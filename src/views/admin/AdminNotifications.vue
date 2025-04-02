@@ -1,4 +1,4 @@
-<template>
+    <template>
   <DashboardLayout>
     <AdminHeader pageTitle="Notifications" />
     <div class="notifications-container">

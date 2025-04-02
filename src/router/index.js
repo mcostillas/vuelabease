@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 // Import views
 import LandingPage from '../views/LandingPage.vue'
-import LoginPage from '../views/LoginPage.vue'
+// LoginPage import removed as it's no longer used
 import SignupPage from '../views/SignupPage.vue'
 import ForgotPasswordPage from '../views/ForgotPasswordPage.vue'
 import InstructorDashboard from '../views/instructor/InstructorDashboard.vue'
@@ -19,6 +19,7 @@ import AdminBookings from '../views/admin/AdminBookings.vue'
 import AdminUserManagement from '../views/admin/AdminUserManagement.vue'
 import AdminAccountPage from '../views/admin/AdminAccountPage.vue'
 import AdminReports from '../views/admin/AdminReports.vue'
+import AdminHistory from '../views/admin/AdminHistory.vue'
 import BookingForm from '../views/BookingForm.vue'
 
 const routes = [
@@ -30,7 +31,7 @@ const routes = [
   {
     path: '/login',
     name: 'LoginPage',
-    component: LoginPage
+    redirect: '/' // Redirect to landing page since login is now integrated there
   },
   {
     path: '/signup',
@@ -106,6 +107,12 @@ const routes = [
     path: '/admin/bookings',
     name: 'AdminBookings',
     component: AdminBookings,
+    meta: { requiresAuth: true, role: 'admin' }
+  },
+  {
+    path: '/admin/history',
+    name: 'AdminHistory',
+    component: AdminHistory,
     meta: { requiresAuth: true, role: 'admin' }
   },
   {

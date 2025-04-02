@@ -33,8 +33,8 @@
         </router-link>
         <router-link :to="historyPath" class="nav-item" :class="{ 'active': isActive('history') }" title="History" @click.stop>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             <path d="M12 8V12L15 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M3.05078 11.0002C3.27441 7.80643 5.04297 4.92768 7.74023 3.15237C10.4375 1.37706 13.7832 0.909961 16.8145 1.88674C19.8457 2.86362 22.2949 5.18362 23.4355 8.13284C24.5762 11.0821 24.2793 14.3633 22.6309 17.0587C20.9824 19.754 18.1758 21.6118 14.9707 22.0978C11.7656 22.5837 8.51953 21.6509 6.05859 19.5431C3.59766 17.4353 2.19922 14.3555 2.19922 11.0978" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
           <span>History</span>
         </router-link>

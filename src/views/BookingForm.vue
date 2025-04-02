@@ -4,8 +4,8 @@
       <div class="form-header">
         <router-link to="/login" class="back-button">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M19 12H5" stroke="#dd3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M12 19L5 12L12 5" stroke="#dd3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M15 19L8 12L15 5" fill="none" stroke="#dd3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M8 12H20" fill="none" stroke="#dd3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </router-link>
         <h1>Laboratory Facility Booking Form</h1>
@@ -17,21 +17,51 @@
           <div class="form-row">
             <div class="form-group">
               <label for="department">Department</label>
-              <input type="text" id="department" v-model="department" required>
+              <div class="input-wrapper">
+                <input type="text" id="department" v-model="department" required>
+                <span class="input-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M20 4H4C3.45 4 3 4.45 3 5V19C3 19.55 3.45 20 4 20H20C20.55 20 21 19.55 21 19V5C21 4.45 20.55 4 20 4ZM19 18H5V8H19V18ZM19 8H5V6H19V8Z" fill="#dd3859"/>
+                    <path d="M15 10H9V12H15V10Z" fill="#dd3859"/>
+                    <path d="M15 13H9V15H15V13Z" fill="#dd3859"/>
+                  </svg>
+                </span>
+              </div>
             </div>
             <div class="form-group">
               <label for="club">Club/Organization</label>
-              <input type="text" id="club" v-model="club">
+              <div class="input-wrapper">
+                <input type="text" id="club" v-model="club">
+                <span class="input-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V19C4 19.55 4.45 20 5 20H19C19.55 20 20 19.55 20 19V18C20 15.34 14.67 14 12 14Z" fill="#dd3859"/>
+                  </svg>
+                </span>
+              </div>
             </div>
           </div>
           <div class="form-row">
             <div class="form-group">
               <label for="person">Person Responsible</label>
-              <input type="text" id="person" v-model="person" required>
+              <div class="input-wrapper">
+                <input type="text" id="person" v-model="person" required>
+                <span class="input-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V19C4 19.55 4.45 20 5 20H19C19.55 20 20 19.55 20 19V18C20 15.34 14.67 14 12 14Z" fill="#dd3859"/>
+                  </svg>
+                </span>
+              </div>
             </div>
             <div class="form-group">
               <label for="contact">Contact No.</label>
-              <input type="tel" id="contact" v-model="contact" required>
+              <div class="input-wrapper">
+                <input type="tel" id="contact" v-model="contact" required>
+                <span class="input-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M20 15.5C18.8 15.5 17.5 15.3 16.4 14.9C16.3 14.9 16.2 14.9 16.1 14.9C15.8 14.9 15.6 15 15.4 15.2L13.2 17.4C10.4 15.9 8 13.6 6.6 10.8L8.8 8.6C9.1 8.3 9.2 7.9 9 7.6C8.7 6.5 8.5 5.2 8.5 4C8.5 3.5 8 3 7.5 3H4C3.5 3 3 3.5 3 4C3 13.4 10.6 21 20 21C20.5 21 21 20.5 21 20V16.5C21 16 20.5 15.5 20 15.5Z" fill="#dd3859"/>
+                  </svg>
+                </span>
+              </div>
             </div>
           </div>
         </section>
@@ -41,36 +71,119 @@
           <div class="form-row">
             <div class="form-group">
               <label for="event">Name of Event</label>
-              <input type="text" id="event" v-model="event" required>
+              <div class="input-wrapper">
+                <input type="text" id="event" v-model="event" required>
+              </div>
             </div>
           </div>
           <div class="form-row">
             <div class="form-group">
               <label for="attendance">Expected Attendees</label>
-              <input type="number" id="attendance" v-model="attendance" required>
+              <div class="input-wrapper">
+                <input type="number" id="attendance" v-model="attendance" required>
+                <span class="input-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M16 11C17.66 11 18.99 9.66 18.99 8C18.99 6.34 17.66 5 16 5C14.34 5 13 6.34 13 8C13 9.66 14.34 11 16 11ZM8 11C9.66 11 10.99 9.66 10.99 8C10.99 6.34 9.66 5 8 5C6.34 5 5 6.34 5 8C5 9.66 6.34 11 8 11ZM8 13C5.67 13 1 14.17 1 16.5V19H15V16.5C15 14.17 10.33 13 8 13ZM16 13C15.71 13 15.38 13.02 15.03 13.05C16.19 13.89 17 15.02 17 16.5V19H23V16.5C23 14.17 18.33 13 16 13Z" fill="#dd3859"/>
+                  </svg>
+                </span>
+              </div>
             </div>
             <div class="form-group">
               <label for="requestDate">Booking Request Date</label>
-              <input type="date" id="requestDate" v-model="requestDate" required class="custom-date-input">
+              <div class="input-wrapper">
+                <input type="date" id="requestDate" v-model="requestDate" required class="custom-date-input" @change="checkRoomAvailability">
+                <span class="input-icon date-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M19 4H18V2H16V4H8V2H6V4H5C3.9 4 3 4.9 3 6V20C3 21.1 3.9 22 5 22H19C20.1 22 21 21.1 21 20V6C21 4.9 20.1 4 19 4ZM19 20H5V10H19V20ZM19 8H5V6H19V8Z" fill="#dd3859"/>
+                  </svg>
+                </span>
+              </div>
             </div>
           </div>
           <div class="form-row">
             <div class="form-group">
               <label for="startTime">Event Start Time</label>
-              <input type="time" id="startTime" v-model="startTime" required>
+              <div class="input-wrapper">
+                <input type="time" id="startTime" v-model="startTime" required class="time-input">
+                <span class="input-icon time-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20Z" fill="#dd3859"/>
+                    <path d="M12.5 7H11V13L16.2 16.2L17 14.9L12.5 12.2V7Z" fill="#dd3859"/>
+                  </svg>
+                </span>
+              </div>
             </div>
             <div class="form-group">
               <label for="endTime">Event End Time</label>
-              <input type="time" id="endTime" v-model="endTime" required>
+              <div class="input-wrapper">
+                <input type="time" id="endTime" v-model="endTime" required class="time-input">
+                <span class="input-icon time-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20Z" fill="#dd3859"/>
+                    <path d="M12.5 7H11V13L16.2 16.2L17 14.9L12.5 12.2V7Z" fill="#dd3859"/>
+                  </svg>
+                </span>
+              </div>
             </div>
           </div>
+        </section>
+
+        <section class="form-section">
+          <h2>ROOM AVAILABILITY</h2>
+          <div v-if="!requestDate" class="date-required-message">
+            <p>Please select a booking date to see available rooms.</p>
+          </div>
+          
+          <template v-else>
+            <div class="form-group">
+              <label for="room">Select Laboratory Room</label>
+              <div class="input-wrapper select-wrapper">
+                <select id="room" v-model="selectedRoom" required>
+                  <option value="" disabled selected>Choose a laboratory room</option>
+                  <option v-for="room in filteredRooms" :key="room.id" :value="room.id">
+                    {{ room.name }} - {{ room.available ? 'Available' : 'Unavailable' }}
+                  </option>
+                </select>
+                <span class="input-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" fill="#dd3859"/>
+                    <path d="M12 15V9m0 6l3-3m-3 3l-3-3" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </span>
+              </div>
+            </div>
+            
+            <div class="room-availability-container" v-if="filteredRooms.length > 0">
+              <div class="room-card" v-for="room in filteredRooms" :key="room.id" 
+                  :class="{'selected': selectedRoom === room.id, 'unavailable': !room.available}"
+                  @click="selectRoom(room.id)">
+                <div class="room-header">
+                  <h3>{{ room.name }}</h3>
+                  <span class="room-status" :class="room.available ? 'available' : 'unavailable'">
+                    {{ room.available ? 'Available' : 'Unavailable' }}
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="no-rooms-message" v-else>
+              <p>No laboratory rooms are available for the selected date.</p>
+            </div>
+          </template>
         </section>
 
         <section class="form-section">
           <h2>FACILITY</h2>
           <div class="form-group">
             <label for="facility">Laboratory Equipment</label>
-            <input type="text" id="facility" v-model="facility" placeholder="List equipment needed" required>
+            <div class="input-wrapper">
+              <input type="text" id="facility" v-model="facility" placeholder="List equipment needed" required>
+              <span class="input-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM19 19H5V8H19V19ZM19 8H5V6H19V8Z" fill="#dd3859"/>
+                </svg>
+              </span>
+            </div>
           </div>
         </section>
 
@@ -107,8 +220,7 @@
   >
     <div class="success-message">
       <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="success-icon">
-        <path d="M22 11.08V12C21.9988 14.1564 21.3005 16.2547 20.0093 17.9818C18.7182 19.709 16.9033 20.9725 14.8354 21.5839C12.7674 22.1953 10.5573 22.1219 8.53447 21.3746C6.51168 20.6273 4.78465 19.2461 3.61096 17.4371C2.43727 15.628 1.87979 13.4881 2.02168 11.3363C2.16356 9.18455 2.99721 7.13631 4.39828 5.49706C5.79935 3.85781 7.69279 2.71537 9.79619 2.24013C11.8996 1.7649 14.1003 1.98232 16.07 2.85999" stroke="#dd3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        <path class="checkmark" d="M22 4L12 14.01L9 11.01" stroke="#dd3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM12.5 7H11V13L16.2 16.2L17 14.9L12.5 12.2V7Z" fill="#dd3859"/>
       </svg>
       <p>Your booking has been submitted successfully!</p>
       <p>Thank you for using LabEase.</p>
@@ -139,7 +251,46 @@ export default {
       notedBy: '',
       dateFilled: new Date().toISOString().substr(0, 10),
       errorMessage: '',
-      showSuccessModal: false
+      showSuccessModal: false,
+      selectedRoom: '',
+      availableRooms: [
+        {
+          id: 'L201',
+          name: 'L201',
+          availableDates: ['2025-04-01', '2025-04-02', '2025-04-05', '2025-04-06']
+        },
+        {
+          id: 'L202',
+          name: 'L202',
+          availableDates: ['2025-04-02', '2025-04-03', '2025-04-04', '2025-04-07']
+        },
+        {
+          id: 'L203',
+          name: 'L203',
+          availableDates: ['2025-04-01', '2025-04-04', '2025-04-05', '2025-04-08']
+        },
+        {
+          id: 'L204',
+          name: 'L204',
+          availableDates: ['2025-04-03', '2025-04-06', '2025-04-07', '2025-04-09']
+        },
+        {
+          id: 'L205',
+          name: 'L205',
+          availableDates: ['2025-04-01', '2025-04-02', '2025-04-08', '2025-04-10']
+        },
+        {
+          id: 'openlab',
+          name: 'Open Laboratory',
+          availableDates: ['2025-04-04', '2025-04-05', '2025-04-09', '2025-04-10']
+        },
+        {
+          id: 'iotlab',
+          name: 'IoT Laboratory',
+          availableDates: ['2025-04-01', '2025-04-03', '2025-04-06', '2025-04-07']
+        }
+      ],
+      filteredRooms: []
     }
   },
   methods: {
@@ -150,7 +301,7 @@ export default {
       // Simple validation
       if (!this.department || !this.person || !this.contact || !this.event || 
           !this.attendance || !this.requestDate || !this.startTime || 
-          !this.endTime || !this.facility || !this.dateFilled) {
+          !this.endTime || !this.facility || !this.dateFilled || !this.selectedRoom) {
         this.errorMessage = 'Please fill in all required fields'
         return
       }
@@ -158,6 +309,13 @@ export default {
       // Validate time range
       if (this.startTime >= this.endTime) {
         this.errorMessage = 'End time must be after start time'
+        return
+      }
+      
+      // Check if selected room is available
+      const selectedRoom = this.filteredRooms.find(room => room.id === this.selectedRoom);
+      if (selectedRoom && !selectedRoom.available) {
+        this.errorMessage = 'The selected room is currently unavailable. Please choose another room.'
         return
       }
       
@@ -172,6 +330,31 @@ export default {
     },
     closeModal() {
       this.showSuccessModal = false
+    },
+    selectRoom(roomId) {
+      // Only allow selecting available rooms
+      const room = this.filteredRooms.find(r => r.id === roomId);
+      if (room && room.available) {
+        this.selectedRoom = roomId;
+      }
+    },
+    checkRoomAvailability() {
+      // Reset selected room when date changes
+      this.selectedRoom = '';
+      
+      // If no date is selected, clear filtered rooms
+      if (!this.requestDate) {
+        this.filteredRooms = [];
+        return;
+      }
+      
+      // Filter rooms based on selected date
+      this.filteredRooms = this.availableRooms.map(room => {
+        return {
+          ...room,
+          available: room.availableDates.includes(this.requestDate)
+        };
+      });
     }
   }
 }
@@ -263,52 +446,68 @@ body {
 
 .form-group {
   flex: 1;
+  margin-bottom: 1.5rem;
 }
 
 .form-group label {
   display: block;
-  color: #666;
   margin-bottom: 0.5rem;
-  font-size: 0.9rem;
+  font-weight: 500;
+  color: #333;
+}
+
+.input-wrapper {
+  position: relative;
+}
+
+.input-icon {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #dd3859;
+  pointer-events: none;
+  z-index: 1;
+  transition: color 0.3s ease;
+}
+
+.input-icon svg {
+  opacity: 0.8;
+  transition: opacity 0.3s ease;
 }
 
 .form-group input,
+.form-group textarea,
 .form-group select {
   width: 100%;
-  padding: 0.8rem;
+  padding: 0.8rem 1rem;
   border: 1px solid #ddd;
   border-radius: 8px;
   font-size: 1rem;
   font-family: inherit;
   transition: border-color 0.3s ease;
+  position: relative;
+  background-color: #fff;
 }
 
 .form-group input:focus,
+.form-group textarea:focus,
 .form-group select:focus {
   outline: none;
   border-color: #dd3859;
 }
 
-.form-group select {
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 0.8rem center;
-  background-size: 1.2rem;
-  padding-right: 2.5rem;
+.form-group input:focus + .input-icon svg,
+.form-group textarea:focus + .input-icon svg,
+.form-group select:focus + .input-icon svg {
+  opacity: 1;
 }
 
-.input-caption {
-  display: block;
-  font-size: 0.8rem;
-  color: #888;
-  margin-top: 0.3rem;
-  text-align: center;
-}
-
-/* Read-only Input */
-input[readonly] {
-  background-color: #f5f5f5;
+.readonly-input {
+  background-color: #f9f9f9;
   cursor: not-allowed;
 }
 
@@ -346,9 +545,9 @@ input[readonly] {
 
 /* Date and Time Inputs */
 .custom-date-input,
-input[type="time"] {
+.time-input {
   width: 100%;
-  padding: 0.8rem;
+  padding: 0.8rem 1rem;
   border: 1px solid #ccc;
   border-radius: 8px;
   font-family: "Poppins", sans-serif;
@@ -360,14 +559,11 @@ input[type="time"] {
   color: #333;
   position: relative;
   cursor: pointer;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23dd3859' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Cline x1='16' y1='2' x2='16' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='2' x2='8' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='10' x2='21' y2='10'%3E%3C/line%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: calc(100% - 10px) center;
-  background-size: 18px;
-  padding-right: 40px;
 }
 
-.custom-date-input::-webkit-calendar-picker-indicator {
+/* Hide the default calendar and time picker icons */
+.custom-date-input::-webkit-calendar-picker-indicator,
+.time-input::-webkit-calendar-picker-indicator {
   opacity: 0;
   width: 100%;
   height: 100%;
@@ -378,28 +574,21 @@ input[type="time"] {
 }
 
 .custom-date-input:hover,
-input[type="time"]:hover {
+.time-input:hover {
   border-color: #dd3859;
 }
 
 .custom-date-input:focus,
-input[type="time"]:focus {
+.time-input:focus {
   border-color: #dd3859;
   box-shadow: 0 0 0 2px rgba(221, 56, 89, 0.1);
 }
 
-input[type="time"]::-webkit-calendar-picker-indicator {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23dd3859' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'%3E%3C/circle%3E%3Cpolyline points='12 6 12 12 16 14'%3E%3C/polyline%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: 18px;
-  opacity: 0;
-  width: 100%;
-  height: 100%;
-  position: absolute;
-  top: 0;
-  left: 0;
-  cursor: pointer;
+/* Ensure the SVG icons are properly positioned and don't overlap */
+.date-icon,
+.time-icon {
+  pointer-events: none;
+  z-index: 2;
 }
 
 /* Responsive Design */
@@ -487,5 +676,98 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* Room Availability Styles */
+.select-wrapper select {
+  appearance: none;
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+  background-color: #fff;
+  cursor: pointer;
+}
+
+.room-availability-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.room-card {
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 0.75rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  text-align: center;
+}
+
+.room-card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.room-card.selected {
+  border-color: #dd3859;
+  box-shadow: 0 4px 12px rgba(221, 56, 89, 0.15);
+}
+
+.room-card.unavailable {
+  opacity: 0.7;
+  background-color: #f9f9f9;
+  cursor: not-allowed;
+}
+
+.room-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.room-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.room-status {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-weight: 500;
+  width: 100%;
+}
+
+.room-status.available {
+  background-color: #e6f7e6;
+  color: #2e7d32;
+}
+
+.room-status.unavailable {
+  background-color: #fdecea;
+  color: #d32f2f;
+}
+
+.no-rooms-message {
+  text-align: center;
+  padding: 1.5rem;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  margin-top: 1rem;
+}
+
+.date-required-message {
+  text-align: center;
+  padding: 1.5rem;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  margin-top: 1rem;
+  color: #666;
 }
 </style>

@@ -2,6 +2,13 @@
   <DashboardLayout>
     <InstructorHeader pageTitle="My Account" />
     <div class="account-page">
+      <div class="back-button-container">
+        <router-link to="/instructor/dashboard" class="back-button">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M15 19L8 12L15 5" stroke="#dd3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </router-link>
+      </div>
       <div class="profile-section">
         <div class="profile-header">
           <div class="profile-avatar">
@@ -557,9 +564,30 @@ export default {
 
 <style scoped>
 .account-page {
-  padding: 24px;
-  max-width: 900px;
+  padding: 1.5rem;
+  max-width: 1000px;
   margin: 0 auto;
+}
+
+.back-button-container {
+  margin-bottom: 1.5rem;
+}
+
+.back-button {
+  display: flex;
+  align-items: center;
+  color: #dd3859;
+  text-decoration: none;
+  font-weight: 500;
+  transition: transform 0.2s ease;
+}
+
+.back-button:hover {
+  transform: translateX(-5px);
+}
+
+.back-button svg {
+  margin-left: 0.5rem;
 }
 
 .profile-section {
