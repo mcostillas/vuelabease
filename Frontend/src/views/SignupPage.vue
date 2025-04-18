@@ -3,26 +3,26 @@
     <div class="signup-form-wrapper">
       <router-link to="/login" class="back-button">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M19 12H5" stroke="#dd3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M12 19L5 12L12 5" stroke="#dd3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M19 12H5" stroke="#dd3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M12 19L5 12L12 5" stroke="#dd3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
         </svg>
       </router-link>
-      
+
       <div class="signup-form">
         <h1>Sign Up</h1>
         <p class="subtitle">Instructor</p>
-        
+
         <form @submit.prevent="handleSignup">
           <div class="form-group">
             <label for="fullName">Full Name</label>
-            <input type="text" id="fullName" v-model="fullName" placeholder="(e.g. Juan Dela Cruz)" required>
+            <input type="text" id="fullName" v-model="name" placeholder="(e.g. Juan Dela Cruz)" required />
           </div>
-          
+
           <div class="form-group">
             <label for="email">Email</label>
-            <input type="email" id="email" v-model="email" placeholder="(School email)" required>
+            <input type="email" id="email" v-model="email" placeholder="(School email)" required />
           </div>
-          
+
           <div class="form-group">
             <label for="department">Department</label>
             <select id="department" v-model="department" required>
@@ -34,18 +34,14 @@
               <option value="Science">Science</option>
             </select>
           </div>
-          
+
           <div class="form-group">
             <label for="password">Password</label>
             <div class="password-input">
-              <input :type="showPassword ? 'text' : 'password'" id="password" v-model="password" required>
+              <input :type="showPassword ? 'text' : 'password'" id="password" v-model="password" required />
               <button type="button" class="toggle-password" @click="togglePasswordVisibility">
                 <svg class="eye-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <g class="eye-open" :style="{ display: showPassword ? 'none' : 'block' }">
-                    <path d="M1 12C1 12 5 4 12 4C19 4 23 12 23 12C23 12 19 20 12 20C5 20 1 12 1 12Z" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  </g>
-                  <path class="eye-closed" :style="{ display: showPassword ? 'block' : 'none' }" d="M3 3L21 21" stroke="#666" stroke-width="2" stroke-linecap="round"/>
+                  <path class="eye-closed" :style="{ display: showPassword ? 'block' : 'none' }" d="M3 3L21 21" stroke="#666" stroke-width="2" stroke-linecap="round" />
                 </svg>
               </button>
             </div>
@@ -54,22 +50,22 @@
           <div class="form-group">
             <label for="confirmPassword">Confirm Password</label>
             <div class="password-input">
-              <input :type="showConfirmPassword ? 'text' : 'password'" id="confirmPassword" v-model="confirmPassword" required>
+              <input :type="showConfirmPassword ? 'text' : 'password'" id="confirmPassword" v-model="confirmPassword" required />
               <button type="button" class="toggle-password" @click="toggleConfirmPasswordVisibility">
                 <svg class="eye-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <g class="eye-open" :style="{ display: showConfirmPassword ? 'none' : 'block' }">
-                    <path d="M1 12C1 12 5 4 12 4C19 4 23 12 23 12C23 12 19 20 12 20C5 20 1 12 1 12Z" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  </g>
-                  <path class="eye-closed" :style="{ display: showConfirmPassword ? 'block' : 'none' }" d="M3 3L21 21" stroke="#666" stroke-width="2" stroke-linecap="round"/>
+                  <path class="eye-closed" :style="{ display: showConfirmPassword ? 'block' : 'none' }" d="M3 3L21 21" stroke="#666" stroke-width="2" stroke-linecap="round" />
                 </svg>
               </button>
             </div>
           </div>
 
           <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
+          <div v-if="successMessage" class="success-message">{{ successMessage }}</div>
 
-          <button type="submit" class="signup-btn">Submit</button>
+          <button type="submit" class="signup-btn" :disabled="isLoading">
+            <span v-if="isLoading">Loading...</span>
+            <span v-else>Submit</span>
+          </button>
         </form>
 
         <p class="signin-text">
@@ -80,50 +76,138 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'SignupPage',
-  data() {
-    return {
-      fullName: '',
-      email: '',
-      department: '',
-      password: '',
-      confirmPassword: '',
-      showPassword: false,
-      showConfirmPassword: false,
-      errorMessage: ''
-    }
-  },
-  methods: {
-    togglePasswordVisibility() {
-      this.showPassword = !this.showPassword
-    },
-    toggleConfirmPasswordVisibility() {
-      this.showConfirmPassword = !this.showConfirmPassword
-    },
-    handleSignup() {
-      // Clear previous error message
-      this.errorMessage = ''
-      
-      // Simple validation
-      if (!this.fullName || !this.email || !this.department || !this.password || !this.confirmPassword) {
-        this.errorMessage = 'All fields are required'
-        return
-      }
-      
-      // Check if passwords match
-      if (this.password !== this.confirmPassword) {
-        this.errorMessage = 'Passwords do not match'
-        return
-      }
-      
-      // In a real application, this would send data to a server
-      // For now, just redirect to login with a success message
-      alert('Account created successfully! Please log in.')
-      this.$router.push('/login')
-    }
+<script setup>
+// Import necessary modules
+import { ref } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { supabase } from '../lib/supabaseClient.js';
+
+// Reactive state
+const name = ref('');
+const email = ref('');
+const department = ref('');
+const password = ref('');
+const confirmPassword = ref('');
+const showPassword = ref(false);
+const showConfirmPassword = ref(false);
+const errorMessage = ref('');
+const successMessage = ref('');
+const isLoading = ref(false);
+
+// Initialize route and router
+const route = useRoute();
+const router = useRouter(); // Keep this if you plan to use it for navigation
+
+// Toggle password visibility
+const togglePasswordVisibility = () => {
+  showPassword.value = !showPassword.value;
+};
+
+const toggleConfirmPasswordVisibility = () => {
+  showConfirmPassword.value = !showConfirmPassword.value;
+};
+
+// Handle signup process
+const handleSignup = async () => {
+  // Clear previous messages
+  errorMessage.value = '';
+  successMessage.value = '';
+
+  // Validate input fields
+  if (!name.value || !email.value || !department.value || !password.value || !confirmPassword.value) {
+    errorMessage.value = 'All fields are required';
+    return;
   }
+
+  if (password.value !== confirmPassword.value) {
+    errorMessage.value = 'Passwords do not match';
+    return;
+  }
+
+  try {
+    isLoading.value = true;
+
+    // Register the user with Supabase Auth
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email: email.value,
+      password: password.value,
+      options: {
+        data: {
+          fullname: name.value,
+          department: department.value,
+        },
+      },
+    });
+
+    if (authError) {
+      console.error('Signup Error:', authError.message);
+      errorMessage.value = authError.message;
+      return;
+    }
+
+    // Insert user details into the "user" table
+    const { error: insertError } = await supabase
+      .from('user')
+      .insert([
+        {
+          userid: authData.user.id, // Use lowercase "userid"
+          fullname: name.value, // Use lowercase "fullname"
+          email: email.value, // Use lowercase "email"
+          department: department.value, // Use lowercase "department"
+          isverified: false, // Use lowercase "isverified"
+          password: password.value, // Use lowercase "password"
+        usertype: 'Instructor', // Use lowercase "usertype"
+        },
+      ]);
+
+    if (insertError) {
+      console.error('Insert Error:', insertError.message);
+      errorMessage.value = 'Failed to save user details. Please try again.';
+      return;
+    }
+
+    // Success message
+    successMessage.value = 'A confirmation email has been sent. Please check your inbox.';
+    console.log('Signup successful. Confirmation email sent.');
+  } catch (err) {
+    console.error('Unexpected Error:', err);
+    errorMessage.value = 'An unexpected error occurred. Please try again.';
+  } finally {
+    isLoading.value = false;
+  }
+};
+// Handle email confirmation
+const handleEmailConfirmation = async () => {
+  const accessToken = route.query.access_token;
+  const type = route.query.type;
+
+  if (!accessToken || type !== 'signup') {
+    errorMessage.value = 'Invalid confirmation link.';
+    return;
+  }
+
+  try {
+    const { error } = await supabase.auth.verifyOTP({
+      token: accessToken,
+      type: 'signup',
+    });
+
+    if (error) {
+      console.error('Confirmation Error:', error.message);
+      errorMessage.value = 'Error confirming your email. Please try again or contact support.';
+    } else {
+      successMessage.value = 'Your email has been confirmed successfully! You can now log in.';
+      router.push('/login'); // Redirect to login page after confirmation
+    }
+  } catch (err) {
+    console.error('Unexpected Error During Confirmation:', err);
+    errorMessage.value = 'An unexpected error occurred. Please try again.';
+  }
+};
+
+// Automatically handle email confirmation if access token is present
+if (route.query.access_token) {
+  handleEmailConfirmation();
 }
 </script>
 

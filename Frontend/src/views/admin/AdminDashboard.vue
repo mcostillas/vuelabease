@@ -1,5 +1,5 @@
 <template>
-    <DashboardLayout>
+    <DashboardLayout :userRole="Admin">
       <AdminHeader pageTitle="Dashboard" />
       <div class="dashboard-content">
         <!-- Overview Section -->
@@ -206,7 +206,7 @@
   <script>
   import DashboardLayout from '@/components/layout/DashboardLayout.vue'
   import AdminHeader from '@/components/admin/AdminHeader.vue'
-  
+
   export default {
     name: 'AdminDashboard',
     components: {

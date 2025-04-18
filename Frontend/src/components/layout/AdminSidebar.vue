@@ -99,51 +99,72 @@
 <script>
 export default {
   name: 'AdminSidebar',
+  props: {
+    userRole: {
+      type: String,
+      required: true, // Pass the userRole dynamically from the parent component
+    },
+  },
   data() {
     return {
       isExpanded: false,
-      userRole: 'admin'
-    }
+    };
   },
   computed: {
-    dashboardPath() {
-      return '/admin/dashboard'
+    // Dynamically generate sidebar links based on userRole
+    sidebarLinks() {
+      if (this.userRole === 'Admin') {
+        return [
+          { path: '/admin/dashboard', title: 'Dashboard', icon: 'dashboard' },
+          { path: '/admin/notifications', title: 'Notifications', icon: 'notifications' },
+          { path: '/admin/bookings', title: 'Bookings', icon: 'bookings' },
+          { path: '/admin/history', title: 'History', icon: 'history' },
+          { path: '/admin/schedule', title: 'Schedule', icon: 'schedule' },
+          { path: '/admin/users', title: 'User Management', icon: 'users' },
+          { path: '/admin/reports', title: 'Reports', icon: 'reports' },
+          { path: '/admin/logbook', title: 'Log Book', icon: 'logbook' },
+        ];
+      } else if (this.userRole === 'Instructor') {
+        return [
+          { path: '/instructor/dashboard', title: 'Dashboard', icon: 'dashboard' },
+          { path: '/instructor/notifications', title: 'Notifications', icon: 'notifications' },
+          { path: '/instructor/schedule', title: 'Schedule', icon: 'schedule' },
+          { path: '/instructor/history', title: 'History', icon: 'history' },
+          { path: '/instructor/account', title: 'Account', icon: 'account' },
+        ];
+      }
+      return [];
     },
-    notificationsPath() {
-      return '/admin/notifications'
-    }
   },
   methods: {
     toggleSidebar() {
-      this.isExpanded = !this.isExpanded
-      this.$emit('sidebar-toggle', this.isExpanded)
+      this.isExpanded = !this.isExpanded;
+      this.$emit('sidebar-toggle', this.isExpanded);
     },
     handleSidebarClick(event) {
-      // Only toggle if clicking on the sidebar itself, not on a link or button
-      if (event.target === event.currentTarget || 
-          event.target.classList.contains('sidenav') ||
-          event.target.classList.contains('logo') ||
-          event.target.classList.contains('logo-text') ||
-          event.target.tagName === 'IMG') {
-        this.toggleSidebar()
+      if (
+        event.target === event.currentTarget ||
+        event.target.classList.contains('sidenav') ||
+        event.target.classList.contains('logo') ||
+        event.target.classList.contains('logo-text') ||
+        event.target.tagName === 'IMG'
+      ) {
+        this.toggleSidebar();
       }
     },
     isActive(route) {
-      return this.$route.path.includes(route)
+      return this.$route.path.includes(route);
     },
     logout() {
       // Clear authentication data
-      localStorage.removeItem('labease_auth_token')
-      localStorage.removeItem('labease_user_data')
-      
+      localStorage.removeItem('labease_auth_token');
+      localStorage.removeItem('labease_user_data');
+
       // Redirect to login page
-      this.$router.push('/login')
-    }
+      this.$router.push('/login');
+    },
   },
-  created() {
-    // No need to get user role as it's fixed to admin
-  }
-}
+};
 </script>
 
 <style scoped>

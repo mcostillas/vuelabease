@@ -1,9 +1,9 @@
 <template>
   <div class="dashboard-container">
-    <AdminSidebar v-if="userRole === 'admin'" @sidebar-toggle="handleSidebarToggle" />
-    <InstructorSidebar v-else @sidebar-toggle="handleSidebarToggle" />
+    <!-- Render the appropriate sidebar based on the usertype from localStorage -->
+    <AdminSidebar v-if="userRole === 'Admin'" @sidebar-toggle="handleSidebarToggle" />
+    <InstructorSidebar v-else-if="userRole === 'Instructor'" @sidebar-toggle="handleSidebarToggle" />
     <main class="main-content" :class="{ 'sidebar-expanded': sidebarExpanded }">
-
       <div class="content-wrapper">
         <slot></slot>
       </div>
@@ -12,44 +12,36 @@
 </template>
 
 <script>
-import AdminSidebar from './AdminSidebar.vue'
-import InstructorSidebar from './Sidebar.vue'
-
+import AdminSidebar from './AdminSidebar.vue';
+import InstructorSidebar from './Sidebar.vue';
 
 export default {
   name: 'DashboardLayout',
   components: {
     AdminSidebar,
     InstructorSidebar,
-
   },
   data() {
     return {
+      userRole: '', // Dynamically set based on localStorage
       sidebarExpanded: false,
-      userRole: null
+    };
+  },
+  created() {
+    // Fetch the usertype from localStorage when the component is created
+    const storedUserRole = localStorage.getItem('usertype');
+    if (storedUserRole) {
+      this.userRole = storedUserRole;
+    } else {
+      console.error('Usertype not found in localStorage');
     }
   },
   methods: {
     handleSidebarToggle(expanded) {
-      this.sidebarExpanded = expanded
+      this.sidebarExpanded = expanded;
     },
-    getUserRole() {
-      const token = localStorage.getItem('labease_auth_token')
-      if (token) {
-        try {
-          const userData = JSON.parse(atob(token))
-          this.userRole = userData.role
-        } catch (e) {
-          console.error('Error parsing token:', e)
-          this.userRole = null
-        }
-      }
-    }
   },
-  created() {
-    this.getUserRole()
-  }
-}
+};
 </script>
 
 <style scoped>
@@ -76,7 +68,7 @@ export default {
   .main-content {
     margin-left: 0;
   }
-  
+
   .main-content.sidebar-expanded {
     margin-left: 240px;
   }

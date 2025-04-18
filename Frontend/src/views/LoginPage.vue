@@ -3,46 +3,50 @@
     <div class="login-form-wrapper">
       <router-link to="/" class="back-button">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M19 12H5" stroke="#dd3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M12 19L5 12L12 5" stroke="#dd3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M19 12H5" stroke="#dd3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M12 19L5 12L12 5" stroke="#dd3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
         </svg>
       </router-link>
-      
+
       <div class="login-form">
         <h1>Log In</h1>
-        
+
         <form @submit.prevent="handleLogin">
           <div class="form-group">
-            <label for="username">Username</label>
-            <input type="text" id="username" v-model="username" required>
+            <label for="email">Email</label>
+            <input type="email" id="email" v-model="email" required />
           </div>
-          
+
           <div class="form-group">
             <label for="password">Password</label>
             <div class="password-input">
-              <input :type="showPassword ? 'text' : 'password'" id="password" v-model="password" required>
+              <input :type="showPassword ? 'text' : 'password'" id="password" v-model="password" required />
               <button type="button" class="toggle-password" @click="togglePasswordVisibility">
                 <svg class="eye-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <g class="eye-open" :style="{ display: showPassword ? 'none' : 'block' }">
-                    <path d="M1 12C1 12 5 4 12 4C19 4 23 12 23 12C23 12 19 20 12 20C5 20 1 12 1 12Z" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  </g>
-                  <path class="eye-closed" :style="{ display: showPassword ? 'block' : 'none' }" d="M3 3L21 21" stroke="#666" stroke-width="2" stroke-linecap="round"/>
+                  <path class="eye-closed" :style="{ display: showPassword ? 'block' : 'none' }" d="M3 3L21 21" stroke="#666" stroke-width="2" stroke-linecap="round" />
                 </svg>
               </button>
             </div>
-            <div class="forgot-password">
-              <router-link to="/forgot-password" class="forgot-password-link">Forgot Password?</router-link>
-            </div>
           </div>
 
-          <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
-
-          <div class="button-group">
-            <router-link to="/booking" class="book_now-btn">Book Now!</router-link>
-            <button type="submit" class="login-btn">Log In</button>
+          <div class="form-group">
+            <label>
+              <input type="checkbox" v-model="rememberMe" /> Remember Me
+            </label>
           </div>
+
+          <div v-if="error" class="error-message">{{ error }}</div>
+
+          <button type="submit" class="login-btn" :disabled="loading">
+            <span v-if="loading">Logging in...</span>
+            <span v-else>Log In</span>
+          </button>
         </form>
+
+        <div class="social-login">
+          <button @click="loginWithGoogle" class="google-login-btn">Log in with Google</button>
+          <button @click="loginWithFacebook" class="facebook-login-btn">Log in with Facebook</button>
+        </div>
 
         <p class="signup-text">
           Don't have an account yet? <router-link to="/signup" class="signup-link">Sign Up</router-link>
@@ -52,67 +56,96 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'LoginPage',
-  data() {
-    return {
-      username: '',
-      password: '',
-      showPassword: false,
-      errorMessage: ''
-    }
-  },
-  created() {
-    // Remove auto-redirect on existing token
-    const token = localStorage.getItem('labease_auth_token')
-    if (token) {
-      localStorage.removeItem('labease_auth_token')
-      localStorage.removeItem('labease_user_data')
-    }
-  },
-  methods: {
-    togglePasswordVisibility() {
-      this.showPassword = !this.showPassword
-    },
-    handleLogin() {
-      // Clear previous error message
-      this.errorMessage = ''
-      
-      // Dummy credentials (same as original)
-      const CREDENTIALS = {
-        instructor: {
-          username: 'teacher',
-          password: '1234',
-          role: 'instructor',
-          dashboard: '/instructor/dashboard'
-        },
-        admin: {
-          username: 'admin',
-          password: '1234',
-          role: 'admin',
-          dashboard: '/admin/dashboard'
-        }
-      }
-      
-      // Check credentials
-      const user = Object.values(CREDENTIALS).find(
-        user => user.username === this.username && user.password === this.password
-      )
+<script setup>
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { useStore } from 'vuex';
+import { supabase } from '../lib/supabaseClient.js';
 
-      if (user) {
-        // Generate a simple token (in real app, this would be from server)
-        const token = btoa(JSON.stringify({ username: user.username, role: user.role }))
-        localStorage.setItem('labease_auth_token', token)
-        localStorage.setItem('labease_user_data', JSON.stringify(user))
-        
-        // Redirect to appropriate dashboard
-        this.$router.push(user.dashboard)
+const router = useRouter();
+const store = useStore();
+
+// Form data
+const email = ref('');
+const password = ref('');
+const rememberMe = ref(false);
+const showPassword = ref(false);
+const loading = ref(false);
+const error = ref(null);
+
+// Toggle password visibility
+const togglePasswordVisibility = () => {
+  showPassword.value = !showPassword.value;
+};
+
+// Handle login with email and password
+const handleLogin = async () => {
+  loading.value = true;
+  error.value = null;
+
+  try {
+    // Sign in with Supabase Auth
+    const { data, error: loginError } = await supabase.auth.signInWithPassword({
+      email: email.value,
+      password: password.value,
+    });
+
+    if (loginError) {
+      error.value = 'Invalid email or password.';
+      toast.error('Login failed. Please check your credentials.');
+      return;
+    }
+
+    if (data.user && data.session) {
+      // Store user data and token in localStorage
+      localStorage.setItem('user', JSON.stringify(data.user));
+      localStorage.setItem('token', data.session.access_token);
+
+      // Fetch the user's role from the 'users' table
+      const { data: userRoleData, error: roleError } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', data.user.id)
+        .single();
+
+      if (roleError) {
+        error.value = 'Error fetching user role.';
+        toast.error('An error occurred while determining your role.');
+        return;
+      }
+
+      // Update Vuex store
+      store.commit('setUser', data.user);
+      store.commit('setLoggedIn', true);
+
+      // Store email if "Remember Me" is checked
+      if (rememberMe.value) {
+        localStorage.setItem('email', email.value);
       } else {
-        this.errorMessage = 'Invalid username or password'
+        localStorage.removeItem('email');
+      }
+
+      // Redirect based on role
+      if (userRoleData.role === 'Teacher') {
+        router.push('/courses'); // Redirect to CourseList.vue
+      } else if (userRoleData.role === 'Student') {
+        router.push('/student-dashboard'); // Redirect to StudentDashboard.vue
+      } else {
+        toast.error('Invalid role. Please contact support.');
       }
     }
+  } catch (err) {
+    error.value = 'An unexpected error occurred.';
+    toast.error('An unexpected error occurred. Please try again.');
+  } finally {
+    loading.value = false;
   }
+};
+
+// Load remembered email if it exists
+if (localStorage.getItem('email')) {
+  email.value = localStorage.getItem('email');
+  rememberMe.value = true;
 }
 </script>
 

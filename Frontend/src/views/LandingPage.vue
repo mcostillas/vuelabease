@@ -107,68 +107,95 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'LandingPage',
-  data() {
-    return {
-      email: '',
-      password: '',
-      showPassword: false,
-      errorMessage: ''
-    }
-  },
-  created() {
-    // Remove auto-redirect on existing token
-    const token = localStorage.getItem('labease_auth_token')
-    if (token) {
-      localStorage.removeItem('labease_auth_token')
-      localStorage.removeItem('labease_user_data')
-    }
-  },
-  methods: {
-    togglePasswordVisibility() {
-      this.showPassword = !this.showPassword
-    },
-    handleLogin() {
-      // Clear previous error message
-      this.errorMessage = ''
-      
-      // Dummy credentials (same as original)
-      const CREDENTIALS = {
-        instructor: {
-          username: 'teacher',
-          password: '1234',
-          role: 'instructor',
-          dashboard: '/instructor/dashboard'
-        },
-        admin: {
-          username: 'admin',
-          password: '1234',
-          role: 'admin',
-          dashboard: '/admin/dashboard'
-        }
-      }
-      
-      // Check credentials - now using email instead of username
-      const user = Object.values(CREDENTIALS).find(
-        user => (user.username === this.email || user.username + '@labease.com' === this.email) && user.password === this.password
-      )
+<script setup>
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { supabase } from '@/lib/supabaseClient';
 
-      if (user) {
-        // Generate a simple token (in real app, this would be from server)
-        const token = btoa(JSON.stringify({ username: user.username, role: user.role }))
-        localStorage.setItem('labease_auth_token', token)
-        localStorage.setItem('labease_user_data', JSON.stringify(user))
-        
-        // Redirect to appropriate dashboard
-        this.$router.push(user.dashboard)
-      } else {
-        this.errorMessage = 'Invalid email or password'
-      }
+// Reactive variables
+const email = ref('');
+const password = ref('');
+const rememberMe = ref(false);
+const showPassword = ref(false);
+const loading = ref(false);
+const errorMessage = ref(''); // Define errorMessage
+
+// Initialize router and store
+const router = useRouter();
+
+
+// Handle login
+const handleLogin = async () => {
+  // Clear previous error messages
+  console.log('Login button clicked'); // Debugging log
+  errorMessage.value = '';
+  loading.value = true;
+
+  try {
+    // Authenticate the user with Supabase Auth
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email.value,
+      password: password.value,
+    });
+    console.log('Supabase Auth Response:', { data, error });
+    if (error) {
+      console.error('Login error:', error.message);
+      errorMessage.value = 'Invalid email or password. Please try again.';
+      return;
     }
+
+    // Check if the user is authenticated
+    if (!data.user) {
+      errorMessage.value = 'Authentication failed. Please try again.';
+      return;
+    }
+
+    // Fetch the user's role from the 'user' table
+    const { data: userRoleData, error: roleError } = await supabase
+      .from('user')
+      .select('usertype')
+      .eq('userid', data.user.id)
+      .single();
+    console.log('Supabase Query Response:', { userRoleData, roleError });
+    if (roleError) {
+      console.error('Error fetching user role:', roleError.message);
+      errorMessage.value = 'An error occurred while determining your role.';
+      return;
+    }
+
+    // Store the usertype in localStorage
+    localStorage.setItem('usertype', userRoleData.usertype);
+    console.log('Usertype stored in localStorage:', userRoleData.usertype);
+
+    // Redirect based on usertype
+    if (userRoleData.usertype === 'Admin') {
+      console.log('Redirecting to /admin/dashboard');
+      router.push('/admin/dashboard'); // Redirect to Admin Dashboard
+    } else if (userRoleData.usertype === 'Instructor') {
+      console.log('Redirecting to /instructor/dashboard');
+      router.push('/instructor/dashboard'); // Redirect to Instructor Dashboard
+    } else {
+      console.log('Invalid role:', userRoleData.usertype);
+      errorMessage.value = 'Invalid role. Please contact support.';
+    }
+  } catch (err) {
+    console.error('Unexpected login error:', err);
+    errorMessage.value = 'An unexpected error occurred. Please try again.';
+  } finally {
+    loading.value = false;
   }
+};
+
+// Load remembered email if it exists
+if (localStorage.getItem('email')) {
+  email.value = localStorage.getItem('email');
+  rememberMe.value = true;
 }
+
+// Toggle password visibility
+const togglePasswordVisibility = () => {
+  showPassword.value = !showPassword.value;
+};
 </script>
 
 <style scoped>
