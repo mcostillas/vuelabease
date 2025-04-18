@@ -1,3 +1,4 @@
+/* eslint-disable */
 <template>
   <DashboardLayout>
     <AdminHeader pageTitle="User Management" />
@@ -57,10 +58,10 @@
             >
               <div class="user-item">
                 <div class="user-name">
-                  <span>{{ user.name }}</span>
+                  <span>{{ user.fullname }}</span>
                 </div>
                 <div class="user-email">{{ user.email }}</div>
-                <div class="user-role">{{ capitalizeFirstLetter(user.role) }}</div>
+                <div class="user-role">{{ capitalizeFirstLetter(user.usertype) }}</div>
                 <div class="user-department">{{ user.department }}</div>
                 <div class="user-status">
                   <span class="status-badge" :class="user.status">
@@ -137,7 +138,7 @@
       <form @submit.prevent="showEditUserModal ? updateUser() : addUser()" class="user-form">
         <div class="form-group">
           <label for="name">Full Name</label>
-          <input type="text" id="name" v-model="userForm.name" required />
+          <input type="text" id="name" v-model="userForm.fullname" required />
         </div>
         <div class="form-group">
           <label for="email">Email</label>
@@ -145,7 +146,7 @@
         </div>
         <div class="form-group">
           <label for="role">Role</label>
-          <select id="role" v-model="userForm.role" required>
+          <select id="role" v-model="userForm.usertype" required>
             <option value="admin">Admin</option>
             <option value="instructor">Instructor</option>
             <option value="student">Student</option>
@@ -205,234 +206,260 @@
 </template>
 
 <script>
-import DashboardLayout from '@/components/layout/DashboardLayout.vue';
-import Modal from '@/components/ui/Modal.vue';
-import AdminHeader from '@/components/admin/AdminHeader.vue';
+import { ref, reactive, computed } from "vue"; // Import Composition API functions
+import DashboardLayout from "@/components/layout/DashboardLayout.vue";
+import Modal from "@/components/ui/Modal.vue";
+import AdminHeader from "@/components/admin/AdminHeader.vue";
+import { createClient } from "@supabase/supabase-js";
+
+// Initialize Supabase client
+const supabase = createClient(
+  "https://bfmvnahlknvyrajofmdw.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmbXZuYWhsa252eXJham9mbWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ5OTc4NjUsImV4cCI6MjA2MDU3Mzg2NX0.xkeqAML3bYf9iOV6iG_GJ35_RD7rPKH_OuXFz1SQBLk"
+);
 
 export default {
-  name: 'AdminUserManagement',
+  name: "AdminUserManagement",
   components: {
     DashboardLayout,
     Modal,
-    AdminHeader
+    AdminHeader,
   },
-  data() {
-    return {
-      // Filters
-      selectedRole: '',
-      selectedStatus: '',
-      searchQuery: '',
-      
-      // Pagination
-      currentPage: 1,
-      itemsPerPage: 10,
-      
-      // Modals
-      showAddUserModal: false,
-      showEditUserModal: false,
-      showDeleteModal: false,
-      
-      // Form data
-      userForm: {
-        id: null,
-        name: '',
-        email: '',
-        role: 'student',
-        department: 'College of Accounting and Business Education',
-        status: 'active',
-        password: ''
-      },
-      
-      userToDelete: null,
-      
-      // Sample user data (would come from API in real app)
-      users: [
-        {
-          id: 1,
-          name: 'John Doe',
-          email: 'john.doe@example.com',
-          role: 'admin',
-          department: 'College of Accounting and Business Education',
-          status: 'active'
-        },
-        {
-          id: 2,
-          name: 'Jane Smith',
-          email: 'jane.smith@example.com',
-          role: 'instructor',
-          department: 'College of Arts and Humanities',
-          status: 'active'
-        },
-        {
-          id: 3,
-          name: 'Bob Johnson',
-          email: 'bob.johnson@example.com',
-          role: 'student',
-          department: 'College of Computer Studies',
-          status: 'active'
-        },
-        {
-          id: 4,
-          name: 'Alice Williams',
-          email: 'alice.williams@example.com',
-          role: 'staff',
-          department: 'College of Engineering and Architecture',
-          status: 'inactive'
-        },
-        {
-          id: 5,
-          name: 'Charlie Brown',
-          email: 'charlie.brown@example.com',
-          role: 'student',
-          department: 'College of Human Environmental Science and Food Studies',
-          status: 'active'
-        },
-        {
-          id: 6,
-          name: 'Diana Prince',
-          email: 'diana.prince@example.com',
-          role: 'instructor',
-          department: 'College of Medical and Biological Sciences',
-          status: 'active'
-        },
-        {
-          id: 7,
-          name: 'Edward Clark',
-          email: 'edward.clark@example.com',
-          role: 'student',
-          department: 'College of Music',
-          status: 'inactive'
-        },
-        {
-          id: 8,
-          name: 'Fiona Green',
-          email: 'fiona.green@example.com',
-          role: 'admin',
-          department: 'College of Nursing',
-          status: 'active'
-        }
-      ]
-    }
-  },
-  computed: {
-    filteredUsers() {
-      let filtered = [...this.users];
-      
+  setup() {
+    // Reactive variables
+    const users = ref([]); // Reactive array for users
+    const userForm = reactive({
+  userid: null, // Primary key
+  fullname: "",
+  email: "",
+  password: "",
+  department: "College of Accounting and Business Education",
+  usertype: "student",
+  status: "active",
+});
+    const currentPage = ref(1);
+    const itemsPerPage = ref(10);
+    const showAddUserModal = ref(false);
+    const showEditUserModal = ref(false);
+    const showDeleteModal = ref(false);
+    const userToDelete = ref(null);
+    const selectedRole = ref("");
+    const selectedStatus = ref("");
+    const searchQuery = ref("");
+
+    // Computed properties
+    const filteredUsers = computed(() => {
+      let filtered = [...users.value];
+
       // Filter by role
-      if (this.selectedRole) {
-        filtered = filtered.filter(user => user.role === this.selectedRole);
+      if (selectedRole.value) {
+        filtered = filtered.filter((user) => user.usertype === selectedRole.value);
       }
-      
+
       // Filter by status
-      if (this.selectedStatus) {
-        filtered = filtered.filter(user => user.status === this.selectedStatus);
+      if (selectedStatus.value) {
+        filtered = filtered.filter((user) => user.status === selectedStatus.value);
       }
-      
+
       // Filter by search query
-      if (this.searchQuery) {
-        const query = this.searchQuery.toLowerCase();
-        filtered = filtered.filter(user => 
-          user.name.toLowerCase().includes(query) || 
-          user.email.toLowerCase().includes(query)
+      if (searchQuery.value) {
+        const query = searchQuery.value.toLowerCase();
+        filtered = filtered.filter(
+          (user) =>
+            user.fullname.toLowerCase().includes(query) ||
+            user.email.toLowerCase().includes(query)
         );
       }
-      
+
       return filtered;
-    },
-    paginatedUsers() {
-      const start = (this.currentPage - 1) * this.itemsPerPage;
-      const end = start + this.itemsPerPage;
-      return this.filteredUsers.slice(start, end);
-    },
-    totalPages() {
-      return Math.ceil(this.filteredUsers.length / this.itemsPerPage);
-    }
-  },
-  methods: {
-    applyFilters() {
-      this.currentPage = 1;
-    },
-    getInitials(name) {
-      return name
-        .split(' ')
-        .map(part => part.charAt(0))
-        .join('')
-        .toUpperCase();
-    },
-    capitalizeFirstLetter(string) {
-      return string.charAt(0).toUpperCase() + string.slice(1);
-    },
-    editUser(user) {
-      this.userForm = { ...user, password: '' };
-      this.showEditUserModal = true;
-    },
-    closeUserModal() {
-      this.showAddUserModal = false;
-      this.showEditUserModal = false;
-      this.resetForm();
-    },
-    resetForm() {
-      this.userForm = {
-        id: null,
-        name: '',
-        email: '',
-        role: 'student',
-        department: 'College of Accounting and Business Education',
-        status: 'active',
-        password: ''
-      };
-    },
-    addUser() {
-      // In a real app, this would be an API call
-      const newUser = {
-        ...this.userForm,
-        id: this.users.length + 1
-      };
-      
-      this.users.push(newUser);
-      this.closeUserModal();
-      // Show success message or notification
-    },
-    updateUser() {
-      // In a real app, this would be an API call
-      const index = this.users.findIndex(user => user.id === this.userForm.id);
-      if (index !== -1) {
-        // If password is empty, don't update it
-        const updatedUser = { ...this.userForm };
-        if (!updatedUser.password) {
-          delete updatedUser.password;
-        }
-        
-        this.users.splice(index, 1, updatedUser);
-        this.closeUserModal();
-        // Show success message or notification
-      }
-    },
-    toggleUserStatus(user) {
-      // In a real app, this would be an API call
-      const index = this.users.findIndex(u => u.id === user.id);
-      if (index !== -1) {
-        const updatedUser = { ...user };
-        updatedUser.status = user.status === 'active' ? 'inactive' : 'active';
-        this.users.splice(index, 1, updatedUser);
-        // Show success message or notification
-      }
-    },
-    confirmDeleteUser(user) {
-      this.userToDelete = user;
-      this.showDeleteModal = true;
-    },
-    deleteUser() {
-      // In a real app, this would be an API call
-      if (this.userToDelete) {
-        this.users = this.users.filter(user => user.id !== this.userToDelete.id);
-        this.showDeleteModal = false;
-        this.userToDelete = null;
-        // Show success message or notification
-      }
-    }
+    });
+
+    const paginatedUsers = computed(() => {
+      const start = (currentPage.value - 1) * itemsPerPage.value;
+      const end = start + itemsPerPage.value;
+      return filteredUsers.value.slice(start, end);
+    });
+
+    const totalPages = computed(() => {
+      return Math.ceil(filteredUsers.value.length / itemsPerPage.value);
+    });
+
+    // Methods
+    const fetchUsers = async () => {
+  try {
+    const { data, error } = await supabase.from("user").select("*");
+    if (error) throw error;
+    users.value = data; // Assign the fetched data to the reactive `users` variable
+  } catch (error) {
+    console.error("Error fetching users:", error.message);
   }
-}
+};
+
+    const applyFilters = () => {
+      currentPage.value = 1;
+    };
+
+    const capitalizeFirstLetter = (string) => {
+      if (!string || typeof string !== "string") {
+        return ""; // Return an empty string if the input is undefined or not a string
+      }
+      return string.charAt(0).toUpperCase() + string.slice(1);
+    };
+
+    const editUser = (user) => {
+      Object.assign(userForm, { ...user, password: "" }); // Load user data into the form
+      showEditUserModal.value = true;
+    };
+
+    const closeUserModal = () => {
+      showAddUserModal.value = false;
+      showEditUserModal.value = false;
+      resetForm();
+    };
+
+    const resetForm = () => {
+      Object.assign(userForm, {
+        id: null,
+        fullname: "",
+        email: "",
+        usertype: "student",
+        department: "College of Accounting and Business Education",
+        status: "active",
+        password: "",
+      });
+    };
+
+    const addUser = async () => {
+  try {
+    const { data, error } = await supabase.from("user").insert([
+      {
+        fullname: userForm.fullname,
+        email: userForm.email,
+        password: userForm.password,
+        department: userForm.department,
+        usertype: userForm.usertype,
+        status: userForm.status,
+      },
+    ]);
+    if (error) throw error;
+
+    users.value.push(data[0]); // Add the new user to the local array
+    closeUserModal();
+  } catch (error) {
+    console.error("Error adding user:", error.message);
+  }
+};
+
+const updateUser = async () => {
+  try {
+    const updatedUser = { ...userForm };
+
+    // Capitalize the first letter of usertype
+    updatedUser.usertype = updatedUser.usertype.charAt(0).toUpperCase() + updatedUser.usertype.slice(1).toLowerCase();
+
+    if (!updatedUser.password) {
+      delete updatedUser.password; // Don't update the password if it's blank
+    }
+
+    const { error } = await supabase
+      .from("user")
+      .update({
+        fullname: updatedUser.fullname,
+        email: updatedUser.email,
+        password: updatedUser.password,
+        department: updatedUser.department,
+        usertype: updatedUser.usertype, // Ensure this is capitalized
+        status: updatedUser.status,
+      })
+      .eq("userid", updatedUser.userid); // Use 'userid' as the primary key
+    if (error) throw error;
+
+    // Update the local users array
+    const index = users.value.findIndex((user) => user.userid === updatedUser.userid);
+    if (index !== -1) {
+      users.value.splice(index, 1, updatedUser); // Use updatedUser directly
+    }
+    closeUserModal();
+  } catch (error) {
+    console.error("Error updating user:", error.message);
+  }
+};
+
+const deleteUser = async () => {
+  try {
+    if (userToDelete.value) {
+      const { error } = await supabase
+        .from("user")
+        .delete()
+        .eq("userid", userToDelete.value.userid); // Use 'userid' as the primary key
+      if (error) throw error;
+
+      // Remove the user from the local array
+      users.value = users.value.filter((user) => user.userid !== userToDelete.value.userid);
+      showDeleteModal.value = false;
+      userToDelete.value = null;
+    }
+  } catch (error) {
+    console.error("Error deleting user:", error.message);
+  }
+};
+
+    const confirmDeleteUser = (user) => {
+      userToDelete.value = user;
+      showDeleteModal.value = true;
+    };
+
+    const toggleUserStatus = async (user) => {
+  try {
+    const newStatus = user.status === "active" ? "inactive" : "active";
+    const { error } = await supabase
+      .from("user")
+      .update({ status: newStatus })
+      .eq("userid", user.userid); // Use 'userid' as the primary key
+    if (error) throw error;
+
+    // Update the local users array
+    const index = users.value.findIndex((u) => u.userid === user.userid);
+    if (index !== -1) {
+      users.value[index].status = newStatus;
+    }
+  } catch (error) {
+    console.error("Error toggling user status:", error.message);
+  }
+};
+
+    // Fetch users on component creation
+    fetchUsers();
+
+    return {
+      users,
+      userForm,
+      currentPage,
+      itemsPerPage,
+      showAddUserModal,
+      showEditUserModal,
+      showDeleteModal,
+      userToDelete,
+      selectedRole,
+      selectedStatus,
+      searchQuery,
+      filteredUsers,
+      paginatedUsers,
+      totalPages,
+      fetchUsers,
+      applyFilters,
+      capitalizeFirstLetter,
+      editUser,
+      closeUserModal,
+      resetForm,
+      addUser,
+      updateUser,
+      deleteUser,
+      confirmDeleteUser,
+      toggleUserStatus,
+    };
+  },
+};
 </script>
 
 <style scoped>

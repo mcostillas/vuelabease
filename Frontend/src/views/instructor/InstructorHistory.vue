@@ -68,8 +68,8 @@
           </select>
         </div>
       </div>
-      
-      <!-- Schedule Cards Layout (matching original design) -->
+
+      <!-- Schedule Cards Layout -->
       <div class="schedule-section">
         <div class="schedule-header">
           <div class="header-item">Time Slot</div>
@@ -78,51 +78,73 @@
           <div class="header-item">Lab, Room No.</div>
           <div class="header-item">Status</div>
         </div>
-        
+
         <div class="schedule-cards">
-          <div 
-            v-for="booking in filteredBookings" 
-            :key="booking.id" 
+          <div
+            v-for="booking in filteredBookings"
+            :key="booking.id"
             class="schedule-card"
             :class="booking.status"
           >
             <div class="schedule-item">
-              <div class="time-slot">{{ formatTime(booking.startTime, booking.endTime) }}</div>
-              <div class="purpose">{{ booking.purpose }}</div>
-              <div class="section">{{ booking.section || 'N/A' }}</div>
-              <div class="room">{{ booking.room }}</div>
+              <div class="time-slot">{{ formatTime(booking.start_time, booking.end_time) }}</div>
+              <div class="purpose">{{ booking.event_name }}</div>
+              <div class="section">{{ booking.section || "N/A" }}</div>
+              <div class="room">{{ booking.room_id }}</div>
               <div class="status">{{ booking.status }}</div>
             </div>
           </div>
-          
+
           <div v-if="filteredBookings.length === 0" class="empty-schedule">
             <p>No booking history found.</p>
           </div>
         </div>
       </div>
-      
+
       <div class="pagination">
-        <button 
-          class="pagination-button" 
+        <button
+          class="pagination-button"
           :disabled="currentPage === 1"
           @click="currentPage--"
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M15 18L9 12L15 6"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
           </svg>
         </button>
-        
-        <div class="page-info">
-          Page {{ currentPage }} of {{ totalPages }}
-        </div>
-        
-        <button 
-          class="pagination-button" 
+
+        <div class="page-info">Page {{ currentPage }} of {{ totalPages }}</div>
+
+        <button
+          class="pagination-button"
           :disabled="currentPage === totalPages"
           @click="currentPage++"
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M9 18L15 12L9 6"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
           </svg>
         </button>
       </div>
@@ -131,387 +153,115 @@
 </template>
 
 <script>
-import DashboardLayout from '@/components/layout/DashboardLayout.vue'
-import InstructorHeader from '@/components/instructor/InstructorHeader.vue'
+import DashboardLayout from "@/components/layout/DashboardLayout.vue";
+import InstructorHeader from "@/components/instructor/InstructorHeader.vue";
+import { createClient } from "@supabase/supabase-js";
+
+// Initialize Supabase client
+const supabase = createClient(
+  "https://bfmvnahlknvyrajofmdw.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmbXZuYWhsa252eXJham9mbWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ5OTc4NjUsImV4cCI6MjA2MDU3Mzg2NX0.xkeqAML3bYf9iOV6iG_GJ35_RD7rPKH_OuXFz1SQBLk"
+);
 
 export default {
-  name: 'InstructorHistory',
+  name: "InstructorHistory",
   components: {
     DashboardLayout,
-    InstructorHeader
+    InstructorHeader,
   },
   data() {
     return {
-      selectedProgram: '',
-      selectedYear: '',
-      selectedSection: '',
-      statusFilter: '',
-      dateFilter: 'all',
-      selectedSemester: 'current',
+      selectedProgram: "",
+      selectedYear: "",
+      selectedSection: "",
+      statusFilter: "",
+      dateFilter: "all",
+      selectedSemester: "current",
       currentPage: 1,
       itemsPerPage: 10,
-      bookings: [
-        {
-          id: 1,
-          room: 'L201',
-          date: '2025-03-10',
-          startTime: '09:00',
-          endTime: '12:00',
-          purpose: 'Web Applications Development',
-          section: 'CCS-2A',
-          status: 'approved',
-          program: 'CCS',
-          year: '2'
-        },
-        {
-          id: 2,
-          room: 'L202',
-          date: '2025-03-08',
-          startTime: '13:00',
-          endTime: '16:00',
-          purpose: 'Data Structures and Algorithms',
-          section: 'CCS-2B',
-          status: 'rejected',
-          program: 'CCS',
-          year: '2'
-        },
-        {
-          id: 3,
-          room: 'L203',
-          date: '2025-03-15',
-          startTime: '10:00',
-          endTime: '12:00',
-          purpose: 'Computer Programming',
-          section: 'CCS-1A',
-          status: 'pending',
-          program: 'CCS',
-          year: '1'
-        },
-        {
-          id: 4,
-          room: 'L204',
-          date: '2025-02-28',
-          startTime: '14:00',
-          endTime: '16:00',
-          purpose: 'Calculus for Engineers',
-          section: 'CEA-1A',
-          status: 'cancelled',
-          program: 'CEA',
-          year: '1'
-        },
-        {
-          id: 5,
-          room: 'L205',
-          date: '2025-03-05',
-          startTime: '08:00',
-          endTime: '10:00',
-          purpose: 'Database Management Systems',
-          section: 'CCS-2C',
-          status: 'approved',
-          program: 'CCS',
-          year: '2'
-        },
-        {
-          id: 6,
-          room: 'Open Laboratory',
-          date: '2025-03-12',
-          startTime: '13:00',
-          endTime: '15:00',
-          purpose: 'Software Engineering',
-          section: 'CCS-3A',
-          status: 'approved',
-          program: 'CCS',
-          year: '3'
-        },
-        {
-          id: 7,
-          room: 'IOT Lab',
-          date: '2025-03-18',
-          startTime: '10:00',
-          endTime: '12:00',
-          purpose: 'Mobile Application Development',
-          section: 'CCS-3B',
-          status: 'pending',
-          program: 'CCS',
-          year: '3'
-        },
-        {
-          id: 8,
-          room: 'L201',
-          date: '2025-03-20',
-          startTime: '14:00',
-          endTime: '16:00',
-          purpose: 'Organic Chemistry',
-          section: 'CPC-2A',
-          status: 'pending',
-          program: 'CPC',
-          year: '2'
-        }
-      ]
-    }
+      bookings: [], // Array to store bookings fetched from Supabase
+    };
   },
   computed: {
     availableSections() {
-      // Filter sections based on selected program and year
-      const sections = []
-      
-      this.bookings.forEach(booking => {
-        // Check if booking matches the selected program and year
-        const programMatch = !this.selectedProgram || booking.program === this.selectedProgram
-        const yearMatch = !this.selectedYear || booking.year === this.selectedYear
-        
-        // If both match and the section isn't already in our list, add it
-        if (programMatch && yearMatch && booking.section && !sections.includes(booking.section)) {
-          sections.push(booking.section)
+      const sections = [];
+      this.bookings.forEach((booking) => {
+        if (
+          (!this.selectedProgram || booking.program === this.selectedProgram) &&
+          (!this.selectedYear || booking.year === this.selectedYear) &&
+          booking.section &&
+          !sections.includes(booking.section)
+        ) {
+          sections.push(booking.section);
         }
-      })
-      
-      // Sort sections alphabetically
-      return sections.sort()
+      });
+      return sections.sort();
     },
     filteredBookings() {
-      let filtered = [...this.bookings]
-      
-      // Apply program filter
-      if (this.selectedProgram) {
-        filtered = filtered.filter(booking => booking.program === this.selectedProgram)
-      }
-      
-      // Apply year filter
-      if (this.selectedYear) {
-        filtered = filtered.filter(booking => booking.year === this.selectedYear)
-      }
-      
-      // Apply section filter
-      if (this.selectedSection) {
-        filtered = filtered.filter(booking => booking.section === this.selectedSection)
-      }
-      
-      // Apply status filter
-      if (this.statusFilter) {
-        filtered = filtered.filter(booking => booking.status === this.statusFilter)
-      }
-      
-      // Apply date filter
-      if (this.dateFilter !== 'all') {
-        const today = new Date()
-        const bookingDate = new Date()
-        
-        // Declare all variables outside of case blocks to fix ESLint errors
-        let startOfWeek, startOfMonth, startOfSemester
-        
-        switch(this.dateFilter) {
-          case 'week':
-            // Get start of current week (Sunday)
-            startOfWeek = new Date(today)
-            startOfWeek.setDate(today.getDate() - today.getDay())
-            startOfWeek.setHours(0, 0, 0, 0)
-            
-            filtered = filtered.filter(booking => {
-              bookingDate.setTime(Date.parse(booking.date))
-              return bookingDate >= startOfWeek
-            })
-            break
-            
-          case 'month':
-            // Get start of current month
-            startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
-            
-            filtered = filtered.filter(booking => {
-              bookingDate.setTime(Date.parse(booking.date))
-              return bookingDate >= startOfMonth
-            })
-            break
-            
-          case 'semester':
-            // Handle different semester selections
-            if (this.selectedSemester === 'current') {
-              // Current semester (last 4 months)
-              startOfSemester = new Date(today)
-              startOfSemester.setMonth(today.getMonth() - 4)
-            } else {
-              // Parse the selected semester (format: YYYY-N where N is 1 or 2)
-              const [year, semNum] = this.selectedSemester.split('-')
-              startOfSemester = new Date()
-              
-              if (semNum === '1') {
-                // First semester typically starts in August
-                startOfSemester.setFullYear(parseInt(year), 7, 1) // August 1st
-              } else {
-                // Second semester typically starts in January of the next year
-                startOfSemester.setFullYear(parseInt(year) + 1, 0, 1) // January 1st
-              }
-            }
-            
-            filtered = filtered.filter(booking => {
-              bookingDate.setTime(Date.parse(booking.date))
-              return bookingDate >= startOfSemester
-            })
-            break
-        }
-      }
-      
-      // Apply pagination
-      const startIndex = (this.currentPage - 1) * this.itemsPerPage
-      const endIndex = startIndex + this.itemsPerPage
-      
-      return filtered.slice(startIndex, endIndex)
-    },
-    totalPages() {
-      // Calculate total pages based on filtered bookings before pagination
-      let filtered = [...this.bookings]
-      
-      // Apply program filter
-      if (this.selectedProgram) {
-        filtered = filtered.filter(booking => booking.program === this.selectedProgram)
-      }
-      
-      // Apply year filter
-      if (this.selectedYear) {
-        filtered = filtered.filter(booking => booking.year === this.selectedYear)
-      }
-      
-      // Apply section filter
-      if (this.selectedSection) {
-        filtered = filtered.filter(booking => booking.section === this.selectedSection)
-      }
-      
-      // Apply status filter
-      if (this.statusFilter) {
-        filtered = filtered.filter(booking => booking.status === this.statusFilter)
-      }
-      
-      // Apply date filter
-      if (this.dateFilter !== 'all') {
-        const today = new Date()
-        const bookingDate = new Date()
-        
-        // Declare all variables outside of case blocks to fix ESLint errors
-        let startOfWeek, startOfMonth, startOfSemester
-        
-        switch(this.dateFilter) {
-          case 'week':
-            // Get start of current week (Sunday)
-            startOfWeek = new Date(today)
-            startOfWeek.setDate(today.getDate() - today.getDay())
-            startOfWeek.setHours(0, 0, 0, 0)
-            
-            filtered = filtered.filter(booking => {
-              bookingDate.setTime(Date.parse(booking.date))
-              return bookingDate >= startOfWeek
-            })
-            break
-            
-          case 'month':
-            // Get start of current month
-            startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
-            
-            filtered = filtered.filter(booking => {
-              bookingDate.setTime(Date.parse(booking.date))
-              return bookingDate >= startOfMonth
-            })
-            break
-            
-          case 'semester':
-            // Handle different semester selections
-            if (this.selectedSemester === 'current') {
-              // Current semester (last 4 months)
-              startOfSemester = new Date(today)
-              startOfSemester.setMonth(today.getMonth() - 4)
-            } else {
-              // Parse the selected semester (format: YYYY-N where N is 1 or 2)
-              const [year, semNum] = this.selectedSemester.split('-')
-              startOfSemester = new Date()
-              
-              if (semNum === '1') {
-                // First semester typically starts in August
-                startOfSemester.setFullYear(parseInt(year), 7, 1) // August 1st
-              } else {
-                // Second semester typically starts in January of the next year
-                startOfSemester.setFullYear(parseInt(year) + 1, 0, 1) // January 1st
-              }
-            }
-            
-            filtered = filtered.filter(booking => {
-              bookingDate.setTime(Date.parse(booking.date))
-              return bookingDate >= startOfSemester
-            })
-            break
-        }
-      }
-      
-      return Math.ceil(filtered.length / this.itemsPerPage) || 1
+    let filtered = [...this.bookings];
+
+    // Filter by program
+    if (this.selectedProgram) {
+      filtered = filtered.filter((booking) => booking.program === this.selectedProgram);
     }
+
+    // Filter by year
+    if (this.selectedYear) {
+      filtered = filtered.filter((booking) => booking.year === this.selectedYear);
+    }
+
+    // Filter by section
+    if (this.selectedSection) {
+      filtered = filtered.filter((booking) => booking.section === this.selectedSection);
+    }
+
+    // Filter by status
+    if (this.statusFilter) {
+      filtered = filtered.filter((booking) => booking.status === this.statusFilter);
+    }
+
+    // Filter by answered status
+    filtered = filtered.filter((booking) => booking.answered === true);
+
+    // Pagination
+    const start = (this.currentPage - 1) * this.itemsPerPage;
+    const end = start + this.itemsPerPage;
+    return filtered.slice(start, end);
   },
-  created() {
-  // Retrieve the userType from localStorage
-  const storedUserRole = localStorage.getItem('usertype');
-  console.log('Retrieved usertype from localStorage:', storedUserRole); // Debugging log
-
-  if (!storedUserRole) {
-    console.error('Usertype not found in localStorage. Redirecting to login.');
-    this.$router.push('/login');
-    return;
-  }
-
-  // Check if the userType matches 'instructor'
-  if (storedUserRole.toLowerCase() !== 'instructor') {
-    console.error('Usertype is not instructor. Redirecting to login.');
-    this.$router.push('/login');
-    return;
-  }
-
-  // If userType is valid, proceed
-  console.log('Usertype is valid:', storedUserRole);
-
-  // Proceed with data initialization or other logic
-  console.log('Proceeding with data initialization.');
+  totalPages() {
+    return Math.ceil(
+      this.bookings.filter((booking) => booking.answered === true).length / this.itemsPerPage
+    );
+  },
 },
   methods: {
-    formatDate(dateString) {
-      const options = { year: 'numeric', month: 'short', day: 'numeric' }
-      return new Date(dateString).toLocaleDateString('en-US', options)
-    },
-    formatTime(start, end) {
-      const formatTimeStr = (timeStr) => {
-        const [hours, minutes] = timeStr.split(':')
-        const hour = parseInt(hours)
-        return `${hour % 12 || 12}${minutes !== '00' ? ':' + minutes : ''} ${hour < 12 ? 'am' : 'pm'}`
+    async fetchBookings() {
+      try {
+        const { data, error } = await supabase.from("bookings").select("*");
+        if (error) throw error;
+        this.bookings = data;
+      } catch (error) {
+        console.error("Error fetching bookings:", error.message);
       }
-      
-      return `${formatTimeStr(start)} - ${formatTimeStr(end)}`
-    },
-    viewBookingDetails(booking) {
-      // In a real application, this would show a modal with booking details
-      alert(`Booking Details:\nRoom: ${booking.room}\nDate: ${this.formatDate(booking.date)}\nTime: ${this.formatTime(booking.startTime, booking.endTime)}\nPurpose: ${booking.purpose}\nStatus: ${booking.status}`)
     },
     applyFilters() {
-      // Reset to first page when filters change
-      this.currentPage = 1
-    }
+      this.currentPage = 1;
+    },
+    formatTime(start, end) {
+      const formatHour = (timeStr) => {
+        const [hour, minute] = timeStr.split(":");
+        const hourNum = parseInt(hour, 10);
+        const period = hourNum >= 12 ? "PM" : "AM";
+        const hour12 = hourNum % 12 || 12;
+        return `${hour12}:${minute} ${period}`;
+      };
+      return `${formatHour(start)} - ${formatHour(end)}`;
+    },
   },
-  watch: {
-    selectedProgram() {
-      // Reset section when program changes
-      this.selectedSection = ''
-      this.applyFilters()
-    },
-    selectedYear() {
-      // Reset section when year changes
-      this.selectedSection = ''
-      this.applyFilters()
-    },
-    statusFilter() {
-      this.applyFilters()
-    },
-    dateFilter() {
-      this.applyFilters()
-    },
-    selectedSemester() {
-      this.applyFilters()
-    }
-  }
-}
+  created() {
+    this.fetchBookings();
+  },
+};
 </script>
 
 <style scoped>
