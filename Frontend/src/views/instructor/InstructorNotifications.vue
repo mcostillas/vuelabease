@@ -286,25 +286,26 @@ export default {
     }
   },
   created() {
-    // Check authentication and role
-    const token = localStorage.getItem('labease_auth_token')
-    if (!token) {
-      this.$router.push('/login')
-      return
-    }
-    
-    try {
-      const userData = JSON.parse(atob(token))
-      if (userData.role !== 'instructor') {
-        this.$router.push('/login')
-      }
-    } catch (e) {
-      console.error('Error parsing token:', e)
-      localStorage.removeItem('labease_auth_token')
-      localStorage.removeItem('labease_user_data')
-      this.$router.push('/login')
-    }
-  },
+  // Retrieve the userType from localStorage
+  const storedUserRole = localStorage.getItem('usertype');
+  console.log('Retrieved usertype from localStorage:', storedUserRole); // Debugging log
+
+  if (!storedUserRole) {
+    console.error('Usertype not found in localStorage. Redirecting to login.');
+    this.$router.push('/');
+    return;
+  }
+
+  // Check if the userType matches 'instructor'
+  if (storedUserRole.toLowerCase() !== 'instructor') {
+    console.error('Usertype is not instructor. Redirecting to login.');
+    this.$router.push('/');
+    return;
+  }
+
+  // If userType is valid, proceed
+  console.log('Usertype is valid:', storedUserRole);
+},
   methods: {
     openNotificationModal(notification, index) {
       this.selectedNotification = { ...notification };

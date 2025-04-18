@@ -6,7 +6,7 @@
         <span class="logo-text">LabEase</span>
       </div>
       <div class="nav-links">
-        <router-link :to="dashboardPath" class="nav-item" :class="{ 'active': isActive('dashboard') }" title="Dashboard" @click.stop>
+        <router-link to="/instructor/dashboard" class="nav-item" :class="{ 'active': isActive('dashboard') }" title="Dashboard" @click.stop>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <rect x="2" y="2" width="9" height="9" rx="2" stroke="currentColor" stroke-width="2"/>
             <rect x="2" y="13" width="9" height="9" rx="2" stroke="currentColor" stroke-width="2"/>
@@ -15,14 +15,14 @@
           </svg>
           <span>Dashboard</span>
         </router-link>
-        <router-link :to="notificationsPath" class="nav-item" :class="{ 'active': isActive('notifications') }" title="Notifications" @click.stop>
+        <router-link to="/instructor/notifications" class="nav-item" :class="{ 'active': isActive('notifications') }" title="Notifications" @click.stop>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M18 8C18 6.4087 17.3679 4.88258 16.2426 3.75736C15.1174 2.63214 13.5913 2 12 2C10.4087 2 8.88258 2.63214 7.75736 3.75736C6.63214 4.88258 6 6.4087 6 8C6 15 3 17 3 17H21C21 17 18 15 18 8Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             <path d="M13.73 21C13.5542 21.3016 13.3019 21.5547 12.9982 21.7295C12.6946 21.9044 12.3504 21.9965 12 21.9965C11.6496 21.9965 11.3054 21.9044 11.0018 21.7295C10.6982 21.5547 10.4458 21.3016 10.27 21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
           <span>Notifications</span>
         </router-link>
-        <router-link :to="schedulePath" class="nav-item" :class="{ 'active': isActive('schedule') }" title="Schedule" @click.stop>
+        <router-link to="/instructor/schedule" class="nav-item" :class="{ 'active': isActive('schedule') }" title="Schedule" @click.stop>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
             <path d="M16 2V6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -31,7 +31,7 @@
           </svg>
           <span>Schedule</span>
         </router-link>
-        <router-link :to="historyPath" class="nav-item" :class="{ 'active': isActive('history') }" title="History" @click.stop>
+        <router-link to="/instructor/history" class="nav-item" :class="{ 'active': isActive('history') }" title="History" @click.stop>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M12 8V12L15 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             <path d="M3.05078 11.0002C3.27441 7.80643 5.04297 4.92768 7.74023 3.15237C10.4375 1.37706 13.7832 0.909961 16.8145 1.88674C19.8457 2.86362 22.2949 5.18362 23.4355 8.13284C24.5762 11.0821 24.2793 14.3633 22.6309 17.0587C20.9824 19.754 18.1758 21.6118 14.9707 22.0978C11.7656 22.5837 8.51953 21.6509 6.05859 19.5431C3.59766 17.4353 2.19922 14.3555 2.19922 11.0978" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -63,23 +63,24 @@ export default {
     };
   },
   computed: {
-   // Dynamically generate sidebar links based on userRole
-   sidebarLinks() {
-  if (this.userRole === 'Admin') {
-    return [
-      { path: '/admin/dashboard', title: 'Dashboard', icon: 'dashboard' },
-      { path: '/admin/notifications', title: 'Notifications', icon: 'notifications' },
-      { path: '/admin/history', title: 'History', icon: 'history' },
-    ];
-  } else if (this.userRole === 'Instructor') {
-    return [
-      { path: '/instructor/dashboard', title: 'Dashboard', icon: 'dashboard' },
-      { path: '/instructor/notifications', title: 'Notifications', icon: 'notifications' },
-      { path: '/instructor/history', title: 'History', icon: 'history' },
-    ];
-  }
-  return [];
-}
+    // Dynamically generate sidebar links based on userRole
+    sidebarLinks() {
+      if (this.userRole === 'Admin') {
+        return [
+          { path: '/admin/dashboard', title: 'Dashboard', icon: 'dashboard' },
+          { path: '/admin/notifications', title: 'Notifications', icon: 'notifications' },
+          { path: '/admin/history', title: 'History', icon: 'history' },
+        ];
+      } else if (this.userRole === 'Instructor') {
+        return [
+          { path: '/instructor/dashboard', title: 'Dashboard', icon: 'dashboard' },
+          { path: '/instructor/notifications', title: 'Notifications', icon: 'notifications' },
+          { path: '/instructor/history', title: 'History', icon: 'history' },
+          { path: '/instructor/schedule', title: 'Schedule', icon: 'schedule' },
+        ];
+      }
+      return [];
+    },
   },
   methods: {
     toggleSidebar() {
@@ -101,18 +102,34 @@ export default {
       return this.$route.path.includes(route);
     },
     logout() {
+      // Clear authentication data
       localStorage.removeItem('labease_auth_token');
       localStorage.removeItem('usertype');
-      this.$router.push('/login');
+
+      // Debugging log
+      console.log('Router instance:', this.$router);
+
+      // Ensure $router is available before calling push
+      if (this.$router) {
+        this.$router.push('/').catch(err => {
+          console.error('Router push error:', err);
+        });
+      } else {
+        console.error('Router instance is not available');
+      }
     },
   },
   created() {
-    // Fetch the usertype from localStorage when the component is created
     const storedUserRole = localStorage.getItem('usertype');
+    console.log('Retrieved usertype from localStorage:', storedUserRole); // Debugging log
     if (storedUserRole) {
       this.userRole = storedUserRole;
+      console.log('Assigned userRole:', this.userRole); // Debugging log
     } else {
       console.error('Usertype not found in localStorage');
+      if (this.$router) {
+        this.$router.push('/'); // Redirect to login if usertype is missing
+      }
     }
   },
 };

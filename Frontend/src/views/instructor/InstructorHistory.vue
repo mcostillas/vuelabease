@@ -444,23 +444,29 @@ export default {
     }
   },
   created() {
-    // Check auth on page load
-    try {
-      const token = localStorage.getItem('labease_auth_token')
-      if (!token) {
-        this.$router.push('/login')
-        return
-      }
-      
-      // In a real application, we would fetch booking history from an API
-      // For now, we're using the dummy data in the data() function
-    } catch (e) {
-      console.error('Error parsing token:', e)
-      localStorage.removeItem('labease_auth_token')
-      localStorage.removeItem('labease_user_data')
-      this.$router.push('/login')
-    }
-  },
+  // Retrieve the userType from localStorage
+  const storedUserRole = localStorage.getItem('usertype');
+  console.log('Retrieved usertype from localStorage:', storedUserRole); // Debugging log
+
+  if (!storedUserRole) {
+    console.error('Usertype not found in localStorage. Redirecting to login.');
+    this.$router.push('/login');
+    return;
+  }
+
+  // Check if the userType matches 'instructor'
+  if (storedUserRole.toLowerCase() !== 'instructor') {
+    console.error('Usertype is not instructor. Redirecting to login.');
+    this.$router.push('/login');
+    return;
+  }
+
+  // If userType is valid, proceed
+  console.log('Usertype is valid:', storedUserRole);
+
+  // Proceed with data initialization or other logic
+  console.log('Proceeding with data initialization.');
+},
   methods: {
     formatDate(dateString) {
       const options = { year: 'numeric', month: 'short', day: 'numeric' }

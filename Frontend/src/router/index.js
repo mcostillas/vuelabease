@@ -6,15 +6,11 @@ const routes = [
     name: 'LandingPage',
     component: () => import('@/views/LandingPage.vue'),
   },
+  
   {
     path: '/confirm',
     name: 'ConfirmEmail',
     component: () => import('@/views/ConfirmEmail.vue'),
-  },
-  {
-    path: '/login',
-    name: 'LoginPage',
-    redirect: '/', // Redirect to landing page since login is now integrated there
   },
   {
     path: '/signup',
@@ -41,7 +37,7 @@ const routes = [
     path: '/instructor/notifications',
     name: 'InstructorNotifications',
     component: () => import('@/views/instructor/InstructorNotifications.vue'),
-    meta: { requiresAuth: true, role: 'Instructor' },
+    meta: { requiresAuth: true, role: 'instructor' },
   },
   {
     path: '/instructor/schedule',
@@ -53,13 +49,13 @@ const routes = [
     path: '/instructor/history',
     name: 'InstructorHistory',
     component: () => import('@/views/instructor/InstructorHistory.vue'),
-    meta: { requiresAuth: true, role: 'Instructor' },
+    meta: { requiresAuth: true, role: 'instructor' },
   },
   {
     path: '/instructor/account',
     name: 'InstructorAccount',
     component: () => import('@/views/instructor/AccountPage.vue'),
-    meta: { requiresAuth: true, role: 'Instructor' },
+    meta: { requiresAuth: true, role: 'instructor' },
   },
   {
     path: '/admin/dashboard',
