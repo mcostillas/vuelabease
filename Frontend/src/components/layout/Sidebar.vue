@@ -65,28 +65,21 @@ export default {
   computed: {
    // Dynamically generate sidebar links based on userRole
    sidebarLinks() {
-      if (this.userRole === 'Admin') {
-        return [
-          { path: '/admin/dashboard', title: 'Dashboard', icon: 'dashboard' },
-          { path: '/admin/notifications', title: 'Notifications', icon: 'notifications' },
-          { path: '/admin/bookings', title: 'Bookings', icon: 'bookings' },
-          { path: '/admin/history', title: 'History', icon: 'history' },
-          { path: '/admin/schedule', title: 'Schedule', icon: 'schedule' },
-          { path: '/admin/users', title: 'User Management', icon: 'users' },
-          { path: '/admin/reports', title: 'Reports', icon: 'reports' },
-          { path: '/admin/logbook', title: 'Log Book', icon: 'logbook' },
-        ];
-      } else if (this.userRole === 'Instructor') {
-        return [
-          { path: '/instructor/dashboard', title: 'Dashboard', icon: 'dashboard' },
-          { path: '/instructor/notifications', title: 'Notifications', icon: 'notifications' },
-          { path: '/instructor/schedule', title: 'Schedule', icon: 'schedule' },
-          { path: '/instructor/history', title: 'History', icon: 'history' },
-          { path: '/instructor/account', title: 'Account', icon: 'account' },
-        ];
-      }
-      return [];
-    },
+  if (this.userRole === 'Admin') {
+    return [
+      { path: '/admin/dashboard', title: 'Dashboard', icon: 'dashboard' },
+      { path: '/admin/notifications', title: 'Notifications', icon: 'notifications' },
+      { path: '/admin/history', title: 'History', icon: 'history' },
+    ];
+  } else if (this.userRole === 'Instructor') {
+    return [
+      { path: '/instructor/dashboard', title: 'Dashboard', icon: 'dashboard' },
+      { path: '/instructor/notifications', title: 'Notifications', icon: 'notifications' },
+      { path: '/instructor/history', title: 'History', icon: 'history' },
+    ];
+  }
+  return [];
+}
   },
   methods: {
     toggleSidebar() {
