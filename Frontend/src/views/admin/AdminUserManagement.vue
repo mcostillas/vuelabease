@@ -1,47 +1,48 @@
 /* eslint-disable */
 <template>
   <DashboardLayout>
-    <AdminHeader pageTitle="User Management" />
+    <AdminHeader pageTitle="Instructors Account Management" />
     <div class="users-container">
       <div class="users-section">
-        <!-- Filters -->
-        <div class="filters">
-          <div class="filter-group">
-            <label for="status-filter">Status:</label>
-            <select id="status-filter" v-model="selectedStatus" @change="applyFilters">
-              <option value="">All Status</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
-          </div>
-          <div class="search-group">
-            <label for="search">Search:</label>
-            <div class="search-input-container">
-              <input 
-                type="text" 
-                id="search" 
-                v-model="searchQuery" 
-                placeholder="Search by name or email"
-                @input="applyFilters"
-              />
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M21 21L16.65 16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </div>
-          </div>
-          <button class="add-user-btn" @click="showAddUserModal = true">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 5V19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            Add User
-          </button>
-        </div>
-        
         <!-- Users Content -->
         <div class="users-content">
-          <div class="users-header">
+          <div class="content-wrapper">
+            <!-- Filters -->
+            <div class="filters">
+              <div class="filter-group">
+                <label for="status-filter">Status:</label>
+                <select id="status-filter" v-model="selectedStatus" @change="applyFilters">
+                  <option value="">All Status</option>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              </div>
+              <div class="search-group">
+                <label for="search">Search:</label>
+                <div class="search-input-container">
+                  <input 
+                    type="text" 
+                    id="search" 
+                    v-model="searchQuery" 
+                    placeholder="Search by name or email"
+                    @input="applyFilters"
+                  />
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M21 21L16.65 16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </div>
+              </div>
+              <button class="add-user-btn" @click="showAddUserModal = true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 5V19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Add User
+              </button>
+            </div>
+            
+            <div class="users-header">
             <div class="header-item">Name</div>
             <div class="header-item">Email</div>
             <div class="header-item">Role</div>
@@ -102,9 +103,9 @@
             </div>
           </div> <!-- Close users-cards-container -->
         </div>
-        
-        <!-- Pagination Controls -->
-        <div class="pagination" v-if="filteredUsers.length > 0">
+          
+          <!-- Pagination Controls -->
+          <div class="pagination" v-if="filteredUsers.length > 0">
           <button 
             class="pagination-button" 
             :disabled="currentPage === 1"
@@ -128,6 +129,7 @@
               <path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </button>
+          </div>
         </div>
       </div>
     </div>
@@ -531,7 +533,7 @@ const deleteUser = async () => {
 
 <style scoped>
 .users-container {
-  padding: 32px;
+  padding: 12px 20px;
   min-height: calc(100vh - 80px);
 }
 
@@ -564,12 +566,20 @@ const deleteUser = async () => {
   background-color: #16a34a;
 }
 
-.users-content {
+.users-section {
+  background-color: #f8fafc;
+  border-radius: 16px;
+  padding: 12px;
+  height: 100%;
+}
+
+.content-wrapper {
   background-color: white;
   border-radius: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   overflow: hidden;
-  margin-bottom: 24px;
+  padding: 32px;
+  width: 100%;
 }
 
 .users-cards-container {
@@ -662,7 +672,9 @@ const deleteUser = async () => {
 }
 
 .users-content {
-  margin-top: 24px;
+  margin-top: 8px;
+  margin-bottom: 24px;
+  max-width: 100%;
 }
 
 .users-header {

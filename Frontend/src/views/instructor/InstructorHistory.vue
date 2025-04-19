@@ -2,76 +2,76 @@
   <DashboardLayout>
     <InstructorHeader pageTitle="History of Bookings" />
     <div class="schedule-container">
-      <div class="filters">
-        <div class="filter-group">
-          <label for="program-filter">Program:</label>
-          <select id="program-filter" v-model="selectedProgram" @change="applyFilters">
-            <option value="">All Programs</option>
-            <option value="CABE">College of Accounting and Business Education</option>
-            <option value="CAH">College of Arts and Humanities</option>
-            <option value="CCS">College of Computer Studies</option>
-            <option value="CEA">College of Engineering and Architecture</option>
-            <option value="CHESFS">College of Human Environmental Science and Food Studies</option>
-            <option value="CMBS">College of Medical and Biological Sciences</option>
-            <option value="CM">College of Music</option>
-            <option value="CN">College of Nursing</option>
-            <option value="CPC">College of Pharmacy and Chemistry</option>
-            <option value="CTE">College of Teacher Education</option>
-          </select>
-        </div>
-        <div class="filter-group">
-          <label for="year-filter">Year Level:</label>
-          <select id="year-filter" v-model="selectedYear" @change="applyFilters">
-            <option value="">All Years</option>
-            <option value="1">1st Year</option>
-            <option value="2">2nd Year</option>
-            <option value="3">3rd Year</option>
-            <option value="4">4th Year</option>
-          </select>
-        </div>
-        <div class="filter-group">
-          <label for="section-filter">Section:</label>
-          <select id="section-filter" v-model="selectedSection" @change="applyFilters">
-            <option value="">All Sections</option>
-            <option v-for="section in availableSections" :key="section" :value="section">
-              {{ section }}
-            </option>
-          </select>
-        </div>
-        <div class="filter-group">
-          <label for="status-filter">Status:</label>
-          <select id="status-filter" v-model="statusFilter" @change="applyFilters">
-            <option value="">All Statuses</option>
-            <option value="approved">Approved</option>
-            <option value="pending">Pending</option>
-            <option value="rejected">Rejected</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
-        </div>
-        <div class="filter-group">
-          <label for="date-filter">Date Range:</label>
-          <select id="date-filter" v-model="dateFilter" @change="applyFilters">
-            <option value="all">All Time</option>
-            <option value="week">This Week</option>
-            <option value="month">This Month</option>
-            <option value="semester">This Semester</option>
-          </select>
-        </div>
-        <div class="filter-group" v-if="dateFilter === 'semester'">
-          <label for="semester-filter">Select Semester:</label>
-          <select id="semester-filter" v-model="selectedSemester" @change="applyFilters">
-            <option value="current">Current Semester</option>
-            <option value="2024-2">2nd Semester 2024-2025</option>
-            <option value="2024-1">1st Semester 2024-2025</option>
-            <option value="2023-2">2nd Semester 2023-2024</option>
-            <option value="2023-1">1st Semester 2023-2024</option>
-          </select>
-        </div>
-      </div>
-
       <!-- Schedule Content -->
       <div class="schedule-content">
-        <div class="schedule-header">
+        <div class="content-wrapper">
+          <div class="filters">
+            <div class="filter-group">
+              <label for="program-filter">Program:</label>
+              <select id="program-filter" v-model="selectedProgram" @change="applyFilters">
+                <option value="">All Programs</option>
+                <option value="CABE">College of Accounting and Business Education</option>
+                <option value="CAH">College of Arts and Humanities</option>
+                <option value="CCS">College of Computer Studies</option>
+                <option value="CEA">College of Engineering and Architecture</option>
+                <option value="CHESFS">College of Human Environmental Science and Food Studies</option>
+                <option value="CMBS">College of Medical and Biological Sciences</option>
+                <option value="CM">College of Music</option>
+                <option value="CN">College of Nursing</option>
+                <option value="CPC">College of Pharmacy and Chemistry</option>
+                <option value="CTE">College of Teacher Education</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="year-filter">Year Level:</label>
+              <select id="year-filter" v-model="selectedYear" @change="applyFilters">
+                <option value="">All Years</option>
+                <option value="1">1st Year</option>
+                <option value="2">2nd Year</option>
+                <option value="3">3rd Year</option>
+                <option value="4">4th Year</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="section-filter">Section:</label>
+              <select id="section-filter" v-model="selectedSection" @change="applyFilters">
+                <option value="">All Sections</option>
+                <option v-for="section in availableSections" :key="section" :value="section">
+                  {{ section }}
+                </option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="status-filter">Status:</label>
+              <select id="status-filter" v-model="statusFilter" @change="applyFilters">
+                <option value="">All Statuses</option>
+                <option value="approved">Approved</option>
+                <option value="pending">Pending</option>
+                <option value="rejected">Rejected</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="date-filter">Date Range:</label>
+              <select id="date-filter" v-model="dateFilter" @change="applyFilters">
+                <option value="all">All Time</option>
+                <option value="week">This Week</option>
+                <option value="month">This Month</option>
+                <option value="semester">This Semester</option>
+              </select>
+            </div>
+            <div class="filter-group" v-if="dateFilter === 'semester'">
+              <label for="semester-filter">Select Semester:</label>
+              <select id="semester-filter" v-model="selectedSemester" @change="applyFilters">
+                <option value="current">Current Semester</option>
+                <option value="2024-2">2nd Semester 2024-2025</option>
+                <option value="2024-1">1st Semester 2024-2025</option>
+                <option value="2023-2">2nd Semester 2023-2024</option>
+                <option value="2023-1">1st Semester 2023-2024</option>
+              </select>
+            </div>
+          </div>
+          <div class="schedule-header">
           <div class="header-item">Time Slot</div>
           <div class="header-item">Purpose</div>
           <div class="header-item">Section</div>
@@ -151,6 +151,7 @@
             />
           </svg>
         </button>
+        </div>
       </div>
     </div>
   </DashboardLayout>
@@ -282,7 +283,7 @@ export default {
 
 <style scoped>
 .schedule-container {
-  padding: 32px;
+  padding: 12px 20px;
   min-height: calc(100vh - 80px);
 }
 
@@ -292,6 +293,19 @@ export default {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   padding: 32px;
   height: 100%;
+}
+
+.schedule-content {
+  margin-bottom: 24px;
+}
+
+.content-wrapper {
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  padding: 32px;
+  width: 100%;
 }
 
 .filters {
@@ -331,7 +345,11 @@ export default {
 }
 
 .schedule-content {
-  margin-top: 24px;
+  margin-top: 8px;
+  background-color: #f8fafc;
+  border-radius: 16px;
+  padding: 12px;
+  max-width: 100%;
 }
 
 .schedule-header {

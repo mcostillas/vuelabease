@@ -1,6 +1,6 @@
 <template>
   <transition name="fade">
-    <div class="loading-overlay" :class="{ 'table-mode': tableMode }" v-if="isLoading">
+    <div class="loading-overlay" v-if="isLoading">
       <div class="text-animation-container">
         <div class="text-animation">
           <span>L</span>
@@ -23,10 +23,6 @@ export default {
     isLoading: {
       type: Boolean,
       default: false
-    },
-    tableMode: {
-      type: Boolean,
-      default: true
     }
   }
 }
@@ -39,22 +35,11 @@ export default {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(255, 255, 255, 0.9);
+  background-color: #FFFFFF;
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 9999;
-  backdrop-filter: blur(5px);
-}
-
-.loading-overlay.table-mode {
-  position: absolute;
-  min-height: 200px;
-  border-radius: 8px;
-  top: auto;
-  left: 0;
-  width: 100%;
-  height: calc(100% - 50px); /* Adjust based on your header height */
 }
 
 .text-animation-container {
