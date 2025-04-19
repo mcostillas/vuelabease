@@ -249,13 +249,22 @@ export default {
     },
     formatTime(start, end) {
       const formatHour = (timeStr) => {
+        if (!timeStr) return 'N/A';
         const [hour, minute] = timeStr.split(":");
         const hourNum = parseInt(hour, 10);
         const period = hourNum >= 12 ? "PM" : "AM";
         const hour12 = hourNum % 12 || 12;
         return `${hour12}:${minute} ${period}`;
       };
-      return `${formatHour(start)} - ${formatHour(end)}`;
+      
+      const startFormatted = formatHour(start);
+      const endFormatted = formatHour(end);
+      
+      if (startFormatted === 'N/A' || endFormatted === 'N/A') {
+        return 'Time not specified';
+      }
+      
+      return `${startFormatted} - ${endFormatted}`;
     },
   },
   created() {
@@ -511,3 +520,4 @@ export default {
   }
 }
 </style>
+``` 

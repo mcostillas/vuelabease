@@ -3,8 +3,12 @@ import { createRouter, createWebHistory } from 'vue-router';
 const routes = [
   {
     path: '/',
-    name: 'LandingPage',
-    component: () => import('@/views/LandingPage.vue'),
+    name: 'LoginPage',
+    component: () => import('@/views/LoginPage.vue'),
+  },
+  {
+    path: '/login',
+    redirect: '/',
   },
   
   {
@@ -21,6 +25,11 @@ const routes = [
     path: '/forgot-password',
     name: 'ForgotPasswordPage',
     component: () => import('@/views/ForgotPasswordPage.vue'),
+  },
+  {
+    path: '/reset-password',
+    name: 'ResetPasswordPage',
+    component: () => import('@/views/ResetPasswordPage.vue'),
   },
   {
     path: '/booking',

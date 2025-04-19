@@ -1,15 +1,17 @@
 <template>
   <div class="forgot-password-container">
     <div class="forgot-password-form-wrapper">
-      <router-link to="/login" class="back-button">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M19 12H5" stroke="#dd3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M12 19L5 12L12 5" stroke="#dd3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </router-link>
+      <div class="header-container">
+        <router-link to="/login" class="back-button">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19 12H5" stroke="#dd3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M12 19L5 12L12 5" stroke="#dd3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </router-link>
+        <h1 class="form-title">Forgot Password</h1>
+      </div>
       
       <div class="forgot-password-form">
-        <h1>Forgot Password</h1>
         <p class="subtitle">Enter your email to reset your password</p>
         
         <form @submit.prevent="handleSubmit">
@@ -50,64 +52,88 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'ForgotPasswordPage',
-  data() {
-    return {
-      email: '',
-      errorMessage: '',
-      successMessage: '',
-      isSubmitting: false
-    }
-  },
-  methods: {
-    handleSubmit() {
-      // Clear previous messages
-      this.errorMessage = ''
-      this.successMessage = ''
-      
-      // Basic validation
-      if (!this.email) {
-        this.errorMessage = 'Please enter your email address'
-        return
+<script setup>
+import { ref } from 'vue';
+import { supabase } from '@/lib/supabaseClient';
+
+// Reactive variables
+const email = ref('');
+const errorMessage = ref('');
+const successMessage = ref('');
+const isSubmitting = ref(false);
+
+// Handle form submission
+async function handleSubmit() {
+  // Clear previous messages
+  errorMessage.value = '';
+  successMessage.value = '';
+  
+  // Basic validation
+  if (!email.value) {
+    errorMessage.value = 'Please enter your email address';
+    return;
+  }
+  
+  // Email format validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email.value)) {
+    errorMessage.value = 'Please enter a valid email address';
+    return;
+  }
+  
+  // Show loading state
+  isSubmitting.value = true;
+  
+  try {
+    // Check if the email exists in the database
+    const { data: userData, error: userError } = await supabase
+      .from('user')
+      .select('userid, fullname')
+      .eq('email', email.value)
+      .single();
+    
+    if (userError) {
+      if (userError.code === 'PGRST116') {
+        // No user found with this email
+        throw new Error('No account found with this email address.');
       }
-      
-      // Email format validation
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-      if (!emailRegex.test(this.email)) {
-        this.errorMessage = 'Please enter a valid email address'
-        return
-      }
-      
-      // Show loading state
-      this.isSubmitting = true
-      
-      // Simulate API call with timeout
-      setTimeout(() => {
-        // In a real application, this would send a request to the server
-        // For now, we'll simulate a successful response
-        
-        // Create a notification for admin (in a real app, this would be server-side)
-        const notification = {
-          id: Date.now(),
-          type: 'password_reset',
-          email: this.email,
-          timestamp: new Date().toISOString(),
-          status: 'pending'
-        }
-        
-        // Store the notification in localStorage (simulating database)
-        const notifications = JSON.parse(localStorage.getItem('admin_notifications') || '[]')
-        notifications.push(notification)
-        localStorage.setItem('admin_notifications', JSON.stringify(notifications))
-        
-        // Reset form and show success message
-        this.isSubmitting = false
-        this.successMessage = 'Password reset request submitted. An administrator will contact you shortly.'
-        this.email = ''
-      }, 1500) // Simulate network delay
+      throw userError;
     }
+    
+    // Create a notification for admin
+    const notification = {
+      type: 'password_reset',
+      userid: userData.userid,
+      fullname: userData.fullname,
+      email: email.value,
+      timestamp: new Date().toISOString(),
+      status: 'pending',
+      message: `User ${userData.fullname} has requested a password reset.`
+    };
+    
+    // Store the notification in localStorage for admin to see
+    try {
+      // Get existing notifications or initialize empty array
+      const existingNotifications = JSON.parse(localStorage.getItem('admin_notifications') || '[]');
+      
+      // Add the new notification
+      existingNotifications.push(notification);
+      
+      // Save back to localStorage
+      localStorage.setItem('admin_notifications', JSON.stringify(existingNotifications));
+    } catch (storageError) {
+      console.error('Error storing notification in localStorage:', storageError);
+      // Continue anyway, as this is not critical
+    }
+    
+    // Reset form and show success message
+    successMessage.value = 'Your password reset request has been submitted. An administrator will contact you shortly.';
+    email.value = '';
+  } catch (error) {
+    console.error('Error submitting password reset request:', error.message);
+    errorMessage.value = error.message || 'An error occurred. Please try again later.';
+  } finally {
+    isSubmitting.value = false;
   }
 }
 </script>
@@ -142,32 +168,39 @@ body {
   padding: 2rem;
 }
 
+/* Header Container */
+.header-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
 /* Back Button */
 .back-button {
   position: relative;
-  display: block;
-  margin-bottom: 1rem;
+  display: flex;
   cursor: pointer;
   transition: transform 0.3s ease;
   width: fit-content;
+  margin-right: 1rem;
 }
 
 .back-button:hover {
   transform: translateX(-5px);
 }
 
+/* Form Title */
+.form-title {
+  color: #dd3859;
+  font-size: 2rem;
+  font-weight: 600;
+  margin: 0;
+}
+
 /* Form */
 .forgot-password-form {
   margin-top: 0;
   width: 100%;
-}
-
-.forgot-password-form h1 {
-  color: #dd3859;
-  font-size: 2.5rem;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-  text-align: center;
 }
 
 .subtitle {

@@ -195,6 +195,14 @@
         
         <div class="modal-notification-actions">
           <button 
+            v-if="selectedNotification && selectedNotification.type === 'password_reset'" 
+            class="modal-action-button primary"
+            @click="handlePasswordReset()"
+          >
+            Reset Password
+          </button>
+          
+          <button 
             v-if="selectedNotification && selectedNotification.type === 'booking'" 
             class="modal-action-button primary"
             @click="handleAction('confirm')"
@@ -225,15 +233,20 @@
 
 <script>
 import DashboardLayout from '@/components/layout/DashboardLayout.vue'
-import AdminHeader from '@/components/admin/AdminHeader.vue'
 import Modal from '@/components/ui/Modal.vue'
+import AdminHeader from '@/components/admin/AdminHeader.vue'
+import { useRouter } from 'vue-router'
 
 export default {
   name: 'AdminNotifications',
   components: {
     DashboardLayout,
-    AdminHeader,
-    Modal
+    Modal,
+    AdminHeader
+  },
+  setup() {
+    const router = useRouter();
+    return { router };
   },
   data() {
     return {
@@ -365,6 +378,24 @@ export default {
       }
       
       this.closeModal();
+    },
+    
+    handlePasswordReset() {
+      if (!this.selectedNotification || this.selectedNotification.type !== 'password_reset') return;
+      
+      // Mark notification as handled
+      this.notifications[this.selectedNotificationIndex].status = 'processing';
+      
+      // Store the user ID to highlight in the User Management page
+      if (this.selectedNotification.userid) {
+        localStorage.setItem('highlight_user_id', this.selectedNotification.userid);
+      }
+      
+      // Close the modal
+      this.closeModal();
+      
+      // Navigate to the User Management page
+      this.$router.push('/admin/users');
     },
     setFilter(filter) {
       this.activeFilter = filter;

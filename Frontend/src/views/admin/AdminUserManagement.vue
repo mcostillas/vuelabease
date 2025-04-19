@@ -134,6 +134,7 @@
       :show="showAddUserModal || showEditUserModal" 
       :title="showEditUserModal ? 'Edit User' : 'Add New User'" 
       @close="closeUserModal"
+      :showFooter="false"
     >
       <form @submit.prevent="showEditUserModal ? updateUser() : addUser()" class="user-form">
         <div class="form-group">
@@ -181,7 +182,6 @@
           </select>
         </div>
         <div class="form-actions">
-          <button type="button" class="cancel-btn" @click="closeUserModal">Cancel</button>
           <button type="submit" class="submit-btn">{{ showEditUserModal ? 'Update' : 'Add' }} User</button>
         </div>
       </form>
@@ -192,14 +192,33 @@
       :show="showDeleteModal" 
       title="Confirm Delete" 
       @close="showDeleteModal = false"
+      :showFooter="false"
     >
       <div class="confirm-delete">
-        <p>Are you sure you want to delete the user <strong>{{ userToDelete?.name }}</strong>?</p>
+        <p>Are you sure you want to delete the user <strong>{{ userToDelete?.fullname }}</strong>?</p>
         <p class="warning">This action cannot be undone.</p>
         <div class="form-actions">
           <button type="button" class="cancel-btn" @click="showDeleteModal = false">Cancel</button>
           <button type="button" class="delete-btn" @click="deleteUser">Delete</button>
         </div>
+      </div>
+    </Modal>
+    
+    <!-- Update Success Modal -->
+    <Modal 
+      :show="showUpdateSuccessModal" 
+      title="Update Successful" 
+      @close="showUpdateSuccessModal = false"
+      :showFooter="false"
+      :close-on-overlay-click="false"
+    >
+      <div class="success-message">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="success-icon">
+          <path d="M22 11.08V12C21.9988 14.1564 21.3005 16.2547 20.0093 17.9818C18.7182 19.709 16.9033 20.9725 14.8354 21.5839C12.7674 22.1953 10.5573 22.1219 8.53447 21.3746C6.51168 20.6273 4.78465 19.2461 3.61096 17.4371C2.43727 15.628 1.87979 13.4881 2.02168 11.3363C2.16356 9.18455 2.99721 7.13631 4.39828 5.49706C5.79935 3.85781 7.69279 2.71537 9.79619 2.24013C11.8996 1.7649 14.1003 1.98232 16.07 2.85999" stroke="#DD3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path class="checkmark" d="M22 4L12 14.01L9 11.01" stroke="#DD3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <p>User information has been successfully updated.</p>
+        <p>Thank you for using LabEase.</p>
       </div>
     </Modal>
   </DashboardLayout>
@@ -242,6 +261,7 @@ export default {
     const showAddUserModal = ref(false);
     const showEditUserModal = ref(false);
     const showDeleteModal = ref(false);
+    const showUpdateSuccessModal = ref(false);
     const userToDelete = ref(null);
     const selectedRole = ref("");
     const selectedStatus = ref("");
@@ -357,22 +377,64 @@ const updateUser = async () => {
     // Capitalize the first letter of usertype
     updatedUser.usertype = updatedUser.usertype.charAt(0).toUpperCase() + updatedUser.usertype.slice(1).toLowerCase();
 
-    if (!updatedUser.password) {
-      delete updatedUser.password; // Don't update the password if it's blank
+    // Check if password is being updated
+    const isPasswordUpdate = !!updatedUser.password;
+    
+    // If password is not being updated, remove it from the update object
+    if (!isPasswordUpdate) {
+      delete updatedUser.password;
     }
 
+    // Update user in the custom user table
     const { error } = await supabase
       .from("user")
       .update({
         fullname: updatedUser.fullname,
         email: updatedUser.email,
-        password: updatedUser.password,
+        password: updatedUser.password, // This will be undefined if not updating
         department: updatedUser.department,
         usertype: updatedUser.usertype, // Ensure this is capitalized
         status: updatedUser.status,
       })
       .eq("userid", updatedUser.userid); // Use 'userid' as the primary key
+    
     if (error) throw error;
+
+    // If password is being updated, we need to handle it differently
+    // since we can't directly update auth passwords from client-side
+    if (isPasswordUpdate) {
+      // Create a notification for the admin to know that the auth password needs to be reset
+      const passwordUpdateNotification = {
+        type: 'password_update',
+        userid: updatedUser.userid,
+        fullname: updatedUser.fullname,
+        email: updatedUser.email,
+        timestamp: new Date().toISOString(),
+        status: 'pending',
+        message: `Password for user ${updatedUser.fullname} has been updated in the user table. The user will need to use the 'Forgot Password' feature to reset their Supabase auth password.`
+      };
+      
+      // Get existing notifications
+      let notifications = [];
+      try {
+        const storedNotifications = localStorage.getItem('notifications');
+        if (storedNotifications) {
+          notifications = JSON.parse(storedNotifications);
+        }
+      } catch (e) {
+        console.error('Error parsing notifications from localStorage:', e);
+      }
+      
+      // Add the new notification
+      notifications.push(passwordUpdateNotification);
+      
+      // Save back to localStorage
+      try {
+        localStorage.setItem('notifications', JSON.stringify(notifications));
+      } catch (e) {
+        console.error('Error saving notifications to localStorage:', e);
+      }
+    }
 
     // Update the local users array
     const index = users.value.findIndex((user) => user.userid === updatedUser.userid);
@@ -380,6 +442,9 @@ const updateUser = async () => {
       users.value.splice(index, 1, updatedUser); // Use updatedUser directly
     }
     closeUserModal();
+    
+    // Show success modal after update
+    showUpdateSuccessModal.value = true;
   } catch (error) {
     console.error("Error updating user:", error.message);
   }
@@ -439,6 +504,7 @@ const deleteUser = async () => {
       showAddUserModal,
       showEditUserModal,
       showDeleteModal,
+      showUpdateSuccessModal,
       userToDelete,
       selectedRole,
       selectedStatus,
@@ -466,6 +532,35 @@ const deleteUser = async () => {
 .users-container {
   padding: 32px;
   min-height: calc(100vh - 80px);
+}
+
+.success-icon {
+  display: flex;
+  justify-content: center;
+  margin: 1rem 0;
+}
+
+.success-message {
+  text-align: center;
+}
+
+.form-actions.center {
+  justify-content: center;
+}
+
+.ok-btn {
+  background-color: #22c55e;
+  color: white;
+  border: none;
+  padding: 0.8rem 2rem;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.ok-btn:hover {
+  background-color: #16a34a;
 }
 
 .users-section {
@@ -851,6 +946,75 @@ const deleteUser = async () => {
   }
 }
 
+/* Success Modal Styles */
+.success-message {
+  text-align: center;
+  padding: 1rem;
+}
+
+.success-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 1rem auto;
+  display: block;
+  animation: scaleIn 0.5s ease-in-out;
+}
+
+.checkmark {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: dash 1s ease-in-out forwards;
+  animation-delay: 0.5s;
+}
+
+@keyframes dash {
+  from {
+    stroke-dashoffset: 100;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes scaleIn {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.success-message p {
+  margin: 0.5rem 0;
+  font-size: 1.1rem;
+  color: #333;
+  animation: fadeIn 0.5s ease-in-out forwards;
+  opacity: 0;
+}
+
+.success-message p:nth-child(2) {
+  animation-delay: 0.3s;
+}
+
+.success-message p:nth-child(3) {
+  animation-delay: 0.6s;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive Styles */
 @media (max-width: 768px) {
   .users-container {
     padding: 16px;
