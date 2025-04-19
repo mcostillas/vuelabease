@@ -69,7 +69,7 @@
         </form>
 
         <p class="signin-text">
-          Already have an account? <router-link to="/login" class="signin-link">Sign in</router-link>
+          Already have an account? <router-link to="/" class="signin-link">Sign in</router-link>
         </p>
       </div>
     </div>
