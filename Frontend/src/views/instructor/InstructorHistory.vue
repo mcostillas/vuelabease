@@ -1,7 +1,7 @@
 <template>
   <DashboardLayout>
     <InstructorHeader pageTitle="History of Bookings" />
-    <div class="history-container">
+    <div class="schedule-container">
       <div class="filters">
         <div class="filter-group">
           <label for="program-filter">Program:</label>
@@ -69,8 +69,8 @@
         </div>
       </div>
 
-      <!-- Schedule Cards Layout -->
-      <div class="schedule-section">
+      <!-- Schedule Content -->
+      <div class="schedule-content">
         <div class="schedule-header">
           <div class="header-item">Time Slot</div>
           <div class="header-item">Purpose</div>
@@ -91,7 +91,11 @@
               <div class="purpose">{{ booking.event_name }}</div>
               <div class="section">{{ booking.section || "N/A" }}</div>
               <div class="room">{{ booking.room_id }}</div>
-              <div class="status">{{ booking.status }}</div>
+              <div class="status">
+                <span class="status-badge" :class="booking.status">
+                  {{ capitalizeFirstLetter(booking.status) }}
+                </span>
+              </div>
             </div>
           </div>
 
@@ -266,6 +270,9 @@ export default {
       
       return `${startFormatted} - ${endFormatted}`;
     },
+    capitalizeFirstLetter(string) {
+      return string.charAt(0).toUpperCase() + string.slice(1);
+    },
   },
   created() {
     this.fetchBookings();
@@ -274,37 +281,47 @@ export default {
 </script>
 
 <style scoped>
-.history-container {
-  padding: 24px;
+.schedule-container {
+  padding: 32px;
+  min-height: calc(100vh - 80px);
+}
+
+.schedule-section {
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  padding: 32px;
+  height: 100%;
 }
 
 .filters {
   display: flex;
+  flex-wrap: wrap;
   gap: 16px;
   margin-bottom: 24px;
-  flex-wrap: wrap;
 }
 
 .filter-group {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
+  min-width: 180px;
 }
 
 .filter-group label {
-  font-size: 12px;
+  font-size: 14px;
+  font-weight: 500;
   color: #64748B;
-  font-family: 'Poppins', sans-serif;
 }
 
 .filter-group select {
-  padding: 10px 12px;
+  padding: 8px 12px;
   border: 1px solid #E2E8F0;
   border-radius: 8px;
   font-size: 14px;
   color: #1E293B;
   background-color: white;
-  min-width: 150px;
+  cursor: pointer;
   font-family: 'Poppins', sans-serif;
 }
 
@@ -313,148 +330,136 @@ export default {
   border-color: #DD3859;
 }
 
-/* Schedule Section Styling - Matching Original Design */
-.schedule-section {
-  border-radius: 16px;
-  padding: 24px;
-  margin-bottom: 24px;
+.schedule-content {
+  margin-top: 24px;
 }
 
 .schedule-header {
   display: grid;
   grid-template-columns: 1.5fr 2fr 1fr 1fr 1fr;
   gap: 16px;
-  padding: 12px 16px;
-  background-color: #FFF1F3;
-  border: 1px solid #99183A;
+  padding: 16px;
+  background-color: #DD3859;
   border-radius: 8px;
   margin-bottom: 16px;
+  font-weight: 600;
+  color: white;
 }
 
 .header-item {
-  color: #DD3859;
   font-size: 14px;
-  font-weight: 500;
-  font-family: 'Poppins', sans-serif;
 }
 
 .schedule-cards {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 12px;
 }
 
 .schedule-card {
-  border: 1px solid #dfdfdf;
+  border: 1px solid #E2E8F0;
   border-radius: 12px;
-  padding: 16px;
   transition: all 0.2s ease;
 }
 
 .schedule-card:hover {
-  transform: translateY(-2px);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  transform: translateY(-2px);
 }
 
 .schedule-item {
   display: grid;
   grid-template-columns: 1.5fr 2fr 1fr 1fr 1fr;
   gap: 16px;
+  padding: 16px;
   align-items: center;
 }
 
 .time-slot {
   color: #DD3859;
-  font-weight: 500;
+  font-weight: 600;
   font-size: 14px;
-  font-family: 'Poppins', sans-serif;
 }
 
 .purpose {
+  font-weight: 500;
   color: #1E293B;
-  font-weight: 600;
   font-size: 14px;
-  font-family: 'Poppins', sans-serif;
 }
 
 .section, .room {
   color: #64748B;
   font-size: 14px;
-  font-family: 'Poppins', sans-serif;
 }
 
 .status {
   font-weight: 500;
   font-size: 14px;
   text-transform: capitalize;
-  font-family: 'Poppins', sans-serif;
+  display: flex;
+  align-items: center;
 }
 
-/* Status Colors and Left Borders */
-.schedule-card.pending {
-  border-left: 4px solid #F59E0B;
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-block;
+  text-align: center;
 }
 
-.schedule-card.pending .status {
-  color: #F59E0B;
+.status-badge.pending {
+  background-color: #FFF1F3;
+  color: #DD3859;
 }
 
-.schedule-card.approved {
-  border-left: 4px solid #10B981;
+.status-badge.approved {
+  background-color: #e6f7e6;
+  color: #22c55e;
 }
 
-.schedule-card.approved .status {
-  color: #10B981;
+.status-badge.rejected {
+  background-color: #FFF1F3;
+  color: #DD3859;
 }
 
-.schedule-card.rejected {
-  border-left: 4px solid #EF4444;
-}
-
-.schedule-card.rejected .status {
-  color: #EF4444;
-}
-
-.schedule-card.cancelled {
-  border-left: 4px solid #64748B;
-}
-
-.schedule-card.cancelled .status {
-  color: #64748B;
+.status-badge.cancelled {
+  background-color: #f1f1f1;
+  color: #6b7280;
 }
 
 .empty-schedule {
+  padding: 48px 0;
   text-align: center;
-  padding: 32px 0;
   color: #64748B;
-  font-size: 16px;
-  font-family: 'Poppins', sans-serif;
 }
 
 .pagination {
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
   gap: 16px;
+  margin-top: 24px;
 }
 
 .pagination-button {
   width: 36px;
   height: 36px;
   border-radius: 8px;
-  background-color: white;
-  border: 1px solid #E2E8F0;
   display: flex;
   align-items: center;
   justify-content: center;
+  background-color: white;
+  border: 1px solid #E2E8F0;
   cursor: pointer;
-  color: #64748B;
   transition: all 0.2s ease;
 }
 
 .pagination-button:hover:not(:disabled) {
-  background-color: #F1F5F9;
-  color: #1E293B;
+  background-color: #F8FAFC;
+  border-color: #DD3859;
+  color: #DD3859;
 }
 
 .pagination-button:disabled {
@@ -465,10 +470,23 @@ export default {
 .page-info {
   font-size: 14px;
   color: #64748B;
-  font-family: 'Poppins', sans-serif;
+}
+
+@media (max-width: 1024px) {
+  .schedule-header, .schedule-item {
+    grid-template-columns: 1.5fr 2fr 1fr 1fr 1fr;
+  }
 }
 
 @media (max-width: 768px) {
+  .schedule-container {
+    padding: 16px;
+  }
+  
+  .schedule-section {
+    padding: 16px;
+  }
+  
   .filters {
     flex-direction: column;
   }
@@ -477,21 +495,13 @@ export default {
     width: 100%;
   }
   
-  .schedule-item {
-    grid-template-columns: 1fr;
-    gap: 8px;
-  }
-  
   .schedule-header {
     display: none;
   }
   
-  .schedule-card {
-    padding: 16px;
-  }
-  
-  .time-slot, .purpose, .section, .room, .status {
-    padding: 4px 0;
+  .schedule-item {
+    grid-template-columns: 1fr;
+    gap: 8px;
   }
   
   .time-slot::before {
@@ -520,4 +530,3 @@ export default {
   }
 }
 </style>
-``` 

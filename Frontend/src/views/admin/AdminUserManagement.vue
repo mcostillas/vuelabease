@@ -150,8 +150,6 @@
           <select id="role" v-model="userForm.usertype" required>
             <option value="admin">Admin</option>
             <option value="instructor">Instructor</option>
-            <option value="student">Student</option>
-            <option value="staff">Staff</option>
           </select>
         </div>
         <div class="form-group">
@@ -720,19 +718,22 @@ const deleteUser = async () => {
 }
 
 .status-badge {
-  padding: 4px 8px;
-  border-radius: 4px;
+  padding: 4px 10px;
+  border-radius: 20px;
   font-size: 12px;
-  font-weight: 500;
-  color: white;
+  font-weight: 600;
+  display: inline-block;
+  text-align: center;
 }
 
 .status-badge.active {
-  background-color: #10B981;
+  background-color: #e6f7e6;
+  color: #22c55e;
 }
 
 .status-badge.inactive {
-  background-color: #EF4444;
+  background-color: #FFF1F3;
+  color: #DD3859;
 }
 
 .actions {

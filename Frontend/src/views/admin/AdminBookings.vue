@@ -512,24 +512,28 @@ export default {
 }
 
 .status-badge {
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 500;
-  color: white;
-}
-
-.status-badge.pending {
-  background-color: #f59e0b;
-}
-
-.status-badge.approved {
-  background-color: #10b981;
-}
-
-.status-badge.rejected {
-  background-color: #ef4444;
-}
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-block;
+    text-align: center;
+  }
+  
+  .status-badge.pending {
+    background-color: #FFF1F3;
+    color: #DD3859;
+  }
+  
+  .status-badge.confirmed {
+    background-color: #e6f7e6;
+    color: #22c55e;
+  }
+  
+  .status-badge.cancelled {
+    background-color: #f1f1f1;
+    color: #6b7280;
+  }
 
 /* Actions Section */
 .actions {

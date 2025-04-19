@@ -490,11 +490,13 @@ export default {
 
 <style scoped>
 .schedule-container {
-  padding: 24px;
+  padding: 32px;
+  min-height: calc(100vh - 80px);
 }
 
 .filters {
   display: flex;
+  flex-wrap: wrap;
   gap: 16px;
   margin-bottom: 24px;
 }
@@ -503,12 +505,13 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  min-width: 180px;
 }
 
 .filter-group label {
   font-size: 14px;
   font-weight: 500;
-  color: #1E293B;
+  color: #64748B;
 }
 
 .filter-group select {
@@ -518,8 +521,8 @@ export default {
   background-color: white;
   font-size: 14px;
   color: #1E293B;
-  min-width: 200px;
-  outline: none;
+  cursor: pointer;
+  font-family: 'Poppins', sans-serif;
   transition: all 0.2s ease;
 }
 
@@ -528,52 +531,52 @@ export default {
   box-shadow: 0 0 0 2px rgba(221, 56, 89, 0.1);
 }
 
-/* Schedule Section Styling - Matching Dashboard */
 .schedule-section {
+  background-color: white;
   border-radius: 16px;
-  padding: 24px;
-  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  padding: 32px;
+  height: 100%;
 }
 
 .schedule-header {
   display: grid;
   grid-template-columns: 0.7fr 1.3fr 2fr 1fr 1fr;
   gap: 16px;
-  padding: 12px 16px;
-  background-color: #FFF1F3;
-  border: 1px solid #99183A;
+  padding: 16px;
+  background-color: #DD3859;
   border-radius: 8px;
   margin-bottom: 16px;
+  font-weight: 600;
+  color: white;
 }
 
 .header-item {
-  color: #DD3859;
   font-size: 14px;
-  font-weight: 500;
 }
 
 .schedule-cards {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 12px;
 }
 
 .schedule-card {
-  border: 1px solid #dfdfdf;
+  border: 1px solid #E2E8F0;
   border-radius: 12px;
-  padding: 16px;
   transition: all 0.2s ease;
 }
 
 .schedule-card:hover {
-  transform: translateY(-2px);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  transform: translateY(-2px);
 }
 
 .schedule-item {
   display: grid;
   grid-template-columns: 0.7fr 1.3fr 2fr 1fr 1fr;
   gap: 16px;
+  padding: 16px;
   align-items: center;
 }
 
@@ -596,18 +599,15 @@ export default {
 }
 
 .empty-schedule {
+  padding: 48px 0;
   text-align: center;
-  padding: 32px 0;
   color: #64748B;
-  font-size: 16px;
-  font-family: 'Poppins', sans-serif;
 }
 
-/* Pagination Styling */
 .pagination {
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
   gap: 16px;
   margin-top: 24px;
 }
@@ -627,8 +627,9 @@ export default {
 }
 
 .pagination-button:hover:not(:disabled) {
-  background-color: #F1F5F9;
-  color: #1E293B;
+  background-color: #F8FAFC;
+  border-color: #DD3859;
+  color: #DD3859;
 }
 
 .pagination-button:disabled {
@@ -639,11 +640,63 @@ export default {
 .page-info {
   font-size: 14px;
   color: #64748B;
-  font-family: 'Poppins', sans-serif;
 }
 
-/* Font styling to match LabEase design system */
-* {
-  font-family: 'Poppins', sans-serif;
+@media (max-width: 1024px) {
+  .schedule-header, .schedule-item {
+    grid-template-columns: 0.7fr 1.3fr 2fr 1fr 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .schedule-container {
+    padding: 16px;
+  }
+  
+  .schedule-section {
+    padding: 16px;
+  }
+  
+  .filters {
+    flex-direction: column;
+  }
+  
+  .filter-group {
+    width: 100%;
+  }
+  
+  .schedule-header {
+    display: none;
+  }
+  
+  .schedule-item {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  
+  .day::before {
+    content: "Day: ";
+    font-weight: normal;
+  }
+  
+  .time-slot::before {
+    content: "Time: ";
+    font-weight: normal;
+  }
+  
+  .purpose::before {
+    content: "Subject: ";
+    font-weight: normal;
+  }
+  
+  .section::before {
+    content: "Section: ";
+    font-weight: normal;
+  }
+  
+  .room::before {
+    content: "Room: ";
+    font-weight: normal;
+  }
 }
 </style>
