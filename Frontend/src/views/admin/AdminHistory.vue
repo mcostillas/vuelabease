@@ -108,6 +108,8 @@
           <div class="header-item">Room</div>
           <div class="header-item">Status</div>
         </div>
+        
+        <div class="schedule-cards-container">
 
         <div class="schedule-cards">
           <div
@@ -140,6 +142,7 @@
             <p>No booking history found.</p>
           </div>
         </div>
+        </div> <!-- Close schedule-cards-container -->
       </div>
 
       <div class="pagination">
@@ -194,6 +197,7 @@
 </template>
 
 <script>
+/* eslint-disable vue/no-unused-components */
 import DashboardLayout from "@/components/layout/DashboardLayout.vue";
 import AdminHeader from "@/components/admin/AdminHeader.vue";
 import { createClient } from "@supabase/supabase-js";
@@ -383,12 +387,16 @@ export default {
   min-height: calc(100vh - 80px);
 }
 
-.schedule-section {
+.schedule-content {
   background-color: white;
   border-radius: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  padding: 32px;
-  height: 100%;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.schedule-cards-container {
+  position: relative;
 }
 
 .filters {

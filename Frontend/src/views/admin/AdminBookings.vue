@@ -47,6 +47,8 @@
             <div class="header-item">Status</div>
             <div class="header-item">Actions</div>
           </div>
+          
+          <div class="bookings-cards-container">
 
           <div class="bookings-cards">
             <div
@@ -152,6 +154,7 @@
               <p>No bookings found.</p>
             </div>
           </div>
+          </div> <!-- Close bookings-cards-container -->
         </div>
 
         <!-- Pagination Controls -->
@@ -631,6 +634,21 @@ export default {
 .page-info {
   font-size: 14px;
   color: #64748b;
+}
+
+/* Loading Overlay */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  backdrop-filter: blur(5px);
 }
 
 /* Modal Styles */
