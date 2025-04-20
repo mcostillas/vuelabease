@@ -1622,6 +1622,7 @@ async fetchSchedulesForDay(dayOfWeek, timeSlot = null) {
     async handleBooking() {
       try {
         const bookingData = {
+
           department: this.department,
           club: this.club,
           person: this.person,
@@ -1636,6 +1637,7 @@ async fetchSchedulesForDay(dayOfWeek, timeSlot = null) {
           dateFilled: this.dateFilled,
           selectedRoom: this.selectedRoom,
           status: "pending",
+          notification_sent: false,
         };
 
         const { data, error } = await supabaseBookings

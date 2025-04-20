@@ -79,7 +79,7 @@
                 </svg>
               </div>
               <div class="metric-content">
-                <div class="metric-value">{{ dashboardStats.activeInstructors }}</div>
+                <div class="metric-value">{{ scheduleCount.filtered }}</div>
                 <div class="metric-label">Active Sessions</div>
                 <div class="metric-detail">
                   Today
@@ -142,7 +142,17 @@
             </div>
           </div>
         </div>
-  
+        <div class="day-selector">
+  <button 
+    v-for="day in ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']" 
+    :key="day" 
+    @click="selectedDay = day"
+    :class="{ active: selectedDay === day }"
+    class="day-button"
+  >
+    {{ day }}
+  </button>
+</div>
         <!-- Data Sections Container -->
         <div class="data-sections-container">
           <!-- Laboratory Sessions Today -->
@@ -158,16 +168,20 @@
               <div class="header-item">Lab. Room No.</div>
             </div>
             <div class="sessions-cards">
-              <div class="session-card" v-for="session in sessions" :key="session.instructor">
-                <div class="session-item">
-                  <div class="instructor">{{ session.instructor }}</div>
-                  <div class="time-slot">{{ session.timeSlot }}</div>
-                  <div class="purpose">{{ session.purpose }}</div>
-                  <div class="section">{{ session.section }}</div>
-                  <div class="room">{{ session.room }}</div>
-                </div>
-              </div>
-            </div>
+  <div class="session-card" v-for="schedule in filteredScheduleData" :key="schedule.id">
+    <div class="session-item">
+      <div class="instructor">{{ schedule.instructorName }}</div>
+      <div class="time-slot">{{ schedule.startTime }} - {{ schedule.endTime }}</div>
+      <div class="purpose">{{ schedule.courseName }}</div>
+      <div class="section">{{ schedule.section }}</div>
+      <div class="room">{{ schedule.labRoom }}</div>
+    </div>
+  </div>
+
+  <div v-if="scheduleData.length === 0" class="empty-sessions">
+    <p>No schedules available.</p>
+  </div>
+</div>
           </div>
   
           <!-- Bookings Section -->
@@ -183,29 +197,46 @@
               <div class="header-item">Status</div>
             </div>
             <div class="bookings-cards">
-              <div class="booking-card" v-for="booking in bookings" :key="booking.id">
-                <div class="booking-item">
-                  <div class="name">{{ booking.name }}</div>
-                  <div class="date">{{ booking.date }}</div>
-                  <div class="time">{{ booking.time }}</div>
-                  <div class="room">{{ booking.room }}</div>
-                  <div class="status">
-                    <span :class="['status-badge', booking.status.toLowerCase()]">
-                      {{ booking.status }}
-                    </span>
-                  </div>
-                </div>
-              </div>
+  <div class="booking-card" v-for="booking in bookings" :key="booking.id">
+    <div class="booking-item">
+      <div class="name">{{ booking.event }}</div>
+      <div class="date">{{ booking.requestDate }}</div>
+      <div class="time">{{ booking.startTime }} - {{ booking.endTime }}</div>
+      <div class="room">{{ booking.selectedRoom }}</div>
+      <div class="status">
+        <span :class="['status-badge', booking.status.toLowerCase()]">
+          {{ booking.status }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div v-if="bookings.length === 0" class="empty-bookings">
+    <p>No bookings available.</p>
+  </div>
+</div>
             </div>
           </div>
         </div>
-      </div>
+      
     </DashboardLayout>
   </template>
   
   <script>
+  /* eslint-disable */
   import DashboardLayout from '@/components/layout/DashboardLayout.vue'
   import AdminHeader from '@/components/admin/AdminHeader.vue'
+  import { createClient } from "@supabase/supabase-js";
+
+  const supabaseBookings = createClient(
+  'https://bfmvnahlknvyrajofmdw.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmbXZuYWhsa252eXJham9mbWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ5OTc4NjUsImV4cCI6MjA2MDU3Mzg2NX0.xkeqAML3bYf9iOV6iG_GJ35_RD7rPKH_OuXFz1SQBLk'
+);
+
+const supabaseSchedules = createClient(
+  'https://yfiyhsazgjsxjmybsyar.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlmaXloc2F6Z2pzeGpteWJzeWFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI4ODE5MzEsImV4cCI6MjA1ODQ1NzkzMX0.j7oFwaqYvJq45jhPuQBPEtNU-itU-CRleOJcqm1fOOo'
+);
 
   export default {
     name: 'AdminDashboard',
@@ -215,6 +246,7 @@
     },
     data() {
       return {
+        selectedDay: new Date().toLocaleDateString('en-US', { weekday: 'long' }), // Default to today's day
         rooms: [
           { id: '201', usage: 4 },
           { id: '202', usage: 3 },
@@ -233,78 +265,13 @@
           { name: 'Open Laboratory', status: 'Available', nextBooking: 'March 18, 2025' },
           { name: 'IOT Lab', status: 'In Use', instructor: 'Nannette Casquejo', time: '9:00 AM - 12:00 PM', purpose: 'IOT Development' }
         ],
-        sessions: [
-          {
-            instructor: 'Clyde Balaman',
-            timeSlot: '9:00 AM - 12:00 PM',
-            purpose: 'Web Applications Development',
-            section: 'CCS-2A',
-            room: 'L201'
-          },
-          {
-            instructor: 'Rogelio Badiang',
-            timeSlot: '1:00 PM - 4:00 PM',
-            purpose: 'Database Management Systems',
-            section: 'CCS-2B',
-            room: 'L202'
-          },
-          {
-            instructor: 'Shena Cloribel',
-            timeSlot: '4:00 PM - 7:00 PM',
-            purpose: 'Network Security',
-            section: 'CCS-3A',
-            room: 'L205'
-          },
-          {
-            instructor: 'Nannette Casquejo',
-            timeSlot: '9:00 AM - 12:00 PM',
-            purpose: 'IOT Development',
-            section: 'CCS-4A',
-            room: 'IOT Lab'
-          }
-        ],
-        bookings: [
-          {
-            id: 1,
-            name: 'Danny Khee',
-            date: 'April 17, 2025',
-            time: '9:00 AM - 12:00 PM',
-            room: 'Open Lab',
-            status: 'Pending'
-          },
-          {
-            id: 2,
-            name: 'Lawrence Pineda',
-            date: 'April 18, 2025',
-            time: '1:00 PM - 4:00 PM',
-            room: 'L202',
-            status: 'Confirmed'
-          },
-          {
-            id: 3,
-            name: 'Mary Santos',
-            date: 'April 19, 2025',
-            time: '4:00 PM - 7:00 PM',
-            room: 'L203',
-            status: 'Cancelled'
-          },
-          {
-            id: 4,
-            name: 'Jared Cruz',
-            date: 'April 20, 2025',
-            time: '9:00 AM - 12:00 PM',
-            room: 'IOT Lab',
-            status: 'Confirmed'
-          },
-          {
-            id: 5,
-            name: 'Emily Davis',
-            date: 'March 15, 2025',
-            time: '1:00 PM - 4:00 PM',
-            room: 'L204',
-            status: 'Pending'
-          }
-        ],
+        sessions: [],
+        scheduleCount: {
+      total: 0, // Total count of schedules
+      filtered: 0, // Count of schedules for the selected day
+    },
+    
+        scheduleData: [], // To store the fetched schedules
         dashboardStats: {
           totalBookings: 0,
           averageUsage: 0,
@@ -314,46 +281,122 @@
           activeInstructors: 4,
           totalInstructors: 6
         },
+        bookings: [],
         usageFilter: 'all',
         timePeriodFilter: 'week',
         currentDate: new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
       }
     },
     methods: {
-      calculateDashboardStats() {
-        // Calculate total bookings from sessions and bookings
-        const totalBookings = this.sessions.length + this.bookings.length;
-        
-        // Calculate total and average usage based on room data
-        let totalUsage = 0;
-        this.rooms.forEach(room => {
-          totalUsage += room.usage; // Usage is already a number
-        });
-        const averageUsage = Math.round(totalUsage / this.rooms.length);
-        
-        // Find most frequently used room
-        let roomUsage = {};
-        this.rooms.forEach(room => {
-          roomUsage[room.id] = room.usage; // Usage is already a number
-        });
-        
-        // Sort rooms by usage and get the highest
-        const mostUsedRoom = Object.keys(roomUsage).reduce((a, b) => roomUsage[a] > roomUsage[b] ? a : b);
-        
-        // Count active instructors (from current sessions)
-        const activeInstructors = new Set(this.sessions.map(session => session.instructor)).size;
-        
-        // Update dashboard stats
-        this.dashboardStats = {
-          totalBookings,
-          averageUsage,
-          totalUsage,
-          mostUsedRoom,
-          bookingTrend: 5, // Placeholder for booking trend percentage
-          activeInstructors,
-          totalInstructors: 6 // Placeholder for total instructors
-        };
-      },
+      async fetchBookings() {
+  try {
+    const { data, error } = await supabaseBookings
+      .from('bookings')
+      .select('*'); // Fetch all columns from the bookings table
+
+    if (error) throw error;
+
+    // Map the fetched data to the bookings array
+    this.bookings = data
+      .map(booking => ({
+        id: booking.id,
+        createdat: booking.created_at, // Ensure this matches the column name in your database
+        event: booking.event, // Ensure this matches the column name in your database
+        requestDate: booking.requestDate, // Ensure this matches the column name in your database
+        startTime: booking.startTime, // Ensure this matches the column name in your database
+        endTime: booking.endTime, // Ensure this matches the column name in your database
+        selectedRoom: booking.selectedRoom, // Ensure this matches the column name in your database
+        status: booking.status, // Ensure this matches the column name in your database
+      }))
+      .sort((a, b) => new Date(b.createdat) - new Date(a.createdat)); // Sort by createdat (latest to oldest)
+
+    console.log('Fetched and sorted bookings:', this.bookings);
+  } catch (error) {
+    console.error('Error fetching bookings:', error.message);
+  }
+},
+async fetchSchedules() {
+  try {
+    const { data, error } = await supabaseSchedules
+      .from('schedules')
+      .select('*'); // Fetch all columns from the schedules table
+
+    if (error) throw error;
+
+    // Map the fetched data to the scheduleData array
+    this.scheduleData = data.map(schedule => ({
+      id: schedule.id,
+      startTime: schedule.start_time,
+      endTime: schedule.end_time,
+      instructorName: schedule.instructor_name,
+      courseName: schedule.course_name,
+      section: schedule.section,
+      labRoom: schedule.lab_room,
+      day: schedule.day, // Ensure this matches the column name in your database
+    }));
+
+    // Update the total count of schedules
+    this.scheduleCount.total = this.scheduleData.length;
+
+    console.log('Fetched scheduleData:', this.scheduleData);
+    console.log('Total schedules:', this.scheduleCount.total);
+  } catch (error) {
+    console.error('Error fetching schedules:', error.message);
+  }
+},
+      async fetchTotalBookings() {
+    try {
+      // eslint-disable-next-line no-unused-vars
+      const { data, error, count } = await supabaseBookings
+        .from('bookings')
+        .select('*', { count: 'exact' }); // Fetch all rows and get the total count
+
+      if (error) throw error;
+
+      // Update the total bookings in dashboardStats
+      this.dashboardStats.totalBookings = count || 0;
+
+      console.log('Total bookings fetched:', count);
+    } catch (error) {
+      console.error('Error fetching total bookings:', error.message);
+    }
+  },
+  calculateDashboardStats() {
+  // Ensure sessions and bookings are defined
+  const totalBookings = (this.sessions?.length || 0) + (this.bookings?.length || 0);
+
+  // Calculate total and average usage based on room data
+  let totalUsage = 0;
+  this.rooms.forEach((room) => {
+    totalUsage += room.usage; // Usage is already a number
+  });
+  const averageUsage = Math.round(totalUsage / this.rooms.length);
+
+  // Find most frequently used room
+  let roomUsage = {};
+  this.rooms.forEach((room) => {
+    roomUsage[room.id] = room.usage; // Usage is already a number
+  });
+
+  // Sort rooms by usage and get the highest
+  const mostUsedRoom = Object.keys(roomUsage).reduce((a, b) =>
+    roomUsage[a] > roomUsage[b] ? a : b
+  );
+
+  // Count active instructors (from current sessions)
+  const activeInstructors = new Set(this.sessions.map((session) => session.instructor)).size;
+
+  // Update dashboard stats
+  this.dashboardStats = {
+    totalBookings,
+    averageUsage,
+    totalUsage,
+    mostUsedRoom,
+    bookingTrend: 5, // Placeholder for booking trend percentage
+    activeInstructors,
+    totalInstructors: 6, // Placeholder for total instructors
+  };
+},
       getMostUsedRoomUsage() {
         // Find the usage value for the most used room
         const room = this.rooms.find(room => room.id === this.dashboardStats.mostUsedRoom);
@@ -367,6 +410,14 @@
     },
     computed: {
       // Filter rooms based on usage level
+      filteredScheduleData() {
+    const filtered = this.scheduleData.filter(schedule => schedule.day === this.selectedDay);
+
+    // Update the filtered count
+    this.scheduleCount.filtered = filtered.length;
+
+    return filtered;
+  },
       filteredRooms() {
         switch(this.usageFilter) {
           case 'high':
@@ -381,7 +432,12 @@
       }
     },
     mounted() {
+      this.fetchSchedules(); // Fetch schedules on page load
       this.calculateDashboardStats();
+      this.fetchBookings(); // Fetch bookings on page load
+      this.fetchTotalBookings(); // Fetch total bookings from the database
+      
+  
     }
   }
   </script>
@@ -694,7 +750,30 @@
     padding-bottom: 8px;
     justify-content: space-between;
   }
-  
+  .day-selector {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.day-button {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: #f8f9fa;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.day-button.active {
+  background-color: #dd3859;
+  color: white;
+  border-color: #dd3859;
+}
+
+.day-button:hover {
+  background-color: #e9ecef;
+}
   .room-card {
     background-color: white;
     border: 1px solid #e0e0e0;
@@ -708,6 +787,7 @@
     flex-direction: column;
     align-items: flex-start;
   }
+
   
   .room-name {
     font-size: 16px;

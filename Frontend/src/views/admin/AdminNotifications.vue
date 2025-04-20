@@ -161,19 +161,19 @@
           <div v-if="selectedNotification && selectedNotification.type === 'booking'" class="modal-notification-details">
             <div class="detail-item">
               <div class="detail-label">Laboratory</div>
-              <div class="detail-value">L201</div>
+              <div class="detail-value">{{ selectedNotification.selectedRoom }}</div>
             </div>
             <div class="detail-item">
               <div class="detail-label">Date</div>
-              <div class="detail-value">March 15, 2025</div>
+              <div class="detail-value">{{ selectedNotification.requestDate }}</div>
             </div>
             <div class="detail-item">
               <div class="detail-label">Time</div>
-              <div class="detail-value">1:00 PM - 3:00 PM</div>
+              <div class="detail-value">{{ selectedNotification.startTime }} - {{ selectedNotification.endTime }}</div>
             </div>
             <div class="detail-item">
               <div class="detail-label">Requester</div>
-              <div class="detail-value">John Smith</div>
+              <div class="detail-value">{{ selectedNotification.requesterName || 'Unknown' }}</div>
             </div>
           </div>
           
@@ -236,6 +236,12 @@ import DashboardLayout from '@/components/layout/DashboardLayout.vue'
 import Modal from '@/components/ui/Modal.vue'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
 import { useRouter } from 'vue-router'
+import { createClient } from "@supabase/supabase-js";
+
+const supabaseBookings = createClient(
+  'https://bfmvnahlknvyrajofmdw.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmbXZuYWhsa252eXJham9mbWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ5OTc4NjUsImV4cCI6MjA2MDU3Mzg2NX0.xkeqAML3bYf9iOV6iG_GJ35_RD7rPKH_OuXFz1SQBLk'
+);
 
 export default {
   name: 'AdminNotifications',
@@ -254,53 +260,7 @@ export default {
       selectedNotification: null,
       selectedNotificationIndex: -1,
       activeFilter: 'all',
-      notifications: [
-        {
-          type: 'booking',
-          title: 'New Booking Request',
-          message: 'John Smith has requested to book L201 on March 15, 2025 from 1:00 PM to 3:00 PM.',
-          time: '2 hours ago',
-          read: false
-        },
-        {
-          type: 'alert',
-          title: 'Maintenance Alert',
-          message: 'L203 requires maintenance. The projector is not functioning properly.',
-          time: '1 day ago',
-          read: false
-        },
-        {
-          type: 'password_reset',
-          title: 'Password Reset Request',
-          message: 'A user has requested to reset their password. Please review and contact them to provide a new password.',
-          email: 'user@example.com',
-          requestTime: 'March 14, 2025 at 6:30 AM',
-          time: '30 minutes ago',
-          status: 'Pending',
-          read: false
-        },
-        {
-          type: 'booking',
-          title: 'New Booking Request',
-          message: 'Maria Garcia has requested to book L202 on March 16, 2025 from 9:00 AM to 12:00 PM.',
-          time: '1 day ago',
-          read: true
-        },
-        {
-          type: 'notification',
-          title: 'System Update',
-          message: 'LabEase system will undergo maintenance on March 20, 2025. The system will be unavailable from 10:00 PM to 2:00 AM.',
-          time: '3 days ago',
-          read: true
-        },
-        {
-          type: 'alert',
-          title: 'Low Inventory Alert',
-          message: 'Laboratory supplies in L204 are running low. Please restock soon.',
-          time: '4 days ago',
-          read: true
-        }
-      ]
+      notifications: [],
     }
   },
   computed: {
@@ -323,29 +283,90 @@ export default {
   },
   mounted() {
     // Check for password reset requests in localStorage
+    this.fetchNotifications(); // Fetch notifications on page load
     this.checkForPasswordResetRequests();
+    this.notificationInterval = setInterval(() => {
+    this.fetchNotifications();
+  }, 5000); // Check every 60 seconds
+  const savedNotifications = JSON.parse(localStorage.getItem('admin_notifications')) || [];
+  this.notifications = savedNotifications;
+},
+beforeUnmount() {
+  // Clear the interval when the component is destroyed
+  clearInterval(this.notificationInterval);
   },
   methods: {
-    openNotificationModal(notification, index) {
-      this.selectedNotification = { ...notification };
-      this.selectedNotificationIndex = index;
-      this.showModal = true;
-      
-      // Mark as read when opened
-      if (!this.notifications[index].read) {
-        this.notifications[index].read = true;
+    
+  async fetchNotifications() {
+    try {
+      const { data, error } = await supabaseBookings
+        .from('bookings')
+        .select('*')
+        .eq('notification_sent', false); // Fetch bookings where notification_sent is false
+
+      if (error) throw error;
+
+      // Map the fetched bookings to notifications
+      const newNotifications = data.map(booking => ({
+        type: 'booking',
+        title: 'New Booking Request',
+        message: `${booking.event} has requested to book ${booking.selectedRoom} on ${booking.requestDate} from ${booking.startTime} to ${booking.endTime}.`,
+        time: new Date(booking.created_at).toLocaleString('en-US', {
+          month: 'long',
+          day: 'numeric',
+          year: 'numeric',
+          hour: 'numeric',
+          minute: 'numeric',
+          hour12: true,
+        }),
+        read: false,
+        bookingId: booking.id, // Store the booking ID for reference
+      }));
+
+      // Add the new notifications to the existing notifications array
+      this.notifications = [...newNotifications, ...this.notifications];
+
+      // Save notifications to localStorage
+      localStorage.setItem('admin_notifications', JSON.stringify(this.notifications));
+
+      // Mark the bookings as "notification_sent" in the database
+      const bookingIds = data.map(booking => booking.id);
+      if (bookingIds.length > 0) {
+        await supabaseBookings
+          .from('bookings')
+          .update({ notification_sent: true })
+          .in('id', bookingIds);
       }
-      
-      // Add booking-modal class for booking notifications
-      if (notification.type === 'booking') {
-        setTimeout(() => {
-          const modalContainer = document.querySelector('.modal-container');
-          if (modalContainer) {
-            modalContainer.classList.add('booking-modal');
-          }
-        }, 0);
+
+      console.log('Fetched notifications:', newNotifications);
+    } catch (error) {
+      console.error('Error fetching notifications:', error.message);
+    }
+  },
+
+  openNotificationModal(notification, index) {
+  console.log('Opening notification modal:', notification); // Debug log
+
+  // Convert the notification to a plain object
+  this.selectedNotification = JSON.parse(JSON.stringify(notification));
+  this.selectedNotificationIndex = index;
+  this.showModal = true;
+
+  // Mark as read when opened
+  if (!this.notifications[index].read) {
+    this.notifications[index].read = true;
+  }
+
+  // Add booking-modal class for booking notifications
+  if (notification.type === 'booking') {
+    setTimeout(() => {
+      const modalContainer = document.querySelector('.modal-container');
+      if (modalContainer) {
+        modalContainer.classList.add('booking-modal');
       }
-    },
+    }, 0);
+  }
+},
     closeModal() {
       this.showModal = false;
       this.selectedNotification = null;

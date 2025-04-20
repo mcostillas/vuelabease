@@ -90,14 +90,14 @@
               :key="event.id" 
               class="schedule-card"
             >
-              <div class="schedule-item">
-                <div class="day">{{ getDayAbbreviation(event.date) }}</div>
-                <div class="time-slot">{{ formatEventTime(event.startTime, event.endTime) }}</div>
-                <div class="purpose">{{ event.title }}</div>
-                <div class="section">{{ event.section || 'N/A' }}</div>
-                <div class="room">{{ event.location }}</div>
-                <div class="instructor">{{ event.instructor }}</div>
-              </div>
+            <div class="schedule-item">
+      <div class="day">{{ event.day }}{{ event.secondDay ? ` / ${event.secondDay}` : '' }}</div>
+      <div class="time-slot">{{ formatEventTime(event.startTime, event.endTime) }}</div>
+      <div class="purpose">{{ event.courseName }}</div>
+      <div class="section">{{ event.section }}</div>
+      <div class="room">{{ event.labRoom }}</div>
+      <div class="instructor">{{ event.instructorName }}</div>
+    </div>
             </div>
             
             <div v-if="filteredEvents.length === 0" class="empty-schedule">
@@ -138,8 +138,14 @@
 </template>
 
 <script>
+import { createClient } from '@supabase/supabase-js';
 import DashboardLayout from '@/components/layout/DashboardLayout.vue'
 import AdminHeader from '@/components/admin/AdminHeader.vue'
+
+const supabaseSchedules = createClient(
+  'https://yfiyhsazgjsxjmybsyar.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlmaXloc2F6Z2pzeGpteWJzeWFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI4ODE5MzEsImV4cCI6MjA1ODQ1NzkzMX0.j7oFwaqYvJq45jhPuQBPEtNU-itU-CRleOJcqm1fOOo'
+);
 
 export default {
   name: 'AdminSchedule',
@@ -158,142 +164,10 @@ export default {
       selectedSemester: 'current',
       currentPage: 1,
       itemsPerPage: 10,
-      scheduleEvents: [
-        {
-          id: 1,
-          title: 'Introduction to Programming',
-          section: 'BSIT-1A',
-          location: 'L202',
-          date: '2025-03-15',
-          startTime: '07:30',
-          endTime: '10:30',
-          type: 'lecture',
-          instructor: 'Dr. Jane Smith'
-        },
-        {
-          id: 2,
-          title: 'Computer Organization',
-          section: 'BSIT-1B',
-          location: 'L203',
-          date: '2025-03-16',
-          startTime: '08:00',
-          endTime: '11:00',
-          type: 'lecture',
-          instructor: 'Prof. John Davis'
-        },
-        {
-          id: 3,
-          title: 'Data Structures and Algorithms',
-          section: 'BSIT-2A',
-          location: 'L204',
-          date: '2025-03-17',
-          startTime: '09:00',
-          endTime: '12:00',
-          type: 'lecture',
-          instructor: 'Dr. Maria Garcia'
-        },
-        {
-          id: 4,
-          title: 'Web Applications Development',
-          section: 'BSIT-2B',
-          location: 'L205',
-          date: '2025-03-18',
-          startTime: '10:30',
-          endTime: '12:00',
-          type: 'lab',
-          instructor: 'Prof. Robert Johnson'
-        },
-        {
-          id: 5,
-          title: 'Database Management Systems',
-          section: 'BSIT-2C',
-          location: 'L206',
-          date: '2025-03-19',
-          startTime: '13:00',
-          endTime: '16:00',
-          type: 'lab',
-          instructor: 'Dr. Emily Chen'
-        },
-        {
-          id: 6,
-          title: 'Operating Systems',
-          section: 'BSCS-3A',
-          location: 'L201',
-          date: '2025-03-20',
-          startTime: '07:30',
-          endTime: '10:30',
-          type: 'lecture',
-          instructor: 'Prof. Michael Wilson'
-        },
-        {
-          id: 7,
-          title: 'Software Engineering',
-          section: 'BSCS-3B',
-          location: 'L202',
-          date: '2025-03-21',
-          startTime: '10:30',
-          endTime: '13:30',
-          type: 'lecture',
-          instructor: 'Dr. Sarah Lee'
-        },
-        {
-          id: 8,
-          title: 'Computer Networks',
-          section: 'BSCS-4A',
-          location: 'L203',
-          date: '2025-03-22',
-          startTime: '13:00',
-          endTime: '16:00',
-          type: 'lab',
-          instructor: 'Prof. David Brown'
-        },
-        {
-          id: 9,
-          title: 'Artificial Intelligence',
-          section: 'BSCS-4B',
-          location: 'L204',
-          date: '2025-03-23',
-          startTime: '08:30',
-          endTime: '11:30',
-          type: 'lecture',
-          instructor: 'Dr. Thomas Martinez'
-        },
-        {
-          id: 10,
-          title: 'Mobile Application Development',
-          section: 'BSIT-3A',
-          location: 'L205',
-          date: '2025-03-24',
-          startTime: '14:00',
-          endTime: '17:00',
-          type: 'lab',
-          instructor: 'Prof. Lisa Anderson'
-        },
-        {
-          id: 11,
-          title: 'Information Security',
-          section: 'BSIT-4A',
-          location: 'L206',
-          date: '2025-03-25',
-          startTime: '09:30',
-          endTime: '12:30',
-          type: 'lecture',
-          instructor: 'Dr. Kevin Taylor'
-        },
-        {
-          id: 12,
-          title: 'Cloud Computing',
-          section: 'BSIT-4B',
-          location: 'L201',
-          date: '2025-03-26',
-          startTime: '13:30',
-          endTime: '16:30',
-          type: 'lab',
-          instructor: 'Prof. Amanda White'
-        }
-      ]
+      scheduleEvents: [], // Dynamically fetched data will be stored here
     }
   },
+  
   computed: {
     availableSections() {
       const sections = new Set()
@@ -409,42 +283,6 @@ export default {
               const eventDate = new Date(event.date)
               return eventDate >= semesterStart && eventDate <= semesterEnd
             })
-          } else if (this.selectedSemester === '2024-2') {
-            // 2nd Semester 2024-2025 (Jan-May 2025)
-            const semesterStart = new Date('2025-01-01')
-            const semesterEnd = new Date('2025-05-31')
-            
-            filtered = filtered.filter(event => {
-              const eventDate = new Date(event.date)
-              return eventDate >= semesterStart && eventDate <= semesterEnd
-            })
-          } else if (this.selectedSemester === '2024-1') {
-            // 1st Semester 2024-2025 (Aug-Dec 2024)
-            const semesterStart = new Date('2024-08-01')
-            const semesterEnd = new Date('2024-12-31')
-            
-            filtered = filtered.filter(event => {
-              const eventDate = new Date(event.date)
-              return eventDate >= semesterStart && eventDate <= semesterEnd
-            })
-          } else if (this.selectedSemester === '2023-2') {
-            // 2nd Semester 2023-2024 (Jan-May 2024)
-            const semesterStart = new Date('2024-01-01')
-            const semesterEnd = new Date('2024-05-31')
-            
-            filtered = filtered.filter(event => {
-              const eventDate = new Date(event.date)
-              return eventDate >= semesterStart && eventDate <= semesterEnd
-            })
-          } else if (this.selectedSemester === '2023-1') {
-            // 1st Semester 2023-2024 (Aug-Dec 2023)
-            const semesterStart = new Date('2023-08-01')
-            const semesterEnd = new Date('2023-12-31')
-            
-            filtered = filtered.filter(event => {
-              const eventDate = new Date(event.date)
-              return eventDate >= semesterStart && eventDate <= semesterEnd
-            })
           }
         }
       }
@@ -468,6 +306,40 @@ export default {
     }
   },
   methods: {
+    async fetchScheduleEvents() {
+    try {
+      const { data, error } = await supabaseSchedules
+        .from('schedules')
+        .select('*'); // Fetch all columns from the schedules table
+
+      if (error) throw error;
+
+      // Map the fetched data to the scheduleEvents array
+      this.scheduleEvents = data.map(event => ({
+        id: event.id,
+        status: event.status,
+        classType: event.class_type,
+        createdAt: event.created_at,
+        updatedAt: event.updated_at,
+        day: event.day,
+        secondDay: event.second_day,
+        labRoom: event.lab_room,
+        instructorName: event.instructor_name,
+        startTime: event.start_time,
+        endTime: event.end_time,
+        scheduleTypes: event.schedule_types,
+        createdBy: event.created_by,
+        semester: event.semester,
+        section: event.section,
+        courseCode: event.course_code,
+        courseName: event.course_name,
+      }));
+
+      console.log('Fetched schedule events:', this.scheduleEvents);
+    } catch (error) {
+      console.error('Error fetching schedule events:', error.message);
+    }
+  },
     getDayAbbreviation(dateString) {
       const date = new Date(dateString)
       const day = date.toLocaleDateString('en-US', { weekday: 'short' })
@@ -491,27 +363,8 @@ export default {
       console.log('View details for event:', event)
     }
   },
-  watch: {
-    selectedProgram() {
-      this.selectedSection = ''
-      this.applyFilters()
-    },
-    selectedYear() {
-      this.selectedSection = ''
-      this.applyFilters()
-    },
-    selectedDay() {
-      this.applyFilters()
-    },
-    selectedTimeOfDay() {
-      this.applyFilters()
-    },
-    dateFilter() {
-      this.applyFilters()
-    },
-    selectedSemester() {
-      this.applyFilters()
-    }
+  mounted() {
+    this.fetchScheduleEvents() // Fetch data when the component is mounted
   }
 }
 </script>

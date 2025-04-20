@@ -59,9 +59,9 @@
               <div class="booking-item">
                 <div class="booking-id">{{ index + 1 }}</div>
                 <div class="department">{{ booking.department }}</div>
-                <div class="event">{{ booking.event_name }}</div>
-                <div class="date">{{ formatDate(booking.request_date) }}</div>
-                <div class="person">{{ booking.person_responsible }}</div>
+                <div class="event">{{ booking.event }}</div>
+                <div class="date">{{ formatDate(booking.requestDate) }}</div>
+                <div class="person">{{ booking.person }}</div>
                 <div class="status">
                   <span class="status-badge" :class="booking.status">
                     {{ capitalizeFirstLetter(booking.status) }}

@@ -121,13 +121,13 @@
                 <div class="schedule-item">
                   <div class="time-slot">
                     {{ formatTime(
-                      booking.start_time || "00:00",
-                      booking.end_time || "00:00"
+                      booking.startTime || "00:00",
+                      booking.endTime || "00:00"
                     ) }}
                   </div>
-                  <div class="purpose">{{ booking.event_name }}</div>
+                  <div class="purpose">{{ booking.event }}</div>
                   <div class="section">{{ booking.section || "N/A" }}</div>
-                  <div class="room">{{ booking.room_id }}</div>
+                  <div class="room">{{ booking.selectedRoom }}</div>
                   <div class="status">
                     <span class="status-badge" :class="booking.status">
                       {{ capitalizeFirstLetter(booking.status) }}
