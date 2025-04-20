@@ -13,15 +13,14 @@
         </div>
         <div class="confirmation-content">
           <div class="icon-container">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M9 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H9" stroke="#DD3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M16 17L21 12L16 7" stroke="#DD3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M21 12H9" stroke="#DD3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" stroke="#DD3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </div>
-          <p>{{ message }}</p>
+          <p class="warning-message">{{ message }}</p>
+          <p class="warning-note">This action will log you out of your account.</p>
         </div>
-        <div class="confirmation-actions">
+        <div class="confirmation-actions center">
           <button class="cancel-button" @click="cancel">{{ cancelText }}</button>
           <button class="confirm-button" @click="confirm">{{ confirmText }}</button>
         </div>
@@ -135,15 +134,24 @@ export default {
 .icon-container {
   display: flex;
   justify-content: center;
-  margin-bottom: 8px;
+  margin: 1rem 0;
 }
 
 .confirmation-content p {
   margin: 0;
   font-size: 16px;
-  color: #555;
   line-height: 1.5;
   text-align: center;
+}
+
+.warning-message {
+  font-weight: 500;
+  color: #333;
+}
+
+.warning-note {
+  color: #666;
+  font-size: 14px;
 }
 
 .confirmation-actions {
@@ -154,13 +162,17 @@ export default {
   border-top: 1px solid #eee;
 }
 
+.confirmation-actions.center {
+  justify-content: center;
+}
+
 .cancel-button, .confirm-button {
-  padding: 8px 16px;
-  border-radius: 4px;
+  padding: 0.8rem 2rem;
+  border-radius: 8px;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
 }
 
 .cancel-button {

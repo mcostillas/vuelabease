@@ -1,4 +1,5 @@
 <template>
+  <LoadingAnimation :isLoading="loading" />
   <div class="login-container">
        <!-- Main Content -->
        <div class="main-content">
@@ -101,6 +102,7 @@ import { EnvelopeIcon, EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/outline';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { supabase } from '@/lib/supabaseClient';
+import LoadingAnimation from '@/components/common/LoadingAnimation.vue';
 
 // Reactive variables
 const email = ref('');
@@ -113,15 +115,30 @@ const errorMessage = ref(''); // Define errorMessage
 // Initialize router and store
 const router = useRouter();
 
-
 // Handle login
 const handleLogin = async () => {
-  // Clear previous error messages
-  console.log('Login button clicked'); // Debugging log
-  errorMessage.value = '';
-  loading.value = true;
-
   try {
+    // Clear any previous error messages
+    errorMessage.value = '';
+    
+    // Show loading animation
+    loading.value = true;
+    
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.value)) {
+      errorMessage.value = 'Please enter a valid email address';
+      loading.value = false;
+      return;
+    }
+    
+    // Validate password (minimum 6 characters)
+    if (password.value.length < 6) {
+      errorMessage.value = 'Password must be at least 6 characters';
+      loading.value = false;
+      return;
+    }
+
     // Authenticate the user with Supabase Auth
     const { data, error } = await supabase.auth.signInWithPassword({
       email: email.value,
@@ -196,9 +213,11 @@ const handleLogin = async () => {
       console.log('Invalid role:', userRoleData.usertype);
       errorMessage.value = 'Invalid role. Please contact support.';
     }
-  } catch (err) {
-    console.error('Unexpected login error:', err);
-    errorMessage.value = 'An unexpected error occurred. Please try again.';
+  } catch (error) {
+    console.error('Error during login:', error.message);
+    errorMessage.value = error.message || 'An error occurred during login';
+    // Hide loading animation on error
+    loading.value = false;
   } finally {
     loading.value = false;
   }

@@ -72,27 +72,48 @@
                     </span>
                   </div>
                   <div class="actions">
-                    <button class="action-btn edit-btn" @click="editUser(user)">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M18.5 2.5C18.8978 2.10217 19.4374 1.87868 20 1.87868C20.5626 1.87868 21.1022 2.10217 21.5 2.5C21.8978 2.89782 22.1213 3.43739 22.1213 4C22.1213 4.56261 21.8978 5.10217 21.5 5.5L12 15L8 16L9 12L18.5 2.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                      </svg>
-                    </button>
-                    <button class="action-btn toggle-btn" @click="toggleUserStatus(user)">
-                      <svg v-if="user.status === 'active'" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                      </svg>
-                      <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                      </svg>
-                    </button>
-                    <button class="action-btn delete-btn" @click="confirmDeleteUser(user)">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M3 6H5H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                      </svg>
-                    </button>
+                    <div class="action-menu">
+                      <button class="menu-trigger" @click="toggleActionMenu(user.userid)">
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <circle cx="12" cy="6" r="2" fill="currentColor" />
+                          <circle cx="12" cy="12" r="2" fill="currentColor" />
+                          <circle cx="12" cy="18" r="2" fill="currentColor" />
+                        </svg>
+                      </button>
+                      <div class="action-dropdown" v-if="activeActionMenu === user.userid">
+                        <button class="action-btn edit-btn" @click="editUser(user)">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M18.5 2.50001C18.8978 2.10219 19.4374 1.87869 20 1.87869C20.5626 1.87869 21.1022 2.10219 21.5 2.50001C21.8978 2.89784 22.1213 3.4374 22.1213 4.00001C22.1213 4.56262 21.8978 5.10219 21.5 5.50001L12 15L8 16L9 12L18.5 2.50001Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                          </svg>
+                          <span>Edit</span>
+                        </button>
+                        <button class="action-btn toggle-btn" @click="toggleUserStatus(user)">
+                          <svg v-if="user.status === 'active'" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                          </svg>
+                          <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                          </svg>
+                          <span v-if="user.status === 'active'">Deactivate</span>
+                          <span v-else>Activate</span>
+                        </button>
+                        <button class="action-btn delete-btn" @click="confirmDeleteUser(user)">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M3 6H5H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                          </svg>
+                          <span>Delete</span>
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -198,11 +219,18 @@
       :showFooter="false"
     >
       <div class="confirm-delete">
-        <p>Are you sure you want to delete the user <strong>{{ userToDelete?.fullname }}</strong>?</p>
-        <p class="warning">This action cannot be undone.</p>
-        <div class="form-actions">
+        <div class="warning-icon">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#DD3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M12 8V12" stroke="#DD3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M12 16H12.01" stroke="#DD3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <p class="delete-message">Are you sure you want to delete the user <strong>{{ userToDelete?.fullname }}</strong>?</p>
+        <p class="warning">This action cannot be undone and will permanently remove the user from the system.</p>
+        <div class="form-actions center">
           <button type="button" class="cancel-btn" @click="showDeleteModal = false">Cancel</button>
-          <button type="button" class="delete-btn" @click="deleteUser">Delete</button>
+          <button type="button" class="labease-btn" @click="deleteUser">Delete User</button>
         </div>
       </div>
     </Modal>
@@ -222,6 +250,27 @@
         </svg>
         <p>User information has been successfully updated.</p>
         <p>Thank you for using LabEase.</p>
+      </div>
+    </Modal>
+    
+    <!-- Delete Success Modal -->
+    <Modal 
+      :show="showDeleteSuccessModal" 
+      title="Delete Successful" 
+      @close="showDeleteSuccessModal = false"
+      :showFooter="false"
+      :close-on-overlay-click="false"
+    >
+      <div class="success-message">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="success-icon">
+          <path d="M22 11.08V12C21.9988 14.1564 21.3005 16.2547 20.0093 17.9818C18.7182 19.709 16.9033 20.9725 14.8354 21.5839C12.7674 22.1953 10.5573 22.1219 8.53447 21.3746C6.51168 20.6273 4.78465 19.2461 3.61096 17.4371C2.43727 15.628 1.87979 13.4881 2.02168 11.3363C2.16356 9.18455 2.99721 7.13631 4.39828 5.49706C5.79935 3.85781 7.69279 2.71537 9.79619 2.24013C11.8996 1.7649 14.1003 1.98232 16.07 2.85999" stroke="#DD3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path class="checkmark" d="M22 4L12 14.01L9 11.01" stroke="#DD3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <p>User has been successfully deleted.</p>
+        <p>Thank you for using LabEase.</p>
+        <div class="form-actions center" style="margin-top: 20px;">
+          <button type="button" class="labease-btn" @click="showDeleteSuccessModal = false">OK</button>
+        </div>
       </div>
     </Modal>
   </DashboardLayout>
@@ -247,24 +296,27 @@ export default {
     Modal,
     AdminHeader,
   },
+
   setup() {
     // Reactive variables
+    const activeActionMenu = ref(null); // Track which action menu is open
     const users = ref([]); // Reactive array for users
     const userForm = reactive({
-  userid: null, // Primary key
-  fullname: "",
-  email: "",
-  password: "",
-  department: "College of Accounting and Business Education",
-  usertype: "student",
-  status: "active",
-});
+      userid: null, // Primary key
+      fullname: "",
+      email: "",
+      password: "",
+      department: "College of Accounting and Business Education",
+      usertype: "student",
+      status: "active",
+    });
     const currentPage = ref(1);
     const itemsPerPage = ref(10);
     const showAddUserModal = ref(false);
     const showEditUserModal = ref(false);
     const showDeleteModal = ref(false);
     const showUpdateSuccessModal = ref(false);
+    const showDeleteSuccessModal = ref(false);
     const userToDelete = ref(null);
     const selectedRole = ref("");
     const selectedStatus = ref("");
@@ -309,14 +361,14 @@ export default {
 
     // Methods
     const fetchUsers = async () => {
-  try {
-    const { data, error } = await supabase.from("user").select("*");
-    if (error) throw error;
-    users.value = data; // Assign the fetched data to the reactive `users` variable
-  } catch (error) {
-    console.error("Error fetching users:", error.message);
-  }
-};
+      try {
+        const { data, error } = await supabase.from("user").select("*");
+        if (error) throw error;
+        users.value = data; // Assign the fetched data to the reactive `users` variable
+      } catch (error) {
+        console.error("Error fetching users:", error.message);
+      }
+    };
 
     const applyFilters = () => {
       currentPage.value = 1;
@@ -353,124 +405,127 @@ export default {
     };
 
     const addUser = async () => {
-  try {
-    const { data, error } = await supabase.from("user").insert([
-      {
-        fullname: userForm.fullname,
-        email: userForm.email,
-        password: userForm.password,
-        department: userForm.department,
-        usertype: userForm.usertype,
-        status: userForm.status,
-      },
-    ]);
-    if (error) throw error;
-
-    users.value.push(data[0]); // Add the new user to the local array
-    closeUserModal();
-  } catch (error) {
-    console.error("Error adding user:", error.message);
-  }
-};
-
-const updateUser = async () => {
-  try {
-    const updatedUser = { ...userForm };
-
-    // Capitalize the first letter of usertype
-    updatedUser.usertype = updatedUser.usertype.charAt(0).toUpperCase() + updatedUser.usertype.slice(1).toLowerCase();
-
-    // Check if password is being updated
-    const isPasswordUpdate = !!updatedUser.password;
-    
-    // If password is not being updated, remove it from the update object
-    if (!isPasswordUpdate) {
-      delete updatedUser.password;
-    }
-
-    // Update user in the custom user table
-    const { error } = await supabase
-      .from("user")
-      .update({
-        fullname: updatedUser.fullname,
-        email: updatedUser.email,
-        password: updatedUser.password, // This will be undefined if not updating
-        department: updatedUser.department,
-        usertype: updatedUser.usertype, // Ensure this is capitalized
-        status: updatedUser.status,
-      })
-      .eq("userid", updatedUser.userid); // Use 'userid' as the primary key
-    
-    if (error) throw error;
-
-    // If password is being updated, we need to handle it differently
-    // since we can't directly update auth passwords from client-side
-    if (isPasswordUpdate) {
-      // Create a notification for the admin to know that the auth password needs to be reset
-      const passwordUpdateNotification = {
-        type: 'password_update',
-        userid: updatedUser.userid,
-        fullname: updatedUser.fullname,
-        email: updatedUser.email,
-        timestamp: new Date().toISOString(),
-        status: 'pending',
-        message: `Password for user ${updatedUser.fullname} has been updated in the user table. The user will need to use the 'Forgot Password' feature to reset their Supabase auth password.`
-      };
-      
-      // Get existing notifications
-      let notifications = [];
       try {
-        const storedNotifications = localStorage.getItem('notifications');
-        if (storedNotifications) {
-          notifications = JSON.parse(storedNotifications);
+        const { data, error } = await supabase.from("user").insert([
+          {
+            fullname: userForm.fullname,
+            email: userForm.email,
+            password: userForm.password,
+            department: userForm.department,
+            usertype: userForm.usertype,
+            status: userForm.status,
+          },
+        ]);
+        if (error) throw error;
+
+        users.value.push(data[0]); // Add the new user to the local array
+        closeUserModal();
+      } catch (error) {
+        console.error("Error adding user:", error.message);
+      }
+    };
+
+    const updateUser = async () => {
+      try {
+        const updatedUser = { ...userForm };
+
+        // Capitalize the first letter of usertype
+        updatedUser.usertype = updatedUser.usertype.charAt(0).toUpperCase() + updatedUser.usertype.slice(1).toLowerCase();
+
+        // Check if password is being updated
+        const isPasswordUpdate = !!updatedUser.password;
+        
+        // If password is not being updated, remove it from the update object
+        if (!isPasswordUpdate) {
+          delete updatedUser.password;
         }
-      } catch (e) {
-        console.error('Error parsing notifications from localStorage:', e);
+
+        // Update user in the custom user table
+        const { error } = await supabase
+          .from("user")
+          .update({
+            fullname: updatedUser.fullname,
+            email: updatedUser.email,
+            password: updatedUser.password, // This will be undefined if not updating
+            department: updatedUser.department,
+            usertype: updatedUser.usertype, // Ensure this is capitalized
+            status: updatedUser.status,
+          })
+          .eq("userid", updatedUser.userid); // Use 'userid' as the primary key
+        
+        if (error) throw error;
+
+        // If password is being updated, we need to handle it differently
+        // since we can't directly update auth passwords from client-side
+        if (isPasswordUpdate) {
+          // Create a notification for the admin to know that the auth password needs to be reset
+          const passwordUpdateNotification = {
+            type: 'password_update',
+            userid: updatedUser.userid,
+            fullname: updatedUser.fullname,
+            email: updatedUser.email,
+            timestamp: new Date().toISOString(),
+            status: 'pending',
+            message: `Password for user ${updatedUser.fullname} has been updated in the user table. The user will need to use the 'Forgot Password' feature to reset their Supabase auth password.`
+          };
+          
+          // Get existing notifications
+          let notifications = [];
+          try {
+            const storedNotifications = localStorage.getItem('notifications');
+            if (storedNotifications) {
+              notifications = JSON.parse(storedNotifications);
+            }
+          } catch (e) {
+            console.error('Error parsing notifications from localStorage:', e);
+          }
+          
+          // Add the new notification
+          notifications.push(passwordUpdateNotification);
+          
+          // Save back to localStorage
+          try {
+            localStorage.setItem('notifications', JSON.stringify(notifications));
+          } catch (e) {
+            console.error('Error saving notifications to localStorage:', e);
+          }
+        }
+
+        // Update the local users array
+        const index = users.value.findIndex((user) => user.userid === updatedUser.userid);
+        if (index !== -1) {
+          users.value.splice(index, 1, updatedUser); // Use updatedUser directly
+        }
+        closeUserModal();
+        
+        // Show success modal after update
+        showUpdateSuccessModal.value = true;
+      } catch (error) {
+        console.error("Error updating user:", error.message);
       }
-      
-      // Add the new notification
-      notifications.push(passwordUpdateNotification);
-      
-      // Save back to localStorage
+    };
+
+    const deleteUser = async () => {
       try {
-        localStorage.setItem('notifications', JSON.stringify(notifications));
-      } catch (e) {
-        console.error('Error saving notifications to localStorage:', e);
+        if (userToDelete.value) {
+          const { error } = await supabase
+            .from("user")
+            .delete()
+            .eq("userid", userToDelete.value.userid); // Use 'userid' as the primary key
+          if (error) throw error;
+
+          // Remove the user from the local array
+          users.value = users.value.filter((user) => user.userid !== userToDelete.value.userid);
+          showDeleteModal.value = false;
+          
+          // Show success modal after deletion
+          showDeleteSuccessModal.value = true;
+          userToDelete.value = null;
+        }
+      } catch (error) {
+        console.error("Error deleting user:", error.message);
       }
-    }
-
-    // Update the local users array
-    const index = users.value.findIndex((user) => user.userid === updatedUser.userid);
-    if (index !== -1) {
-      users.value.splice(index, 1, updatedUser); // Use updatedUser directly
-    }
-    closeUserModal();
-    
-    // Show success modal after update
-    showUpdateSuccessModal.value = true;
-  } catch (error) {
-    console.error("Error updating user:", error.message);
-  }
-};
-
-const deleteUser = async () => {
-  try {
-    if (userToDelete.value) {
-      const { error } = await supabase
-        .from("user")
-        .delete()
-        .eq("userid", userToDelete.value.userid); // Use 'userid' as the primary key
-      if (error) throw error;
-
-      // Remove the user from the local array
-      users.value = users.value.filter((user) => user.userid !== userToDelete.value.userid);
-      showDeleteModal.value = false;
-      userToDelete.value = null;
-    }
-  } catch (error) {
-    console.error("Error deleting user:", error.message);
-  }
-};
+    };
 
     const confirmDeleteUser = (user) => {
       userToDelete.value = user;
@@ -478,24 +533,35 @@ const deleteUser = async () => {
     };
 
     const toggleUserStatus = async (user) => {
-  try {
-    const newStatus = user.status === "active" ? "inactive" : "active";
-    const { error } = await supabase
-      .from("user")
-      .update({ status: newStatus })
-      .eq("userid", user.userid); // Use 'userid' as the primary key
-    if (error) throw error;
+      try {
+        const newStatus = user.status === "active" ? "inactive" : "active";
+        const { error } = await supabase
+          .from("user")
+          .update({ status: newStatus })
+          .eq("userid", user.userid); // Use 'userid' as the primary key
+        if (error) throw error;
 
-    // Update the local users array
-    const index = users.value.findIndex((u) => u.userid === user.userid);
-    if (index !== -1) {
-      users.value[index].status = newStatus;
-    }
-  } catch (error) {
-    console.error("Error toggling user status:", error.message);
-  }
-};
+        // Update the local users array
+        const index = users.value.findIndex((u) => u.userid === user.userid);
+        if (index !== -1) {
+          users.value[index].status = newStatus;
+        }
+      } catch (error) {
+        console.error("Error toggling user status:", error.message);
+      }
+    };
 
+
+
+    // Toggle action menu function
+    const toggleActionMenu = (userId) => {
+      if (activeActionMenu.value === userId) {
+        activeActionMenu.value = null;
+      } else {
+        activeActionMenu.value = userId;
+      }
+    };
+    
     // Fetch users on component creation
     fetchUsers();
 
@@ -508,6 +574,7 @@ const deleteUser = async () => {
       showEditUserModal,
       showDeleteModal,
       showUpdateSuccessModal,
+      showDeleteSuccessModal,
       userToDelete,
       selectedRole,
       selectedStatus,
@@ -526,6 +593,8 @@ const deleteUser = async () => {
       deleteUser,
       confirmDeleteUser,
       toggleUserStatus,
+      toggleActionMenu,
+      activeActionMenu,
     };
   },
 };
@@ -705,9 +774,9 @@ const deleteUser = async () => {
   transition: all 0.2s ease;
 }
 
-.user-card:hover {
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  transform: translateY(-2px);
+.user-card {
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
 }
 
 .user-item {
@@ -756,11 +825,16 @@ const deleteUser = async () => {
 }
 
 .actions {
-  display: flex;
-  gap: 8px;
+  position: relative;
 }
 
-.action-btn {
+.action-menu {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.menu-trigger {
   width: 32px;
   height: 32px;
   border-radius: 8px;
@@ -771,6 +845,49 @@ const deleteUser = async () => {
   border: 1px solid #E2E8F0;
   cursor: pointer;
   transition: all 0.2s ease;
+  color: #64748B;
+}
+
+.menu-trigger:hover {
+  background-color: #F8FAFC;
+  color: #DD3859;
+  border-color: #DD3859;
+}
+
+.action-dropdown {
+  position: absolute;
+  top: -5px;
+  left: 36px; /* Width of button (32px) + small gap */
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+  z-index: 1000;
+  min-width: 120px;
+  overflow: hidden;
+}
+
+.action-btn {
+  width: 100%;
+  height: auto;
+  padding: 8px 12px;
+  border-radius: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid #E2E8F0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.action-btn:last-child {
+  border-bottom: none;
+}
+
+.action-btn span {
+  font-size: 14px;
 }
 
 .action-btn:hover {
@@ -779,28 +896,28 @@ const deleteUser = async () => {
 
 .edit-btn {
   color: #3B82F6;
-  border-color: #3B82F6;
-}
-
-.edit-btn:hover {
-  background-color: rgba(59, 130, 246, 0.1);
 }
 
 .toggle-btn {
   color: #10B981;
-  border-color: #10B981;
-}
-
-.toggle-btn:hover {
-  background-color: rgba(16, 185, 129, 0.1);
 }
 
 .delete-btn {
   color: #EF4444;
-  border-color: #EF4444;
+}
+
+.edit-btn:hover {
+  color: #3B82F6;
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+.toggle-btn:hover {
+  color: #10B981;
+  background-color: rgba(16, 185, 129, 0.1);
 }
 
 .delete-btn:hover {
+  color: #EF4444;
   background-color: rgba(239, 68, 68, 0.1);
 }
 
@@ -928,36 +1045,76 @@ const deleteUser = async () => {
 }
 
 .confirm-delete {
-  padding: 16px 0;
+  padding: 24px 16px;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.confirm-delete p {
+.warning-icon {
+  margin-bottom: 16px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.delete-message {
+  font-size: 16px;
   margin-bottom: 16px;
   color: #1E293B;
+  font-weight: 500;
 }
 
 .confirm-delete .warning {
-  color: #EF4444;
+  color: #DD3859;
   font-weight: 500;
   margin-bottom: 24px;
+  padding: 8px 16px;
+  background-color: rgba(221, 56, 89, 0.1);
+  border-radius: 8px;
+  border-left: 4px solid #DD3859;
 }
 
 .confirm-delete .form-actions {
   justify-content: center;
+  margin-top: 24px;
+  gap: 16px;
 }
 
-.confirm-delete .delete-btn {
-  background-color: #EF4444;
+.confirm-delete .cancel-btn {
+  padding: 0.8rem 2rem;
+  font-weight: 500;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.labease-btn {
+  background-color: #DD3859;
   color: white;
   border: none;
-  width: auto;
-  height: auto;
-  padding: 8px 16px;
+  padding: 0.8rem 2rem;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
-.confirm-delete .delete-btn:hover {
-  background-color: #DC2626;
+.labease-btn:hover {
+  background-color: #C8314F;
 }
 
 @media (max-width: 1024px) {
