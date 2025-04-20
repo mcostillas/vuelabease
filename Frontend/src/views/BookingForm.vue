@@ -91,58 +91,59 @@
                 </div>
               </div>
               <div class="form-group">
-  <label for="requestDate">Booking Request Date</label>
-  <div class="input-wrapper">
-    <input
-      type="date"
-      id="requestDate"
-      v-model="requestDate"
-      required
-      class="custom-date-input"
-      @change="
-        updateSelectedDay;
-        filterAvailableRooms;
-      "
-    />
-    <span class="input-icon date-icon">
-      <CalendarIcon class="icon-primary" />
-    </span>
-  </div>
-</div>
-
-<div class="form-group">
-  <label for="startTime">Event Start Time</label>
-  <div class="input-wrapper">
-    <input
-      type="time"
-      id="startTime"
-      v-model="startTime"
-      required
-      class="time-input"
-      @change="filterAvailableRooms"
-    />
-    <span class="input-icon time-icon">
-      <ClockIcon class="icon-primary" />
-    </span>
-  </div>
-</div>
-
-<div class="form-group">
-  <label for="endTime">Event End Time</label>
-  <div class="input-wrapper">
-    <input
-      type="time"
-      id="endTime"
-      v-model="endTime"
-      required
-      class="time-input"
-      @change="filterAvailableRooms"
-    />
-    <span class="input-icon time-icon">
-      <ClockIcon class="icon-primary" />
-    </span>
-  </div>
-</div>
+                <label for="requestDate">Booking Request Date</label>
+                <div class="input-wrapper">
+                  <input
+                    type="date"
+                    id="requestDate"
+                    v-model="requestDate"
+                    required
+                    class="custom-date-input"
+                    @change="
+                      updateSelectedDay;
+                      filterAvailableRooms;
+                    "
+                  />
+                  <span class="input-icon date-icon">
+                    <CalendarIcon class="icon-primary" />
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label for="startTime">Event Start Time</label>
+                <div class="input-wrapper">
+                  <input
+                    type="time"
+                    id="startTime"
+                    v-model="startTime"
+                    required
+                    class="time-input"
+                    @change="filterAvailableRooms"
+                  />
+                  <span class="input-icon time-icon">
+                    <ClockIcon class="icon-primary" />
+                  </span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="endTime">Event End Time</label>
+                <div class="input-wrapper">
+                  <input
+                    type="time"
+                    id="endTime"
+                    v-model="endTime"
+                    required
+                    class="time-input"
+                    @change="filterAvailableRooms"
+                  />
+                  <span class="input-icon time-icon">
+                    <ClockIcon class="icon-primary" />
+                  </span>
+                </div>
+              </div>
             </div>
           </section>
 
@@ -498,27 +499,29 @@
               >
                 <td class="time-cell">{{ timeSlot.time }}</td>
                 <td
-  v-for="day in filteredWeekDays"
-  :key="`${timeSlot.value}-${day}`"
-  class="day-cell"
-  :class="{
-    'has-class': getScheduleForTimeSlotAndDay(timeSlot, day).length > 0,
-    'lunch-time': timeSlot.isLunch
-  }"
->
-  <div
-    v-for="schedule in getScheduleForTimeSlotAndDay(timeSlot, day)"
-    :key="schedule.id"
-    class="class-info"
-  >
-    <div class="class-code">{{ schedule.course_code }}</div>
-    <div class="class-details">
-      <span class="class-section">{{ schedule.section }}</span>
-      <span class="class-room">{{ schedule.room }}</span>
-      
-    </div>
-  </div>
-</td>
+                  v-for="day in filteredWeekDays"
+                  :key="`${timeSlot.value}-${day}`"
+                  class="day-cell"
+                  :class="{
+                    'has-class': getScheduleForTimeSlotAndDay(timeSlot, day).length > 0,
+                    'lunch-time': timeSlot.isLunch
+                  }"
+                >
+                  <div
+                    v-for="schedule in getFilteredSchedules(timeSlot, day)"
+                    :key="schedule.id"
+                    class="class-info"
+                  >
+                    <div class="class-code">{{ schedule.course_code }}</div>
+                    <div class="class-details">
+                      <span class="class-section">{{ schedule.section }}</span>
+                      <span class="class-room">{{ schedule.room }}</span>
+                    </div>
+                  </div>
+                  <template v-if="getFilteredSchedules(timeSlot, day).length === 0">
+                    <span>No schedule</span>
+                  </template>
+                </td>
               </tr>
             </tbody>
           </table>
@@ -754,69 +757,141 @@ export default {
       // Time slots based on the actual schedule from the photos
       timeSlots: [
   {
-    time: "7:00 AM - 8:00 AM",
-    value: "07:00",
-    duration: 60,
+    time: "7:30 AM - 8:00 AM",
+    value: "07:30",
+    duration: 30,
     isLunch: false,
   },
   {
-    time: "8:00 AM - 9:00 AM",
+    time: "8:00 AM - 8:30 AM",
     value: "08:00",
-    duration: 60,
+    duration: 30,
     isLunch: false,
   },
   {
-    time: "9:00 AM - 10:00 AM",
+    time: "8:30 AM - 9:00 AM",
+    value: "08:30",
+    duration: 30,
+    isLunch: false,
+  },
+  {
+    time: "9:00 AM - 9:30 AM",
     value: "09:00",
-    duration: 60,
+    duration: 30,
     isLunch: false,
   },
   {
-    time: "10:00 AM - 11:00 AM",
+    time: "9:30 AM - 10:00 AM",
+    value: "09:30",
+    duration: 30,
+    isLunch: false,
+  },
+  {
+    time: "10:00 AM - 10:30 AM",
     value: "10:00",
-    duration: 60,
+    duration: 30,
     isLunch: false,
   },
   {
-    time: "11:00 AM - 12:00 PM",
+    time: "10:30 AM - 11:00 AM",
+    value: "10:30",
+    duration: 30,
+    isLunch: false,
+  },
+  {
+    time: "11:00 AM - 11:30 AM",
     value: "11:00",
-    duration: 60,
+    duration: 30,
     isLunch: false,
   },
   {
-    time: "1:00 PM - 2:00 PM",
+    time: "11:30 AM - 12:00 PM",
+    value: "11:30",
+    duration: 30,
+    isLunch: false,
+  },
+  {
+    time: "12:00 PM - 12:30 PM",
+    value: "12:00",
+    duration: 30,
+    isLunch: false,
+  },
+  {
+    time: "12:30 PM - 1:00 PM",
+    value: "12:30",
+    duration: 30,
+    isLunch: false,
+  },
+  {
+    time: "1:00 PM - 1:30 PM",
     value: "13:00",
-    duration: 60,
+    duration: 30,
     isLunch: false,
   },
   {
-    time: "2:00 PM - 3:00 PM",
+    time: "1:30 PM - 2:00 PM",
+    value: "13:30",
+    duration: 30,
+    isLunch: false,
+  },
+  {
+    time: "2:00 PM - 2:30 PM",
     value: "14:00",
-    duration: 60,
+    duration: 30,
     isLunch: false,
   },
   {
-    time: "3:00 PM - 4:00 PM",
+    time: "2:30 PM - 3:00 PM",
+    value: "14:30",
+    duration: 30,
+    isLunch: false,
+  },
+  {
+    time: "3:00 PM - 3:30 PM",
     value: "15:00",
-    duration: 60,
+    duration: 30,
     isLunch: false,
   },
   {
-    time: "4:00 PM - 5:00 PM",
+    time: "3:30 PM - 4:00 PM",
+    value: "15:30",
+    duration: 30,
+    isLunch: false,
+  },
+  {
+    time: "4:00 PM - 4:30 PM",
     value: "16:00",
-    duration: 60,
+    duration: 30,
     isLunch: false,
   },
   {
-    time: "5:00 PM - 6:00 PM",
+    time: "4:30 PM - 5:00 PM",
+    value: "16:30",
+    duration: 30,
+    isLunch: false,
+  },
+  {
+    time: "5:00 PM - 5:30 PM",
     value: "17:00",
-    duration: 60,
+    duration: 30,
     isLunch: false,
   },
   {
-    time: "6:00 PM - 7:00 PM",
+    time: "5:30 PM - 6:00 PM",
+    value: "17:30",
+    duration: 30,
+    isLunch: false,
+  },
+  {
+    time: "6:00 PM - 6:30 PM",
     value: "18:00",
-    duration: 60,
+    duration: 30,
+    isLunch: false,
+  },
+  {
+    time: "6:30 PM - 7:00 PM",
+    value: "18:30",
+    duration: 30,
     isLunch: false,
   },
 ],
@@ -950,6 +1025,25 @@ export default {
       };
 
       return roomColors[schedule.room] || "#E0E0E0"; // Default to gray if no match
+    },
+    getFilteredSchedules(timeSlot, day) {
+      // First get all schedules for this time slot and day
+      const allSchedules = this.getScheduleForTimeSlotAndDay(timeSlot, day);
+      
+      // If "all" sections is selected, return all schedules
+      if (this.weeklyScheduleFilter.section === 'all') {
+        return allSchedules;
+      }
+      
+      // Otherwise, filter schedules by the selected section
+      return allSchedules.filter(schedule => {
+        // Normalize both strings by removing any spaces or hyphens for comparison
+        const normalizedScheduleSection = schedule.section ? schedule.section.replace(/[-\s]/g, '').toLowerCase() : '';
+        const normalizedFilterSection = this.weeklyScheduleFilter.section.replace(/[-\s]/g, '').toLowerCase();
+        
+        // Check if the normalized schedule section includes the normalized filter section
+        return normalizedScheduleSection.includes(normalizedFilterSection);
+      });
     },
     convertTimeToMinutes(time) {
   if (typeof time !== "string") {
@@ -1219,47 +1313,83 @@ async filterAvailableRooms() {
     },
 
     getScheduleForTimeSlotAndDay(timeSlot, day) {
-  if (!Array.isArray(this.filteredSchedulesForDay)) {
-    console.error("filteredSchedulesForDay is not an array or is undefined");
-    return [];
-  }
+      if (!Array.isArray(this.filteredSchedulesForDay)) {
+        console.error("filteredSchedulesForDay is not an array or is undefined");
+        return [];
+      }
 
-  console.log("Checking schedules for timeSlot:", timeSlot, "and day:", day);
+      console.log("Checking schedules for timeSlot:", timeSlot, "and day:", day);
 
-  // Filter schedules for the given time slot
-  const filteredSchedules = this.filteredSchedulesForDay.filter((schedule) => {
-    console.log("Raw time values:", {
-      timeSlotValue: timeSlot.value,
-      scheduleStartTime: schedule.start_time,
-      scheduleEndTime: schedule.end_time,
-    });
+      // Filter schedules for the given time slot
+      const filteredSchedules = this.filteredSchedulesForDay.filter((schedule) => {
+        console.log("Raw time values:", {
+          timeSlotValue: timeSlot.value,
+          scheduleStartTime: schedule.start_time,
+          scheduleEndTime: schedule.end_time,
+        });
 
-    // Convert times to minutes for comparison
-    const scheduleStart = this.convertTimeToMinutes(schedule.start_time);
-    const scheduleEnd = this.convertTimeToMinutes(schedule.end_time);
-    const slotStart = this.convertTimeToMinutes(timeSlot.value);
+        // Convert times to minutes for comparison
+        const scheduleStart = this.convertTimeToMinutes(schedule.start_time);
+        const scheduleEnd = this.convertTimeToMinutes(schedule.end_time);
+        const slotStart = this.convertTimeToMinutes(timeSlot.value);
 
-    // Check if the time slot falls within the schedule's time range
-    const isTimeMatch = slotStart >= scheduleStart && slotStart < scheduleEnd;
+        // Check if the time slot falls within the schedule's time range
+        const isTimeMatch = slotStart >= scheduleStart && slotStart < scheduleEnd;
 
-    console.log("Time comparison:", {
-      slotStart,
-      scheduleStart,
-      scheduleEnd,
-      isTimeMatch,
-    });
+        console.log("Time comparison:", {
+          slotStart,
+          scheduleStart,
+          scheduleEnd,
+          isTimeMatch,
+        });
 
-    return isTimeMatch;
-  });
+        return isTimeMatch;
+      });
 
-  console.log("Filtered schedules for timeSlot and day:", {
-    timeSlot,
-    day,
-    filteredSchedules,
-  });
+      console.log("Filtered schedules for timeSlot and day:", {
+        timeSlot,
+        day,
+        filteredSchedules,
+      });
 
-  return filteredSchedules;
-},
+      return filteredSchedules;
+    },
+    async fetchSchedules() {
+      try {
+        const { data, error } = await supabaseSchedules
+          .from("schedules")
+          .select("*");
+        if (error) throw error;
+
+        console.log("Raw data from API:", data); // Log raw data from the API
+
+        // Ensure periods is always populated
+        this.scheduleData = data.map((block) => {
+          console.log("Before processing block:", block); // Log each block before processing
+          const processedBlock = {
+            ...block,
+            periods: [
+              {
+                day: block.day,
+                start_time: block.start_time,
+                end_time: block.end_time,
+                lab_room: block.lab_room,
+                section: block.section,
+                course_code: block.course_code,
+                course_name: block.course_name,
+              },
+            ],
+          };
+          return processedBlock;
+        });
+
+        console.log("Final scheduleData:", this.scheduleData);
+      } catch (error) {
+        console.error("Error fetching schedules:", error.message);
+        this.scheduleData = [];
+        this.errorMessage = "Failed to fetch schedules.";
+      }
+    },
     // Methods for handling merged cells
     isPartOfMergedCell(timeSlot, day) {
       // Check if this cell is part of a merged cell (spanning multiple time slots)
@@ -1272,7 +1402,7 @@ async filterAvailableRooms() {
       // Check if there's a class that spans multiple time slots
       for (let i = 0; i < timeIndex; i++) {
         const previousTimeSlot = timeSlots[i];
-        const previousSchedules = this.getScheduleForTimeAndDay(
+        const previousSchedules = this.getScheduleForTimeSlotAndDay(
           previousTimeSlot,
           day
         );
