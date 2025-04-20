@@ -2,10 +2,11 @@
   <DashboardLayout>
     <InstructorHeader pageTitle="Semester Schedule" />
     <div class="schedule-container">
-      <div class="filters">
-        <div class="filter-group">
-          <label for="program-filter">Program:</label>
-          <select id="program-filter" v-model="selectedProgram" @change="applyFilters">
+      <div class="schedule-section">
+        <div class="filters">
+            <div class="filter-group">
+              <label for="program-filter">Program:</label>
+              <select id="program-filter" v-model="selectedProgram" @change="applyFilters">
             <option value="">All Programs</option>
             <option value="CABE">College of Accounting and Business Education</option>
             <option value="CAH">College of Arts and Humanities</option>
@@ -78,9 +79,9 @@
             <option value="2023-1">1st Semester 2023-2024</option>
           </select>
         </div>
-      </div>
-      
-      <div class="schedule-section">
+        </div>
+        
+        <div class="schedule-content">
         <div class="schedule-header">
           <div class="header-item">Day</div>
           <div class="header-item">Time Slot</div>
@@ -108,6 +109,7 @@
             <p>No scheduled events.</p>
           </div>
         </div>
+        </div>
       </div>
       
       <!-- Pagination Controls -->
@@ -127,7 +129,7 @@
         </div>
         
         <button 
-          class="pagination-button" 
+          class="pagination-button"
           :disabled="currentPage === totalPages"
           @click="currentPage++"
         >
@@ -490,11 +492,23 @@ export default {
 
 <style scoped>
 .schedule-container {
-  padding: 24px;
+  padding: 32px;
+  min-height: calc(100vh - 80px);
+}
+
+
+
+.schedule-section {
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  padding: 32px;
+  height: 100%;
 }
 
 .filters {
   display: flex;
+  flex-wrap: wrap;
   gap: 16px;
   margin-bottom: 24px;
 }
@@ -503,83 +517,72 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  min-width: 180px;
 }
 
 .filter-group label {
   font-size: 14px;
   font-weight: 500;
-  color: #1E293B;
+  color: #64748B;
 }
 
 .filter-group select {
   padding: 8px 12px;
-  border-radius: 8px;
   border: 1px solid #E2E8F0;
-  background-color: white;
+  border-radius: 8px;
   font-size: 14px;
   color: #1E293B;
-  min-width: 200px;
-  outline: none;
-  transition: all 0.2s ease;
+  background-color: white;
+  cursor: pointer;
+  font-family: 'Poppins', sans-serif;
 }
 
 .filter-group select:focus {
+  outline: none;
   border-color: #DD3859;
-  box-shadow: 0 0 0 2px rgba(221, 56, 89, 0.1);
 }
 
-/* Schedule Section Styling - Matching Dashboard */
-.schedule-section {
-  border-radius: 16px;
-  padding: 24px;
-  margin-bottom: 24px;
-}
+
 
 .schedule-header {
   display: grid;
-  grid-template-columns: 0.7fr 1.3fr 2fr 1fr 1fr;
+  grid-template-columns: 0.5fr 1fr 2fr 1fr 1fr 1.5fr;
   gap: 16px;
-  padding: 12px 16px;
-  background-color: #FFF1F3;
-  border: 1px solid #99183A;
+  padding: 16px;
+  background-color:#DD3859;
   border-radius: 8px;
   margin-bottom: 16px;
+  font-weight: 600;
+  color: white;
 }
 
 .header-item {
-  color: #DD3859;
   font-size: 14px;
-  font-weight: 500;
 }
 
 .schedule-cards {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 12px;
 }
 
 .schedule-card {
-  border: 1px solid #dfdfdf;
+  border: 1px solid #E2E8F0;
   border-radius: 12px;
-  padding: 16px;
   transition: all 0.2s ease;
 }
 
 .schedule-card:hover {
-  transform: translateY(-2px);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  transform: translateY(-2px);
 }
 
 .schedule-item {
   display: grid;
-  grid-template-columns: 0.7fr 1.3fr 2fr 1fr 1fr;
+  grid-template-columns: 0.5fr 1fr 2fr 1fr 1fr 1.5fr;
   gap: 16px;
+  padding: 16px;
   align-items: center;
-}
-
-.day, .time-slot, .purpose, .section, .room {
-  font-size: 14px;
-  color: #1E293B;
 }
 
 .day {
@@ -588,26 +591,30 @@ export default {
 }
 
 .time-slot {
-  font-weight: 500;
+  color: #1E293B;
+  font-size: 14px;
 }
 
 .purpose {
-  font-weight: 600;
+  font-weight: 500;
+  color: #1E293B;
+}
+
+.section, .room, .instructor {
+  color: #64748B;
+  font-size: 14px;
 }
 
 .empty-schedule {
+  padding: 48px 0;
   text-align: center;
-  padding: 32px 0;
   color: #64748B;
-  font-size: 16px;
-  font-family: 'Poppins', sans-serif;
 }
 
-/* Pagination Styling */
 .pagination {
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
   gap: 16px;
   margin-top: 24px;
 }
@@ -616,19 +623,19 @@ export default {
   width: 36px;
   height: 36px;
   border-radius: 8px;
-  background-color: white;
-  border: 1px solid #E2E8F0;
   display: flex;
   align-items: center;
   justify-content: center;
+  background-color: white;
+  border: 1px solid #E2E8F0;
   cursor: pointer;
-  color: #64748B;
   transition: all 0.2s ease;
 }
 
 .pagination-button:hover:not(:disabled) {
-  background-color: #F1F5F9;
-  color: #1E293B;
+  background-color: #F8FAFC;
+  border-color: #DD3859;
+  color: #DD3859;
 }
 
 .pagination-button:disabled {
@@ -639,11 +646,38 @@ export default {
 .page-info {
   font-size: 14px;
   color: #64748B;
-  font-family: 'Poppins', sans-serif;
 }
 
-/* Font styling to match LabEase design system */
-* {
-  font-family: 'Poppins', sans-serif;
+@media (max-width: 1024px) {
+  .schedule-header, .schedule-item {
+    grid-template-columns: 0.5fr 1fr 1.5fr 1fr 1fr 1.5fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .schedule-container {
+    padding: 16px;
+  }
+  
+  .schedule-section {
+    padding: 16px;
+  }
+  
+  .filters {
+    flex-direction: column;
+  }
+  
+  .filter-group {
+    width: 100%;
+  }
+  
+  .schedule-header {
+    display: none;
+  }
+  
+  .schedule-item {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
 }
 </style>

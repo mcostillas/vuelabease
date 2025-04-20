@@ -1,15 +1,17 @@
 <template>
   <div class="signup-container">
     <div class="signup-form-wrapper">
-      <router-link to="/" class="back-button">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M19 12H5" stroke="#dd3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-          <path d="M12 19L5 12L12 5" stroke="#dd3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
-      </router-link>
+      <div class="header-container">
+        <router-link to="/" class="back-button">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19 12H5" stroke="#dd3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M12 19L5 12L12 5" stroke="#dd3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </router-link>
+        <h1 class="form-title">Sign Up</h1>
+      </div>
 
       <div class="signup-form">
-        <h1>Sign Up</h1>
         <p class="subtitle">Instructor</p>
 
         <form @submit.prevent="handleSignup">
@@ -26,12 +28,16 @@
           <div class="form-group">
             <label for="department">Department</label>
             <select id="department" v-model="department" required>
-              <option value="" disabled selected>Select your department</option>
-              <option value="Computer Science">Computer Science</option>
-              <option value="Information Technology">Information Technology</option>
-              <option value="Engineering">Engineering</option>
-              <option value="Business">Business</option>
-              <option value="Science">Science</option>
+              <option value="CABE">College of Accounting and Business Education</option>
+              <option value="CAH">College of Arts and Humanities</option>
+              <option value="CCS">College of Computer Studies</option>
+              <option value="CEA">College of Engineering and Architecture</option>
+              <option value="CHESFS">College of Human Environmental Science and Food Studies</option>
+              <option value="CMBS">College of Medical and Biological Sciences</option>
+              <option value="CM">College of Music</option>
+              <option value="CN">College of Nursing</option>
+              <option value="CPC">College of Pharmacy and Chemistry</option>
+              <option value="CTE">College of Teacher Education</option>
             </select>
           </div>
 
@@ -68,6 +74,8 @@
           </button>
         </form>
 
+
+
         <p class="signin-text">
           Already have an account? <router-link to="/" class="signin-link">Sign in</router-link>
         </p>
@@ -93,6 +101,7 @@ const showConfirmPassword = ref(false);
 const errorMessage = ref('');
 const successMessage = ref('');
 const isLoading = ref(false);
+
 
 // Initialize route and router
 const route = useRoute();
@@ -241,11 +250,20 @@ body {
   padding: 2rem;
 }
 
+/* Header Container */
+.header-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  position: relative;
+  justify-content: center;
+}
+
 /* Back Button */
 .back-button {
-  position: relative;
+  position: absolute;
+  left: 0;
   display: block;
-  margin-bottom: 1rem;
   cursor: pointer;
   transition: transform 0.3s ease;
   width: fit-content;
@@ -261,12 +279,12 @@ body {
   width: 100%;
 }
 
-.signup-form h1 {
+/* Form Title */
+.form-title {
   color: #dd3859;
-  font-size: 2.5rem;
+  font-size: 2rem;
   font-weight: 600;
-  margin-bottom: 0.5rem;
-  text-align: center;
+  margin: 0;
 }
 
 .subtitle {
@@ -371,11 +389,25 @@ body {
 
 /* Error Message */
 .error-message {
-  display: block;
-  color: #E9256E;
+  color: #e53e3e;
   margin-bottom: 1rem;
-  font-size: 0.875rem;
+  font-size: 0.9rem;
+  padding: 0.5rem;
+  background-color: rgba(229, 62, 62, 0.1);
+  border-radius: 4px;
 }
+
+/* Success Message */
+.success-message {
+  color: #38a169;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  padding: 0.5rem;
+  background-color: rgba(56, 161, 105, 0.1);
+  border-radius: 4px;
+}
+
+
 
 /* Submit Button */
 .signup-btn {

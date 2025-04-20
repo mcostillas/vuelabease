@@ -2989,6 +2989,34 @@ body {
   color: #dd3859;
   margin-bottom: 1rem;
 }
+
+/* Status Badge Styles */
+.status-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: white;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.status-badge.pending {
+  background-color: #f59e0b;
+}
+
+.status-badge.approved {
+  background-color: #10b981;
+}
+
+.status-badge.rejected {
+  background-color: #ef4444;
+}
+
+.status-badge.cancelled {
+  background-color: #64748b;
+}
 /* Weekly Schedule Modal Styles */
 .weekly-schedule-modal-content {
   width: 100%;

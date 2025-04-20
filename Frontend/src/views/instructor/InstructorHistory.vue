@@ -1,77 +1,77 @@
 <template>
   <DashboardLayout>
     <InstructorHeader pageTitle="History of Bookings" />
-    <div class="history-container">
-      <div class="filters">
-        <div class="filter-group">
-          <label for="program-filter">Program:</label>
-          <select id="program-filter" v-model="selectedProgram" @change="applyFilters">
-            <option value="">All Programs</option>
-            <option value="CABE">College of Accounting and Business Education</option>
-            <option value="CAH">College of Arts and Humanities</option>
-            <option value="CCS">College of Computer Studies</option>
-            <option value="CEA">College of Engineering and Architecture</option>
-            <option value="CHESFS">College of Human Environmental Science and Food Studies</option>
-            <option value="CMBS">College of Medical and Biological Sciences</option>
-            <option value="CM">College of Music</option>
-            <option value="CN">College of Nursing</option>
-            <option value="CPC">College of Pharmacy and Chemistry</option>
-            <option value="CTE">College of Teacher Education</option>
-          </select>
-        </div>
-        <div class="filter-group">
-          <label for="year-filter">Year Level:</label>
-          <select id="year-filter" v-model="selectedYear" @change="applyFilters">
-            <option value="">All Years</option>
-            <option value="1">1st Year</option>
-            <option value="2">2nd Year</option>
-            <option value="3">3rd Year</option>
-            <option value="4">4th Year</option>
-          </select>
-        </div>
-        <div class="filter-group">
-          <label for="section-filter">Section:</label>
-          <select id="section-filter" v-model="selectedSection" @change="applyFilters">
-            <option value="">All Sections</option>
-            <option v-for="section in availableSections" :key="section" :value="section">
-              {{ section }}
-            </option>
-          </select>
-        </div>
-        <div class="filter-group">
-          <label for="status-filter">Status:</label>
-          <select id="status-filter" v-model="statusFilter" @change="applyFilters">
-            <option value="">All Statuses</option>
-            <option value="approved">Approved</option>
-            <option value="pending">Pending</option>
-            <option value="rejected">Rejected</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
-        </div>
-        <div class="filter-group">
-          <label for="date-filter">Date Range:</label>
-          <select id="date-filter" v-model="dateFilter" @change="applyFilters">
-            <option value="all">All Time</option>
-            <option value="week">This Week</option>
-            <option value="month">This Month</option>
-            <option value="semester">This Semester</option>
-          </select>
-        </div>
-        <div class="filter-group" v-if="dateFilter === 'semester'">
-          <label for="semester-filter">Select Semester:</label>
-          <select id="semester-filter" v-model="selectedSemester" @change="applyFilters">
-            <option value="current">Current Semester</option>
-            <option value="2024-2">2nd Semester 2024-2025</option>
-            <option value="2024-1">1st Semester 2024-2025</option>
-            <option value="2023-2">2nd Semester 2023-2024</option>
-            <option value="2023-1">1st Semester 2023-2024</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- Schedule Cards Layout -->
-      <div class="schedule-section">
-        <div class="schedule-header">
+    <div class="schedule-container">
+      <!-- Schedule Content -->
+      <div class="schedule-content">
+        <div class="content-wrapper">
+          <div class="filters">
+            <div class="filter-group">
+              <label for="program-filter">Program:</label>
+              <select id="program-filter" v-model="selectedProgram" @change="applyFilters">
+                <option value="">All Programs</option>
+                <option value="CABE">College of Accounting and Business Education</option>
+                <option value="CAH">College of Arts and Humanities</option>
+                <option value="CCS">College of Computer Studies</option>
+                <option value="CEA">College of Engineering and Architecture</option>
+                <option value="CHESFS">College of Human Environmental Science and Food Studies</option>
+                <option value="CMBS">College of Medical and Biological Sciences</option>
+                <option value="CM">College of Music</option>
+                <option value="CN">College of Nursing</option>
+                <option value="CPC">College of Pharmacy and Chemistry</option>
+                <option value="CTE">College of Teacher Education</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="year-filter">Year Level:</label>
+              <select id="year-filter" v-model="selectedYear" @change="applyFilters">
+                <option value="">All Years</option>
+                <option value="1">1st Year</option>
+                <option value="2">2nd Year</option>
+                <option value="3">3rd Year</option>
+                <option value="4">4th Year</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="section-filter">Section:</label>
+              <select id="section-filter" v-model="selectedSection" @change="applyFilters">
+                <option value="">All Sections</option>
+                <option v-for="section in availableSections" :key="section" :value="section">
+                  {{ section }}
+                </option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="status-filter">Status:</label>
+              <select id="status-filter" v-model="statusFilter" @change="applyFilters">
+                <option value="">All Statuses</option>
+                <option value="approved">Approved</option>
+                <option value="pending">Pending</option>
+                <option value="rejected">Rejected</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="date-filter">Date Range:</label>
+              <select id="date-filter" v-model="dateFilter" @change="applyFilters">
+                <option value="all">All Time</option>
+                <option value="week">This Week</option>
+                <option value="month">This Month</option>
+                <option value="semester">This Semester</option>
+              </select>
+            </div>
+            <div class="filter-group" v-if="dateFilter === 'semester'">
+              <label for="semester-filter">Select Semester:</label>
+              <select id="semester-filter" v-model="selectedSemester" @change="applyFilters">
+                <option value="current">Current Semester</option>
+                <option value="2024-2">2nd Semester 2024-2025</option>
+                <option value="2024-1">1st Semester 2024-2025</option>
+                <option value="2023-2">2nd Semester 2023-2024</option>
+                <option value="2023-1">1st Semester 2023-2024</option>
+              </select>
+            </div>
+          </div>
+          <div class="schedule-header">
           <div class="header-item">Time Slot</div>
           <div class="header-item">Purpose</div>
           <div class="header-item">Section</div>
@@ -91,7 +91,11 @@
               <div class="purpose">{{ booking.event_name }}</div>
               <div class="section">{{ booking.section || "N/A" }}</div>
               <div class="room">{{ booking.room_id }}</div>
-              <div class="status">{{ booking.status }}</div>
+              <div class="status">
+                <span class="status-badge" :class="booking.status">
+                  {{ capitalizeFirstLetter(booking.status) }}
+                </span>
+              </div>
             </div>
           </div>
 
@@ -147,6 +151,7 @@
             />
           </svg>
         </button>
+        </div>
       </div>
     </div>
   </DashboardLayout>
@@ -249,13 +254,25 @@ export default {
     },
     formatTime(start, end) {
       const formatHour = (timeStr) => {
+        if (!timeStr) return 'N/A';
         const [hour, minute] = timeStr.split(":");
         const hourNum = parseInt(hour, 10);
         const period = hourNum >= 12 ? "PM" : "AM";
         const hour12 = hourNum % 12 || 12;
         return `${hour12}:${minute} ${period}`;
       };
-      return `${formatHour(start)} - ${formatHour(end)}`;
+      
+      const startFormatted = formatHour(start);
+      const endFormatted = formatHour(end);
+      
+      if (startFormatted === 'N/A' || endFormatted === 'N/A') {
+        return 'Time not specified';
+      }
+      
+      return `${startFormatted} - ${endFormatted}`;
+    },
+    capitalizeFirstLetter(string) {
+      return string.charAt(0).toUpperCase() + string.slice(1);
     },
   },
   created() {
@@ -265,37 +282,60 @@ export default {
 </script>
 
 <style scoped>
-.history-container {
-  padding: 24px;
+.schedule-container {
+  padding: 12px 20px;
+  min-height: calc(100vh - 80px);
+}
+
+.schedule-section {
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  padding: 32px;
+  height: 100%;
+}
+
+.schedule-content {
+  margin-bottom: 24px;
+}
+
+.content-wrapper {
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  padding: 32px;
+  width: 100%;
 }
 
 .filters {
   display: flex;
+  flex-wrap: wrap;
   gap: 16px;
   margin-bottom: 24px;
-  flex-wrap: wrap;
 }
 
 .filter-group {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
+  min-width: 180px;
 }
 
 .filter-group label {
-  font-size: 12px;
+  font-size: 14px;
+  font-weight: 500;
   color: #64748B;
-  font-family: 'Poppins', sans-serif;
 }
 
 .filter-group select {
-  padding: 10px 12px;
+  padding: 8px 12px;
   border: 1px solid #E2E8F0;
   border-radius: 8px;
   font-size: 14px;
   color: #1E293B;
   background-color: white;
-  min-width: 150px;
+  cursor: pointer;
   font-family: 'Poppins', sans-serif;
 }
 
@@ -304,148 +344,140 @@ export default {
   border-color: #DD3859;
 }
 
-/* Schedule Section Styling - Matching Original Design */
-.schedule-section {
+.schedule-content {
+  margin-top: 8px;
+  background-color: #f8fafc;
   border-radius: 16px;
-  padding: 24px;
-  margin-bottom: 24px;
+  padding: 12px;
+  max-width: 100%;
 }
 
 .schedule-header {
   display: grid;
   grid-template-columns: 1.5fr 2fr 1fr 1fr 1fr;
   gap: 16px;
-  padding: 12px 16px;
-  background-color: #FFF1F3;
-  border: 1px solid #99183A;
+  padding: 16px;
+  background-color: #DD3859;
   border-radius: 8px;
   margin-bottom: 16px;
+  font-weight: 600;
+  color: white;
 }
 
 .header-item {
-  color: #DD3859;
   font-size: 14px;
-  font-weight: 500;
-  font-family: 'Poppins', sans-serif;
 }
 
 .schedule-cards {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 12px;
 }
 
 .schedule-card {
-  border: 1px solid #dfdfdf;
+  border: 1px solid #E2E8F0;
   border-radius: 12px;
-  padding: 16px;
   transition: all 0.2s ease;
 }
 
 .schedule-card:hover {
-  transform: translateY(-2px);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  transform: translateY(-2px);
 }
 
 .schedule-item {
   display: grid;
   grid-template-columns: 1.5fr 2fr 1fr 1fr 1fr;
   gap: 16px;
+  padding: 16px;
   align-items: center;
 }
 
 .time-slot {
   color: #DD3859;
-  font-weight: 500;
+  font-weight: 600;
   font-size: 14px;
-  font-family: 'Poppins', sans-serif;
 }
 
 .purpose {
+  font-weight: 500;
   color: #1E293B;
-  font-weight: 600;
   font-size: 14px;
-  font-family: 'Poppins', sans-serif;
 }
 
 .section, .room {
   color: #64748B;
   font-size: 14px;
-  font-family: 'Poppins', sans-serif;
 }
 
 .status {
   font-weight: 500;
   font-size: 14px;
   text-transform: capitalize;
-  font-family: 'Poppins', sans-serif;
+  display: flex;
+  align-items: center;
 }
 
-/* Status Colors and Left Borders */
-.schedule-card.pending {
-  border-left: 4px solid #F59E0B;
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-block;
+  text-align: center;
 }
 
-.schedule-card.pending .status {
-  color: #F59E0B;
+.status-badge.pending {
+  background-color: #FFF1F3;
+  color: #DD3859;
 }
 
-.schedule-card.approved {
-  border-left: 4px solid #10B981;
+.status-badge.approved {
+  background-color: #e6f7e6;
+  color: #22c55e;
 }
 
-.schedule-card.approved .status {
-  color: #10B981;
+.status-badge.rejected {
+  background-color: #FFF1F3;
+  color: #DD3859;
 }
 
-.schedule-card.rejected {
-  border-left: 4px solid #EF4444;
-}
-
-.schedule-card.rejected .status {
-  color: #EF4444;
-}
-
-.schedule-card.cancelled {
-  border-left: 4px solid #64748B;
-}
-
-.schedule-card.cancelled .status {
-  color: #64748B;
+.status-badge.cancelled {
+  background-color: #f1f1f1;
+  color: #6b7280;
 }
 
 .empty-schedule {
+  padding: 48px 0;
   text-align: center;
-  padding: 32px 0;
   color: #64748B;
-  font-size: 16px;
-  font-family: 'Poppins', sans-serif;
 }
 
 .pagination {
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
   gap: 16px;
+  margin-top: 24px;
 }
 
 .pagination-button {
   width: 36px;
   height: 36px;
   border-radius: 8px;
-  background-color: white;
-  border: 1px solid #E2E8F0;
   display: flex;
   align-items: center;
   justify-content: center;
+  background-color: white;
+  border: 1px solid #E2E8F0;
   cursor: pointer;
-  color: #64748B;
   transition: all 0.2s ease;
 }
 
 .pagination-button:hover:not(:disabled) {
-  background-color: #F1F5F9;
-  color: #1E293B;
+  background-color: #F8FAFC;
+  border-color: #DD3859;
+  color: #DD3859;
 }
 
 .pagination-button:disabled {
@@ -456,10 +488,23 @@ export default {
 .page-info {
   font-size: 14px;
   color: #64748B;
-  font-family: 'Poppins', sans-serif;
+}
+
+@media (max-width: 1024px) {
+  .schedule-header, .schedule-item {
+    grid-template-columns: 1.5fr 2fr 1fr 1fr 1fr;
+  }
 }
 
 @media (max-width: 768px) {
+  .schedule-container {
+    padding: 16px;
+  }
+  
+  .schedule-section {
+    padding: 16px;
+  }
+  
   .filters {
     flex-direction: column;
   }
@@ -468,21 +513,13 @@ export default {
     width: 100%;
   }
   
-  .schedule-item {
-    grid-template-columns: 1fr;
-    gap: 8px;
-  }
-  
   .schedule-header {
     display: none;
   }
   
-  .schedule-card {
-    padding: 16px;
-  }
-  
-  .time-slot, .purpose, .section, .room, .status {
-    padding: 4px 0;
+  .schedule-item {
+    grid-template-columns: 1fr;
+    gap: 8px;
   }
   
   .time-slot::before {

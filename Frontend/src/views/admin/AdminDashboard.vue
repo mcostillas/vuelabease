@@ -5,7 +5,7 @@
         <!-- Overview Section -->
         <div class="overview-section">
           <div class="section-header-main">
-            <h2>Dashboard Overview</h2>
+            <h2>Overview</h2>
             <div class="date-display">
               <i class="fas fa-calendar-alt"></i>
               <span>{{ currentDate }}</span>
