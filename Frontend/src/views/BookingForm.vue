@@ -1894,6 +1894,7 @@ async fetchSchedulesForDay(dayOfWeek, timeSlot = null) {
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
   -webkit-appearance: none;
+  appearance: none;
   margin: 0;
 }
 
@@ -1906,6 +1907,7 @@ input[type="number"] {
 /* Custom class to remove any spinner buttons */
 .no-spinner {
   -webkit-appearance: none;
+  appearance: none;
   -moz-appearance: textfield;
   appearance: textfield;
   margin: 0;
@@ -2706,7 +2708,10 @@ body {
 }
 
 .class-code {
-  font-weight: bold;
+  font-weight: 700;
+  color: #33465e;
+  margin-bottom: 0.25rem;
+  letter-spacing: 0.03em;
 }
 
 .class-details {
@@ -2718,7 +2723,21 @@ body {
 
 .class-room {
   font-weight: 500;
-  margin-top: 0.25rem;
+  margin-top: 0.35rem;
+  font-size: 0.7rem;
+  color: #5a7089;
+  display: flex;
+  align-items: center;
+}
+
+.class-room:before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #4ade80;
+  margin-right: 0.4rem;
 }
 /* Month selector styles */
 .month-selector {
@@ -3166,86 +3185,137 @@ body {
 /* Weekly Schedule Styles */
 .weekly-schedule-table-container {
   overflow-x: auto;
-  max-height: 60vh;
+  max-height: 65vh;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background-color: white;
 }
 
 .weekly-schedule-display {
-  padding: 1rem;
+  padding: 1.5rem;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  margin-bottom: 2rem;
 }
 
 .schedule-filters {
   display: flex;
-  gap: 1rem;
-  margin-bottom: 1rem;
-  padding: 0.5rem;
-  background-color: #f9f9f9;
-  border-radius: 8px;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem 1.25rem;
+  background-color: #f8f9fc;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .filter-group {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  flex-direction: column;
+  min-width: 180px;
+}
+
+.filter-group label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #555;
 }
 
 .filter-group select {
-  padding: 0.5rem;
-  border-radius: 4px;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
   border: 1px solid #ddd;
   background-color: white;
   font-family: "Poppins", sans-serif;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+  font-size: 0.95rem;
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23555' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 01.753 1.659l-4.796 5.48a1 1 0 01-1.506 0z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: calc(100% - 12px) center;
+  padding-right: 2.5rem;
+}
+
+.filter-group select:focus {
+  border-color: #dd3859;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(221, 56, 89, 0.15);
 }
 
 .weekly-schedule-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   font-family: "Poppins", sans-serif;
   font-size: 0.9rem;
 }
 
 .weekly-schedule-table th {
-  background-color: #f0f0f0;
-  padding: 0.75rem;
+  background-color: #f2f6fc;
+  padding: 1rem 0.75rem;
   text-align: center;
-  border: 1px solid #ddd;
+  border-bottom: 2px solid #e0e7ff;
   position: sticky;
   top: 0;
   z-index: 10;
+  font-weight: 600;
+  color: #4a5568;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
 }
 
 .weekly-schedule-table .time-column {
-  width: 120px;
-  background-color: #f0f0f0;
+  width: 130px;
+  background-color: #f2f6fc;
   position: sticky;
   left: 0;
   z-index: 20;
+  box-shadow: 4px 0 8px -4px rgba(0, 0, 0, 0.1);
 }
 
 .weekly-schedule-table td {
-  border: 1px solid #ddd;
-  padding: 0.5rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  border-right: 1px solid rgba(0, 0, 0, 0.03);
+  padding: 0.75rem;
   vertical-align: top;
-  height: 60px;
+  height: 70px;
+  transition: all 0.2s ease;
+}
+
+.weekly-schedule-table tr:hover td {
+  background-color: rgba(242, 246, 252, 0.5);
 }
 
 .weekly-schedule-table .time-cell {
-  background-color: #f9f9f9;
+  background-color: #f5f9ff;
   font-weight: 500;
   text-align: center;
   position: sticky;
   left: 0;
   z-index: 5;
+  box-shadow: 4px 0 8px -4px rgba(0, 0, 0, 0.1);
+  color: #3a4555;
+  font-size: 0.85rem;
 }
 
 .weekly-schedule-table .has-class {
-  background-color: #ffecd1;
+  background-color: rgba(252, 240, 227, 0.7);
 }
 
 .weekly-schedule-table .lunch-row td {
-  background-color: #f0f0f0;
-  color: #777;
+  background-color: #f0f7ff;
+  color: #5a6a7e;
   font-style: italic;
   text-align: center;
+  font-size: 0.85rem;
+  height: 40px;
 }
 
 .weekly-schedule-table .merged-cell {
@@ -3259,19 +3329,37 @@ body {
 }
 
 .class-info {
-  background-color: #ffd580;
-  padding: 0.5rem;
-  border-radius: 4px;
+  background-color: rgba(255, 166, 102, 0.15);
+  padding: 0.75rem;
+  border-radius: 8px;
   font-size: 0.8rem;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.5rem;
+  border-left: 3px solid #ff9c54;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.class-info:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
 }
 
 .class-code {
-  font-weight: bold;
+  font-weight: 700;
+  color: #33465e;
+  margin-bottom: 0.25rem;
+  letter-spacing: 0.03em;
 }
 
 .class-section {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
+  background-color: rgba(221, 56, 89, 0.1);
+  color: #dd3859;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  display: inline-block;
+  font-weight: 600;
+  margin-right: 0.5rem;
 }
 
 .class-instructor {
@@ -3281,7 +3369,21 @@ body {
 
 .class-room {
   font-weight: 500;
-  margin-top: 0.25rem;
+  margin-top: 0.35rem;
+  font-size: 0.7rem;
+  color: #5a7089;
+  display: flex;
+  align-items: center;
+}
+
+.class-room:before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #4ade80;
+  margin-right: 0.4rem;
 }
 
 .modal-schedule-table {
