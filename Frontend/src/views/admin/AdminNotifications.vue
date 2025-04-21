@@ -158,24 +158,24 @@
             {{ selectedNotification.message }}
           </p>
           
-          <div v-if="selectedNotification && selectedNotification.type === 'booking'" class="modal-notification-details">
-            <div class="detail-item">
-              <div class="detail-label">Laboratory</div>
-              <div class="detail-value">{{ selectedNotification.selectedRoom }}</div>
-            </div>
-            <div class="detail-item">
-              <div class="detail-label">Date</div>
-              <div class="detail-value">{{ selectedNotification.requestDate }}</div>
-            </div>
-            <div class="detail-item">
-              <div class="detail-label">Time</div>
-              <div class="detail-value">{{ selectedNotification.startTime }} - {{ selectedNotification.endTime }}</div>
-            </div>
-            <div class="detail-item">
-              <div class="detail-label">Requester</div>
-              <div class="detail-value">{{ selectedNotification.requesterName || 'Unknown' }}</div>
-            </div>
-          </div>
+<div v-if="selectedNotification && selectedNotification.type === 'booking'" class="modal-notification-details">
+  <div class="detail-item">
+    <div class="detail-label">Laboratory</div>
+    <div class="detail-value">{{ selectedNotification.selectedRoom }}</div>
+  </div>
+  <div class="detail-item">
+    <div class="detail-label">Date</div>
+    <div class="detail-value">{{ notificationDetails.requestDate }}</div>
+  </div>
+  <div class="detail-item">
+    <div class="detail-label">Time</div>
+    <div class="detail-value">{{ notificationDetails.startTime }} - {{ notificationDetails.endTime }}</div>
+  </div>
+  <div class="detail-item">
+    <div class="detail-label">Requester</div>
+    <div class="detail-value">{{ notificationDetails.requesterName }}</div>
+  </div>
+</div>
           
           <div v-if="selectedNotification && selectedNotification.type === 'password_reset'" class="modal-notification-details">
             <div class="detail-item">
@@ -258,6 +258,7 @@ export default {
     return {
       showModal: false,
       selectedNotification: null,
+      notificationDetails: {}, // New variable for notification details
       selectedNotificationIndex: -1,
       activeFilter: 'all',
       notifications: [],
@@ -289,7 +290,14 @@ export default {
     this.fetchNotifications();
   }, 5000); // Check every 60 seconds
   const savedNotifications = JSON.parse(localStorage.getItem('admin_notifications')) || [];
-  this.notifications = savedNotifications;
+  this.notifications = savedNotifications.map(notification => ({
+  ...notification,
+  selectedRoom: notification.selectedRoom || 'N/A',
+  requestDate: notification.requestDate || 'N/A',
+  startTime: notification.startTime || 'N/A',
+  endTime: notification.endTime || 'N/A',
+  requesterName: notification.requesterName || 'Unknown',
+}));
 },
 beforeUnmount() {
   // Clear the interval when the component is destroyed
@@ -297,74 +305,84 @@ beforeUnmount() {
   },
   methods: {
     
-  async fetchNotifications() {
-    try {
-      const { data, error } = await supabaseBookings
+    async fetchNotifications() {
+  try {
+    const { data, error } = await supabaseBookings
+      .from('bookings')
+      .select('*')
+      .eq('notification_sent', false); // Fetch bookings where notification_sent is false
+
+    if (error) throw error;
+
+    console.log('Fetched bookings:', data); // Debug log
+
+    const newNotifications = data.map(booking => ({
+  type: 'booking',
+  title: 'New Booking Request',
+  message: `${booking.event} has requested to book ${booking.selectedRoom} on ${booking.requestDate} from ${booking.startTime} to ${booking.endTime}.`,
+  selectedRoom: booking.selectedRoom || 'N/A', // Laboratory
+  requestDate: booking.requestDate || 'N/A', // Date
+  startTime: booking.startTime || 'N/A', // Start time
+  endTime: booking.endTime || 'N/A', // End time
+  requesterName: booking.person || 'Unknown', // Requester name
+  time: new Date(booking.created_at).toLocaleString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+    hour12: true,
+  }),
+  read: false,
+  bookingId: booking.id, // Booking ID
+}));
+
+    console.log('Mapped notifications:', newNotifications); // Debug log
+
+    // Add the new notifications to the existing notifications array
+    this.notifications = [...newNotifications, ...this.notifications];
+    console.log('Notifications array:', this.notifications);
+
+    // Save notifications to localStorage
+    localStorage.setItem('admin_notifications', JSON.stringify(this.notifications));
+
+    // Mark the bookings as "notification_sent" in the database
+    const bookingIds = data.map(booking => booking.id);
+    if (bookingIds.length > 0) {
+      await supabaseBookings
         .from('bookings')
-        .select('*')
-        .eq('notification_sent', false); // Fetch bookings where notification_sent is false
-
-      if (error) throw error;
-
-      // Map the fetched bookings to notifications
-      const newNotifications = data.map(booking => ({
-        type: 'booking',
-        title: 'New Booking Request',
-        message: `${booking.event} has requested to book ${booking.selectedRoom} on ${booking.requestDate} from ${booking.startTime} to ${booking.endTime}.`,
-        time: new Date(booking.created_at).toLocaleString('en-US', {
-          month: 'long',
-          day: 'numeric',
-          year: 'numeric',
-          hour: 'numeric',
-          minute: 'numeric',
-          hour12: true,
-        }),
-        read: false,
-        bookingId: booking.id, // Store the booking ID for reference
-      }));
-
-      // Add the new notifications to the existing notifications array
-      this.notifications = [...newNotifications, ...this.notifications];
-
-      // Save notifications to localStorage
-      localStorage.setItem('admin_notifications', JSON.stringify(this.notifications));
-
-      // Mark the bookings as "notification_sent" in the database
-      const bookingIds = data.map(booking => booking.id);
-      if (bookingIds.length > 0) {
-        await supabaseBookings
-          .from('bookings')
-          .update({ notification_sent: true })
-          .in('id', bookingIds);
-      }
-
-      console.log('Fetched notifications:', newNotifications);
-    } catch (error) {
-      console.error('Error fetching notifications:', error.message);
+        .update({ notification_sent: true })
+        .in('id', bookingIds);
     }
-  },
 
-  openNotificationModal(notification, index) {
-  console.log('Opening notification modal:', notification); // Debug log
+    console.log('Fetched notifications:', newNotifications);
+  } catch (error) {
+    console.error('Error fetching notifications:', error.message);
+  }
+},
 
-  // Convert the notification to a plain object
+openNotificationModal(notification, index) {
+  console.log('Notification clicked:', JSON.stringify(notification, null, 2)); // Debug log
+
+  // Assign the notification to selectedNotification
   this.selectedNotification = JSON.parse(JSON.stringify(notification));
+  console.log('Selected notification:', JSON.stringify(this.selectedNotification, null, 2)); // Debug log
+
+  // Populate notificationDetails with additional fields
+  this.notificationDetails = {
+    selectedRoom: notification.selectedRoom || 'N/A',
+    requestDate: notification.requestDate || 'N/A',
+    startTime: notification.startTime || 'N/A',
+    endTime: notification.endTime || 'N/A',
+    requesterName: notification.requesterName || 'Unknown',
+  };
+
   this.selectedNotificationIndex = index;
   this.showModal = true;
 
   // Mark as read when opened
   if (!this.notifications[index].read) {
     this.notifications[index].read = true;
-  }
-
-  // Add booking-modal class for booking notifications
-  if (notification.type === 'booking') {
-    setTimeout(() => {
-      const modalContainer = document.querySelector('.modal-container');
-      if (modalContainer) {
-        modalContainer.classList.add('booking-modal');
-      }
-    }, 0);
   }
 },
     closeModal() {

@@ -2,201 +2,297 @@
   <DashboardLayout>
     <InstructorHeader pageTitle="Dashboard" />
     <div class="dashboard-content">
+      <!-- Overview Section -->
       <div class="overview-section">
         <div class="section-header-main">
           <h2>Overview</h2>
           <div class="date-display">
             <i class="fas fa-calendar-alt"></i>
-            <span>{{ new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) }}</span>
+            <span>
+              {{ new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) }}
+            </span>
           </div>
         </div>
-        
+
+        <!-- Metrics Grid -->
         <div class="metrics-grid">
+          <!-- Pending Bookings -->
           <div class="metric-card">
             <div class="metric-icon">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M19 4H5C3.89543 4 3 4.89543 3 6V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V6C21 4.89543 20.1046 4 19 4Z" stroke="#DD3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M16 2V6" stroke="#DD3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M8 2V6" stroke="#DD3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M3 10H21" stroke="#DD3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M19 4H5C3.89543 4 3 4.89543 3 6V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V6C21 4.89543 20.1046 4 19 4Z" stroke="#DD3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M16 2V6" stroke="#DD3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M8 2V6" stroke="#DD3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M3 10H21" stroke="#DD3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
               </svg>
             </div>
             <div class="metric-content">
-              <div class="metric-value">8</div>
+              <div class="metric-value">{{ totalPending }}</div>
               <div class="metric-label">Pending Bookings</div>
-              <div class="metric-trend positive">
-                +12% from last week
-              </div>
             </div>
           </div>
-          
+
+          <!-- Confirmed Bookings -->
           <div class="metric-card">
             <div class="metric-icon">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M9 11L12 14L22 4" stroke="#DD3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M21 12V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H16" stroke="#DD3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M9 11L12 14L22 4" stroke="#DD3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M21 12V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H16" stroke="#DD3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
               </svg>
             </div>
             <div class="metric-content">
-              <div class="metric-value">2</div>
+              <div class="metric-value">{{ totalConfirmed }}</div>
               <div class="metric-label">Confirmed Bookings</div>
-              <div class="metric-trend negative">
-                -5% from last week
-              </div>
             </div>
           </div>
-          
+
+          <!-- Canceled Bookings -->
           <div class="metric-card">
             <div class="metric-icon">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M18 6L6 18" stroke="#DD3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M6 6L18 18" stroke="#DD3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M18 6L6 18" stroke="#DD3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M6 6L18 18" stroke="#DD3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
               </svg>
             </div>
             <div class="metric-content">
-              <div class="metric-value">2</div>
-              <div class="metric-label">Cancelled Bookings</div>
-              <div class="metric-detail">
-                No change from last week
-              </div>
+              <div class="metric-value">{{ totalCanceled }}</div>
+              <div class="metric-label">Canceled Bookings</div>
             </div>
           </div>
-          
+
           <div class="metric-card">
             <div class="metric-icon">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M3 3V21H21" stroke="#DD3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M7 14L11 10L15 14L21 8" stroke="#DD3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M18 6L6 18" stroke="#DD3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M6 6L18 18" stroke="#DD3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
               </svg>
             </div>
             <div class="metric-content">
-              <div class="metric-value">12</div>
+              <div class="metric-value">{{ totalBookings }}</div>
               <div class="metric-label">Total Bookings</div>
-              <div class="metric-trend positive">
-                +8% from last week
-              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Room Availability Section -->
+
       <div class="room-availability-section">
-        <h2 class="section-title">Room Availability</h2>
-        <div class="room-availability-container">
-          <div class="room-cards-container">
-            <div class="room-card" v-for="room in roomAvailability" :key="room.name">
-              <div class="room-info">
-                <div class="room-name">{{ room.name }}</div>
-                <div class="room-status" :class="room.status === 'Available' ? 'available' : 'in-use'">
-                  {{ room.status }}
-                </div>
-              </div>
-            </div>
+  <h2 class="section-title">Room Availability</h2>
+  <div class="room-availability-container">
+    <div class="room-cards-container">
+      <div class="room-card" v-for="room in roomAvailability" :key="room.name">
+        <div class="room-info">
+          <div class="room-name">{{ room.name }}</div>
+          <div class="room-status" :class="room.status === 'Available' ? 'available' : 'in-use'">
+            {{ room.status }}
           </div>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+      
 
-      <!-- Today's Schedule Section -->
-      <div class="sessions-section">
-        <div class="section-title-container">
-          <h2 class="section-title">Today's Schedule</h2>
-        </div>
-        <div class="sessions-header">
-          <div class="header-item">Time Slot</div>
-          <div class="header-item">Purpose</div>
-          <div class="header-item">Section</div>
-          <div class="header-item">Lab, Room No.</div>
-        </div>
-        <div class="sessions-cards">
-          <div class="session-card">
-            <div class="session-item">
-              <div class="time-slot">9:00 am - 12:00 am</div>
-              <div class="purpose">Web Applications Development</div>
-              <div class="section">CCS-2A</div>
-              <div class="room">L201</div>
-            </div>
-          </div>
-          <div class="session-card">
-            <div class="session-item">
-              <div class="time-slot">9:00 am - 12:00 am</div>
-              <div class="purpose">Data Structures and Algorithms</div>
-              <div class="section">CCS-2B</div>
-              <div class="room">L202</div>
-            </div>
-          </div>
-          <div class="session-card">
-            <div class="session-item">
-              <div class="time-slot">1:00 pm - 4:00 pm</div>
-              <div class="purpose">Database Management Systems</div>
-              <div class="section">CCS-2C</div>
-              <div class="room">L205</div>
-            </div>
-          </div>
-          <div class="session-card">
-            <div class="session-item">
-              <div class="time-slot">3:00 pm - 6:00 pm</div>
-              <div class="purpose">Mobile Application Development</div>
-              <div class="section">CCS-3A</div>
-              <div class="room">L203</div>
-            </div>
-          </div>
-          <div class="session-card">
-            <div class="session-item">
-              <div class="time-slot">6:00 pm - 9:00 pm</div>
-              <div class="purpose">Computer Networks</div>
-              <div class="section">CCS-3B</div>
-              <div class="room">L204</div>
-            </div>
-          </div>
-        </div>
+<div class="sessions-section">
+  <div class="section-title-container">
+    <h2 class="section-title">Today's Schedule</h2>
+  </div>
+  <div class="sessions-header">
+    <div class="header-item">Time Slot</div>
+    <div class="header-item">Purpose</div>
+    <div class="header-item">Section</div>
+    
+    <div class="header-item">Lab, Room No.</div>
+  </div>
+  <div class="sessions-cards">
+    <div class="session-card" v-for="session in todaysSchedule" :key="session.id">
+      <div class="session-item">
+        <div class="time-slot">{{ session.startTime }} - {{ session.endTime }}</div>
+        <div class="purpose">{{ session.courseName }}</div>
+        <div class="section">{{ session.section }}</div>
+        <div class="room">{{ session.labRoom }}</div>
       </div>
+    </div>
+  </div>
+</div>
+
     </div>
   </DashboardLayout>
 </template>
 
 <script>
-import DashboardLayout from '@/components/layout/DashboardLayout.vue'
-import InstructorHeader from '@/components/instructor/InstructorHeader.vue'
+import DashboardLayout from '@/components/layout/DashboardLayout.vue';
+import InstructorHeader from '@/components/instructor/InstructorHeader.vue';
+import { createClient } from '@supabase/supabase-js';
+
+// Initialize Supabase client
+const supabaseBookings = createClient(
+  'https://bfmvnahlknvyrajofmdw.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmbXZuYWhsa252eXJham9mbWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ5OTc4NjUsImV4cCI6MjA2MDU3Mzg2NX0.xkeqAML3bYf9iOV6iG_GJ35_RD7rPKH_OuXFz1SQBLk'
+);
+const supabaseSchedules = createClient(
+  'https://yfiyhsazgjsxjmybsyar.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlmaXloc2F6Z2pzeGpteWJzeWFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI4ODE5MzEsImV4cCI6MjA1ODQ1NzkzMX0.j7oFwaqYvJq45jhPuQBPEtNU-itU-CRleOJcqm1fOOo'
+);
 
 export default {
   name: 'InstructorDashboard',
   components: {
     DashboardLayout,
-    InstructorHeader
+    InstructorHeader,
   },
   data() {
     return {
-      roomAvailability: [
-        { name: 'L201', status: 'Available' },
-        { name: 'L202', status: 'In Use' },
-        { name: 'L203', status: 'Available' },
-        { name: 'L204', status: 'In Use' },
-        { name: 'L205', status: 'Available' },
-        { name: 'Open Laboratory', status: 'In Use' },
-        { name: 'IOT Lab', status: 'Available' }
-      ],
-      todaySchedule: [
-        { timeSlot: '9:00 am - 12:00 am', purpose: 'Web Applications Development', section: 'CCS-2A', room: 'L201' },
-        { timeSlot: '9:00 am - 12:00 am', purpose: 'Data Structures and Algorithms', section: 'CCS-2B', room: 'L202' },
-        { timeSlot: '1:00 pm - 4:00 pm', purpose: 'Database Management Systems', section: 'CCS-2C', room: 'L205' },
-        { timeSlot: '3:00 pm - 6:00 pm', purpose: 'Mobile Application Development', section: 'CCS-3A', room: 'L203' },
-        { timeSlot: '6:00 pm - 9:00 pm', purpose: 'Computer Networks', section: 'CCS-3B', room: 'L204' }
-      ],
-      isDropdownOpen: false
-    }
+      totalPending: 0, // Total pending bookings
+      totalConfirmed: 0, // Total confirmed bookings
+      totalCanceled: 0, // Total canceled bookings
+      totalBookings: 0,
+      scheduleCount: {
+        total: 0, // Total number of schedules
+      },
+      rooms: [
+          { id: '201', usage: 4 },
+          { id: '202', usage: 3 },
+          { id: '203', usage: 5 },
+          { id: '204', usage: 3 },
+          { id: '205', usage: 2 },
+          { id: 'Open Lab', usage: 6 },
+          { id: 'IOT Lab', usage: 4 }
+        ],
+        roomAvailability: [], // Array to hold room availability data
+        scheduleData: [], // Array to hold schedule data
+    };
   },
+  computed: {
+  todaysSchedule() {
+    const currentDay = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+
+    // Filter schedules for the current day
+    const filteredSchedules = this.scheduleData.filter(schedule => schedule.day === currentDay);
+
+    console.log('Filtered schedules for today:', filteredSchedules); // Debugging log
+
+    // Sort schedules by startTime in ascending order
+    return filteredSchedules.sort((a, b) => {
+      const [aHour, aMinute] = a.startTime.split(':').map(Number);
+      const [bHour, bMinute] = b.startTime.split(':').map(Number);
+
+      const aTotalMinutes = aHour * 60 + aMinute;
+      const bTotalMinutes = bHour * 60 + bMinute;
+
+      return aTotalMinutes - bTotalMinutes;
+    });
+  },
+
+},
   methods: {
-    toggleDropdown() {
-      this.isDropdownOpen = !this.isDropdownOpen
-    },
-    handleLogout() {
-      localStorage.removeItem('labease_auth_token')
-      localStorage.removeItem('labease_user_data')
-      this.$router.push('/login')
-    }
+    checkRoomAvailability() {
+  const currentTime = new Date();
+  const currentHour = currentTime.getHours();
+  const currentMinutes = currentTime.getMinutes();
+  const currentDay = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+
+  // Iterate through each room and check if it is in use
+  this.roomAvailability = this.rooms.map(room => {
+    const schedules = this.scheduleData.filter(schedule =>
+      schedule.labRoom === room.id && schedule.day === currentDay
+    );
+
+    // Check if the current time falls within any schedule for this room
+    const isInUse = schedules.some(schedule => {
+      const [startHour, startMinutes] = schedule.startTime.split(':').map(Number);
+      const [endHour, endMinutes] = schedule.endTime.split(':').map(Number);
+
+      const startTime = startHour * 60 + startMinutes;
+      const endTime = endHour * 60 + endMinutes;
+      const currentTimeInMinutes = currentHour * 60 + currentMinutes;
+
+      return currentTimeInMinutes >= startTime && currentTimeInMinutes < endTime;
+    });
+
+    // Update the room status
+    return {
+      name: room.id,
+      status: isInUse ? 'In Use' : 'Available',
+    };
+  });
+
+  console.log('Updated room availability:', this.roomAvailability);
+},
+  async fetchTotalBookings() {
+  try {
+    const { data, count, error } = await supabaseBookings
+      .from('bookings')
+      .select('*', { count: 'exact' });
+
+    console.log('Supabase response:', { data, count, error });
+
+    if (error) throw error;
+
+    // Update the total bookings count
+    this.totalBookings = count || 0;
+
+    console.log('Total bookings fetched:', this.totalBookings);
+  } catch (error) {
+    console.error('Error fetching total bookings:', error.message);
   }
-}
+},
+async fetchSchedules() {
+  try {
+    const { data, error } = await supabaseSchedules
+      .from('schedules')
+      .select('*'); // Fetch all columns from the schedules table
+
+    if (error) throw error;
+
+    // Map the fetched data to the scheduleData array
+    this.scheduleData = data.map(schedule => ({
+      id: schedule.id,
+      startTime: schedule.start_time,
+      endTime: schedule.end_time,
+      instructorName: schedule.instructor_name,
+      courseName: schedule.course_name,
+      section: schedule.section,
+      labRoom: schedule.lab_room,
+      day: schedule.day, // Ensure this matches the column name in your database
+    }));
+
+    console.log('Fetched scheduleData:', this.scheduleData); // Debugging log
+  } catch (error) {
+    console.error('Error fetching schedules:', error.message);
+  }
+},
+    async fetchBookingStats() {
+      try {
+        const { data, error } = await supabaseBookings
+          .from('bookings')
+          .select('status'); // Fetch only the status column
+
+        if (error) throw error;
+
+        // Calculate totals based on booking status
+        this.totalPending = data.filter(booking => booking.status === 'pending').length;
+        this.totalConfirmed = data.filter(booking => booking.status === 'approved').length;
+        this.totalCanceled = data.filter(booking => booking.status === 'rejected').length;
+        this.totalBookings = this.totalPending + this.totalConfirmed + this.totalCanceled; // Total bookings
+
+        console.log('Booking stats fetched:', {
+          totalPending: this.totalPending,
+          totalConfirmed: this.totalConfirmed,
+          totalCanceled: this.totalCanceled,
+          totalBookings: this.totalBookings,
+        });
+      } catch (error) {
+        console.error('Error fetching booking stats:', error.message);
+      }
+    },
+  },
+  mounted() {
+    this.fetchBookingStats(); // Fetch booking stats when the component is mounted
+    this.fetchSchedules();
+    this.checkRoomAvailability(); // Check room availability
+  },
+};
 </script>
 
 <style scoped>

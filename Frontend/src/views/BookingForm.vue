@@ -757,143 +757,78 @@ export default {
       // Time slots based on the actual schedule from the photos
       timeSlots: [
   {
-    time: "7:30 AM - 8:00 AM",
-    value: "07:30",
-    duration: 30,
+    time: "7:00 AM - 8:00 AM",
+    value: "07:00",
+    duration: 60,
     isLunch: false,
   },
   {
-    time: "8:00 AM - 8:30 AM",
+    time: "8:00 AM - 9:00 AM",
     value: "08:00",
-    duration: 30,
+    duration: 60,
     isLunch: false,
   },
   {
-    time: "8:30 AM - 9:00 AM",
-    value: "08:30",
-    duration: 30,
-    isLunch: false,
-  },
-  {
-    time: "9:00 AM - 9:30 AM",
+    time: "9:00 AM - 10:00 AM",
     value: "09:00",
-    duration: 30,
+    duration: 60,
     isLunch: false,
   },
   {
-    time: "9:30 AM - 10:00 AM",
-    value: "09:30",
-    duration: 30,
-    isLunch: false,
-  },
-  {
-    time: "10:00 AM - 10:30 AM",
+    time: "10:00 AM - 11:00 AM",
     value: "10:00",
-    duration: 30,
+    duration: 60,
     isLunch: false,
   },
   {
-    time: "10:30 AM - 11:00 AM",
-    value: "10:30",
-    duration: 30,
-    isLunch: false,
-  },
-  {
-    time: "11:00 AM - 11:30 AM",
+    time: "11:00 AM - 12:00 PM",
     value: "11:00",
-    duration: 30,
+    duration: 60,
     isLunch: false,
   },
   {
-    time: "11:30 AM - 12:00 PM",
-    value: "11:30",
-    duration: 30,
-    isLunch: false,
-  },
-  {
-    time: "12:00 PM - 12:30 PM",
+    time: "12:00 PM - 1:00 PM",
     value: "12:00",
-    duration: 30,
+    duration: 60,
     isLunch: false,
   },
   {
-    time: "12:30 PM - 1:00 PM",
-    value: "12:30",
-    duration: 30,
-    isLunch: false,
-  },
-  {
-    time: "1:00 PM - 1:30 PM",
+    time: "1:00 PM - 2:00 PM",
     value: "13:00",
-    duration: 30,
+    duration: 60,
     isLunch: false,
   },
   {
-    time: "1:30 PM - 2:00 PM",
-    value: "13:30",
-    duration: 30,
-    isLunch: false,
-  },
-  {
-    time: "2:00 PM - 2:30 PM",
+    time: "2:00 PM - 3:00 PM",
     value: "14:00",
-    duration: 30,
+    duration: 60,
     isLunch: false,
   },
   {
-    time: "2:30 PM - 3:00 PM",
-    value: "14:30",
-    duration: 30,
-    isLunch: false,
-  },
-  {
-    time: "3:00 PM - 3:30 PM",
+    time: "3:00 PM - 4:00 PM",
     value: "15:00",
-    duration: 30,
+    duration: 60,
     isLunch: false,
   },
   {
-    time: "3:30 PM - 4:00 PM",
-    value: "15:30",
-    duration: 30,
-    isLunch: false,
-  },
-  {
-    time: "4:00 PM - 4:30 PM",
+    time: "4:00 PM - 5:00 PM",
     value: "16:00",
-    duration: 30,
+    duration: 60,
     isLunch: false,
   },
   {
-    time: "4:30 PM - 5:00 PM",
-    value: "16:30",
-    duration: 30,
-    isLunch: false,
-  },
-  {
-    time: "5:00 PM - 5:30 PM",
+    time: "5:00 PM - 6:00 PM",
     value: "17:00",
-    duration: 30,
+    duration: 60,
     isLunch: false,
   },
   {
-    time: "5:30 PM - 6:00 PM",
-    value: "17:30",
-    duration: 30,
-    isLunch: false,
-  },
-  {
-    time: "6:00 PM - 6:30 PM",
+    time: "6:00 PM - 7:00 PM",
     value: "18:00",
-    duration: 30,
+    duration: 60,
     isLunch: false,
   },
-  {
-    time: "6:30 PM - 7:00 PM",
-    value: "18:30",
-    duration: 30,
-    isLunch: false,
-  },
+
 ],
       // Weekly time blocks for the schedule display - completely flexible structure
       // This can accommodate any time slot combination from the scheduling team
@@ -1354,42 +1289,7 @@ async filterAvailableRooms() {
 
       return filteredSchedules;
     },
-    async fetchSchedules() {
-      try {
-        const { data, error } = await supabaseSchedules
-          .from("schedules")
-          .select("*");
-        if (error) throw error;
-
-        console.log("Raw data from API:", data); // Log raw data from the API
-
-        // Ensure periods is always populated
-        this.scheduleData = data.map((block) => {
-          console.log("Before processing block:", block); // Log each block before processing
-          const processedBlock = {
-            ...block,
-            periods: [
-              {
-                day: block.day,
-                start_time: block.start_time,
-                end_time: block.end_time,
-                lab_room: block.lab_room,
-                section: block.section,
-                course_code: block.course_code,
-                course_name: block.course_name,
-              },
-            ],
-          };
-          return processedBlock;
-        });
-
-        console.log("Final scheduleData:", this.scheduleData);
-      } catch (error) {
-        console.error("Error fetching schedules:", error.message);
-        this.scheduleData = [];
-        this.errorMessage = "Failed to fetch schedules.";
-      }
-    },
+    
     // Methods for handling merged cells
     isPartOfMergedCell(timeSlot, day) {
       // Check if this cell is part of a merged cell (spanning multiple time slots)

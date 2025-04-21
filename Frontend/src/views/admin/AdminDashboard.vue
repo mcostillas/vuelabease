@@ -131,15 +131,15 @@
           <h2 class="section-title">Room Availability</h2>
           <div class="room-availability-container">
             <div class="room-cards-container">
-              <div class="room-card" v-for="room in roomAvailability" :key="room.name">
-                <div class="room-info">
-                  <div class="room-name">{{ room.name }}</div>
-                  <div class="room-status" :class="room.status === 'Available' ? 'available' : 'in-use'">
-                    {{ room.status }}
-                  </div>
-                </div>
-              </div>
-            </div>
+  <div class="room-card" v-for="room in roomAvailability" :key="room.name">
+    <div class="room-info">
+      <div class="room-name">{{ room.name }}</div>
+      <div class="room-status" :class="room.status === 'Available' ? 'available' : 'in-use'">
+        {{ room.status }}
+      </div>
+    </div>
+  </div>
+</div>
           </div>
         </div>
         <div class="day-selector">
@@ -288,6 +288,37 @@ const supabaseSchedules = createClient(
       }
     },
     methods: {
+      checkRoomAvailability() {
+    const currentTime = new Date();
+    const currentHour = currentTime.getHours();
+    const currentMinutes = currentTime.getMinutes();
+    const currentDay = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+
+    // Iterate through each room and check if it is in use
+    this.roomAvailability = this.roomAvailability.map(room => {
+      const schedules = this.scheduleData.filter(schedule => 
+        schedule.labRoom === room.name && schedule.day === currentDay
+      );
+
+      // Check if the current time falls within any schedule for this room
+      const isInUse = schedules.some(schedule => {
+        const [startHour, startMinutes] = schedule.startTime.split(':').map(Number);
+        const [endHour, endMinutes] = schedule.endTime.split(':').map(Number);
+
+        const startTime = startHour * 60 + startMinutes;
+        const endTime = endHour * 60 + endMinutes;
+        const currentTimeInMinutes = currentHour * 60 + currentMinutes;
+
+        return currentTimeInMinutes >= startTime && currentTimeInMinutes < endTime;
+      });
+
+      // Update the room status
+      return {
+        ...room,
+        status: isInUse ? 'In Use' : 'Available',
+      };
+    });
+  },
       async fetchBookings() {
   try {
     const { data, error } = await supabaseBookings
@@ -432,13 +463,21 @@ async fetchSchedules() {
       }
     },
     mounted() {
-      this.fetchSchedules(); // Fetch schedules on page load
-      this.calculateDashboardStats();
-      this.fetchBookings(); // Fetch bookings on page load
-      this.fetchTotalBookings(); // Fetch total bookings from the database
-      
-  
-    }
+  this.fetchSchedules(); // Fetch schedules on page load
+  this.calculateDashboardStats();
+  this.fetchBookings(); // Fetch bookings on page load
+  this.fetchTotalBookings(); // Fetch total bookings from the database
+  this.checkRoomAvailability();
+
+  // Set up an interval to check room availability every 60 seconds
+  this.roomAvailabilityInterval = setInterval(() => {
+    this.checkRoomAvailability();
+  }, 60000); // Check every 60 seconds
+},
+beforeUnmount() {
+  // Clear the interval when the component is destroyed
+  clearInterval(this.roomAvailabilityInterval);
+},
   }
   </script>
   

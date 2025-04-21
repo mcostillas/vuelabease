@@ -88,27 +88,37 @@
           <div class="header-item">Subject</div>
           <div class="header-item">Section</div>
           <div class="header-item">Room</div>
+          <div class="header-item">Instructor</div>
         </div>
         
         <div class="schedule-cards">
-          <div 
-            v-for="event in paginatedEvents" 
-            :key="event.id" 
-            class="schedule-card"
-          >
-            <div class="schedule-item">
-              <div class="day">{{ getDayAbbreviation(event.date) }}</div>
-              <div class="time-slot">{{ formatEventTime(event.startTime, event.endTime) }}</div>
-              <div class="purpose">{{ event.title }}</div>
-              <div class="section">{{ event.section || 'N/A' }}</div>
-              <div class="room">{{ event.location }}</div>
-            </div>
-          </div>
-          
-          <div v-if="filteredEvents.length === 0" class="empty-schedule">
-            <p>No scheduled events.</p>
-          </div>
-        </div>
+  <!-- Loading Indicator -->
+  <div v-if="isLoading" class="loading-indicator">
+    <p>Loading schedules...</p>
+  </div>
+
+  <!-- Schedule Cards -->
+  <div 
+    v-for="event in paginatedEvents" 
+    :key="event.id" 
+    class="schedule-card"
+  >
+    <div class="schedule-item">
+      
+      <div class="day">{{ event.date }}</div>
+      <div class="time-slot">{{ formatEventTime(event.startTime, event.endTime) }}</div>
+      <div class="purpose">{{ event.title }}</div>
+      <div class="section">{{ event.section || 'N/A' }}</div>
+      <div class="room">{{ event.location }}</div>
+      <div class="instructor">{{ event.instructorName }}</div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div v-if="!isLoading && filteredEvents.length === 0" class="empty-schedule">
+    <p>No scheduled events.</p>
+  </div>
+</div>
         </div>
       </div>
       
@@ -143,14 +153,21 @@
 </template>
 
 <script>
-import DashboardLayout from '@/components/layout/DashboardLayout.vue'
-import InstructorHeader from '@/components/instructor/InstructorHeader.vue'
+import { createClient } from '@supabase/supabase-js';
+import DashboardLayout from '@/components/layout/DashboardLayout.vue';
+import InstructorHeader from '@/components/instructor/InstructorHeader.vue';
+
+// Initialize Supabase client
+const supabaseSchedules = createClient(
+  'https://yfiyhsazgjsxjmybsyar.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlmaXloc2F6Z2pzeGpteWJzeWFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI4ODE5MzEsImV4cCI6MjA1ODQ1NzkzMX0.j7oFwaqYvJq45jhPuQBPEtNU-itU-CRleOJcqm1fOOo'
+);
 
 export default {
   name: 'InstructorSchedule',
   components: {
     DashboardLayout,
-    InstructorHeader
+    InstructorHeader,
   },
   data() {
     return {
@@ -163,148 +180,23 @@ export default {
       selectedSemester: 'current',
       currentPage: 1,
       itemsPerPage: 10,
-      scheduleEvents: [
-        {
-          id: 1,
-          title: 'Web Applications Development',
-          section: 'CCS-2A',
-          location: 'L201',
-          date: '2025-03-15',
-          startTime: '07:30',
-          endTime: '10:30',
-          type: 'lab'
-        },
-        {
-          id: 2,
-          title: 'Data Structures and Algorithms',
-          section: 'CCS-2B',
-          location: 'L202',
-          date: '2025-03-16',
-          startTime: '13:00',
-          endTime: '16:00',
-          type: 'lab'
-        },
-        {
-          id: 3,
-          title: 'Computer Programming',
-          section: 'CCS-1A',
-          location: 'L203',
-          date: '2025-03-17',
-          startTime: '07:30',
-          endTime: '10:30',
-          type: 'lecture'
-        },
-        {
-          id: 4,
-          title: 'Computer Networks',
-          section: 'CCS-3A',
-          location: 'L204',
-          date: '2025-03-18',
-          startTime: '10:30',
-          endTime: '12:00',
-          type: 'lab'
-        },
-        {
-          id: 5,
-          title: 'Database Management Systems',
-          section: 'CCS-2C',
-          location: 'L205',
-          date: '2025-03-19',
-          startTime: '13:00',
-          endTime: '16:00',
-          type: 'lab'
-        },
-        {
-          id: 6,
-          title: 'Software Engineering',
-          section: 'CCS-3A',
-          location: 'Open Laboratory',
-          date: '2025-03-15',
-          startTime: '11:30',
-          endTime: '12:30',
-          type: 'lecture'
-        },
-        {
-          id: 7,
-          title: 'Mobile Application Development',
-          section: 'CCS-3B',
-          location: 'IOT Lab',
-          date: '2025-03-16',
-          startTime: '13:30',
-          endTime: '15:00',
-          type: 'lab'
-        },
-        {
-          id: 8,
-          title: 'Artificial Intelligence',
-          section: 'CCS-3C',
-          location: 'L201',
-          date: '2025-03-17',
-          startTime: '13:00',
-          endTime: '16:00',
-          type: 'lecture'
-        },
-        {
-          id: 9,
-          title: 'Cybersecurity',
-          section: 'CCS-4A',
-          location: 'L202',
-          date: '2025-03-18',
-          startTime: '14:30',
-          endTime: '16:00',
-          type: 'lab'
-        },
-        {
-          id: 10,
-          title: 'Calculus for Engineers',
-          section: 'CEA-1A',
-          location: 'L203',
-          date: '2025-03-19',
-          startTime: '07:30',
-          endTime: '09:00',
-          type: 'lecture'
-        },
-        {
-          id: 11,
-          title: 'Accounting Principles',
-          section: 'CABE-1A',
-          location: 'L204',
-          date: '2025-03-20',
-          startTime: '10:30',
-          endTime: '12:00',
-          type: 'lecture'
-        },
-        {
-          id: 12,
-          title: 'Organic Chemistry',
-          section: 'CPC-2A',
-          location: 'L205',
-          date: '2025-03-21',
-          startTime: '13:00',
-          endTime: '16:00',
-          type: 'lab'
-        }
-      ]
-    }
+      scheduleEvents: [], // Array to store fetched schedule events
+      isLoading: false, // Loading state
+    };
   },
   computed: {
     availableSections() {
-      // Get unique sections based on the selected program and year
       return this.scheduleEvents
         .filter(event => {
-          // Filter by program if selected
           if (this.selectedProgram && !event.section.startsWith(this.selectedProgram)) {
             return false;
           }
-          
-          // Filter by year if selected
           if (this.selectedYear) {
             const yearPattern = new RegExp(`${this.selectedProgram}-${this.selectedYear}[A-Z]`);
             if (!yearPattern.test(event.section)) {
               return false;
             }
           }
-          
           return true;
         })
         .map(event => event.section)
@@ -312,182 +204,196 @@ export default {
         .sort();
     },
     filteredEvents() {
-      let filtered = [...this.scheduleEvents]
-      
-      // Apply program and year filters through section filter
-      if (this.selectedSection) {
-        filtered = filtered.filter(event => event.section === this.selectedSection)
-      } else {
-        // If no section is selected, apply program and year filters separately
-        if (this.selectedProgram) {
-          filtered = filtered.filter(event => {
-            if (!event.section) return false
-            const parts = event.section.split('-')
-            return parts.length >= 2 && parts[0] === this.selectedProgram
-          })
-        }
-        
-        if (this.selectedYear) {
-          filtered = filtered.filter(event => {
-            if (!event.section) return false
-            const parts = event.section.split('-')
-            return parts.length >= 2 && parts[1].charAt(0) === this.selectedYear
-          })
-        }
+  let filtered = [...this.scheduleEvents];
+
+  // Filter by section
+  if (this.selectedSection) {
+    filtered = filtered.filter(event => event.section === this.selectedSection);
+  } else {
+    // Filter by program
+    if (this.selectedProgram) {
+      filtered = filtered.filter(event => {
+        if (!event.section) return false;
+        const parts = event.section.split('-');
+        return parts.length >= 2 && parts[0] === this.selectedProgram;
+      });
+    }
+
+    // Filter by year level
+    if (this.selectedYear) {
+      filtered = filtered.filter(event => {
+        if (!event.section) return false;
+        const parts = event.section.split('-');
+        return parts.length >= 2 && parts[1].startsWith(this.selectedYear); // Match the year level
+      });
+    }
+  }
+
+  // Filter by day
+  if (this.selectedDay) {
+    filtered = filtered.filter(event => {
+      const day = this.getDayAbbreviation(event.date);
+      return day === this.selectedDay;
+    });
+  }
+
+  // Filter by time of day
+  if (this.selectedTimeOfDay) {
+    filtered = filtered.filter(event => {
+      const startHour = parseInt(event.startTime.split(':')[0]);
+      if (this.selectedTimeOfDay === 'morning') {
+        return startHour >= 7 && startHour < 12;
+      } else if (this.selectedTimeOfDay === 'afternoon') {
+        return startHour >= 12 && startHour < 16;
       }
-      
-      // Apply day filter
-      if (this.selectedDay) {
+      return true;
+    });
+  }
+
+  // Filter by date range
+  if (this.dateFilter !== 'all') {
+    const today = new Date();
+    const eventDate = new Date();
+    let startOfWeek, startOfMonth, startOfSemester, endOfSemester;
+
+    switch (this.dateFilter) {
+      case 'week':
+        startOfWeek = new Date(today);
+        startOfWeek.setDate(today.getDate() - today.getDay());
+        startOfWeek.setHours(0, 0, 0, 0);
         filtered = filtered.filter(event => {
-          const day = this.getDayAbbreviation(event.date)
-          return day === this.selectedDay
-        })
-      }
-      
-      // Apply time of day filter
-      if (this.selectedTimeOfDay) {
+          eventDate.setTime(Date.parse(event.date));
+          return eventDate >= startOfWeek;
+        });
+        break;
+
+      case 'month':
+        startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
         filtered = filtered.filter(event => {
-          const startHour = parseInt(event.startTime.split(':')[0])
-          
-          if (this.selectedTimeOfDay === 'morning') {
-            return startHour >= 7 && startHour < 12
-          } else if (this.selectedTimeOfDay === 'afternoon') {
-            return startHour >= 12 && startHour < 16
+          eventDate.setTime(Date.parse(event.date));
+          return eventDate >= startOfMonth;
+        });
+        break;
+
+      case 'semester':
+        if (this.selectedSemester === 'current') {
+          startOfSemester = new Date(today);
+          startOfSemester.setMonth(today.getMonth() - 4);
+        } else {
+          const [year, semNum] = this.selectedSemester.split('-');
+          startOfSemester = new Date();
+          if (semNum === '1') {
+            startOfSemester.setFullYear(parseInt(year), 7, 1);
+            endOfSemester = new Date();
+            endOfSemester.setFullYear(parseInt(year), 11, 31);
+          } else {
+            startOfSemester.setFullYear(parseInt(year) + 1, 0, 1);
+            endOfSemester = new Date();
+            endOfSemester.setFullYear(parseInt(year) + 1, 4, 31);
           }
-          
-          return true
-        })
-      }
-      
-      // Apply date filter
-      if (this.dateFilter !== 'all') {
-        const today = new Date()
-        const eventDate = new Date()
-        
-        // Declare variables outside of case blocks to avoid ESLint errors
-        let startOfWeek, startOfMonth, startOfSemester, endOfSemester
-        
-        switch(this.dateFilter) {
-          case 'week':
-            // Get start of current week (Sunday)
-            startOfWeek = new Date(today)
-            startOfWeek.setDate(today.getDate() - today.getDay())
-            startOfWeek.setHours(0, 0, 0, 0)
-            
-            filtered = filtered.filter(event => {
-              eventDate.setTime(Date.parse(event.date))
-              return eventDate >= startOfWeek
-            })
-            break
-            
-          case 'month':
-            // Get start of current month
-            startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
-            
-            filtered = filtered.filter(event => {
-              eventDate.setTime(Date.parse(event.date))
-              return eventDate >= startOfMonth
-            })
-            break
-            
-          case 'semester':
-            // Handle different semester selections
-            if (this.selectedSemester === 'current') {
-              // Current semester (last 4 months)
-              startOfSemester = new Date(today)
-              startOfSemester.setMonth(today.getMonth() - 4)
-            } else {
-              // Parse the selected semester (format: YYYY-N where N is 1 or 2)
-              const [year, semNum] = this.selectedSemester.split('-')
-              startOfSemester = new Date()
-              
-              if (semNum === '1') {
-                // First semester typically starts in August
-                startOfSemester.setFullYear(parseInt(year), 7, 1) // August 1st
-                endOfSemester = new Date()
-                endOfSemester.setFullYear(parseInt(year), 11, 31) // December 31st
-              } else {
-                // Second semester typically starts in January of the next year
-                startOfSemester.setFullYear(parseInt(year) + 1, 0, 1) // January 1st
-                endOfSemester = new Date()
-                endOfSemester.setFullYear(parseInt(year) + 1, 4, 31) // May 31st
-              }
-            }
-            
-            filtered = filtered.filter(event => {
-              eventDate.setTime(Date.parse(event.date))
-              if (this.selectedSemester === 'current') {
-                return eventDate >= startOfSemester
-              } else {
-                return eventDate >= startOfSemester && eventDate <= endOfSemester
-              }
-            })
-            break
         }
-      }
-      
-      return filtered
-    },
+        filtered = filtered.filter(event => {
+          eventDate.setTime(Date.parse(event.date));
+          if (this.selectedSemester === 'current') {
+            return eventDate >= startOfSemester;
+          } else {
+            return eventDate >= startOfSemester && eventDate <= endOfSemester;
+          }
+        });
+        break;
+    }
+  }
+
+  return filtered;
+},
     paginatedEvents() {
-      // Apply pagination to filtered events
-      const startIndex = (this.currentPage - 1) * this.itemsPerPage
-      const endIndex = startIndex + this.itemsPerPage
-      return this.filteredEvents.slice(startIndex, endIndex)
+      const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+      const endIndex = startIndex + this.itemsPerPage;
+      return this.filteredEvents.slice(startIndex, endIndex);
     },
     totalPages() {
-      // Calculate total pages based on filtered events
-      return Math.ceil(this.filteredEvents.length / this.itemsPerPage) || 1
-    }
+      return Math.ceil(this.filteredEvents.length / this.itemsPerPage) || 1;
+    },
   },
   methods: {
+    async fetchScheduleEvents() {
+      this.isLoading = true;
+      try {
+        const { data, error } = await supabaseSchedules
+          .from('schedules')
+          .select('*');
+
+        if (error) throw error;
+
+        this.scheduleEvents = data.map(event => ({
+          id: event.id,
+          title: event.course_name,
+          courseCode: event.course_code,
+          section: event.section,
+          location: event.lab_room,
+          date: event.day,
+          secondDay: event.second_day || null,
+          startTime: event.start_time,
+          endTime: event.end_time,
+          instructorName: event.instructor_name,
+          semester: event.semester,
+          scheduleType: event.schedule_types,
+          status: event.status,
+        }));
+
+        console.log('Fetched schedule events:', this.scheduleEvents);
+      } catch (error) {
+        console.error('Error fetching schedule events:', error.message);
+      } finally {
+        this.isLoading = false;
+      }
+    },
     getDayAbbreviation(dateString) {
       const date = new Date(dateString);
       const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
       return days[date.getDay()];
     },
     formatEventTime(start, end) {
-      const formatTime = (time) => {
-        const [hours, minutes] = time.split(':')
-        const hour = parseInt(hours)
-        return `${hour % 12 || 12}:${minutes} ${hour < 12 ? 'am' : 'pm'}`
-      }
-      
-      return `${formatTime(start)} - ${formatTime(end)}`
+      const formatTime = time => {
+        const [hours, minutes] = time.split(':');
+        const hour = parseInt(hours);
+        return `${hour % 12 || 12}:${minutes} ${hour < 12 ? 'am' : 'pm'}`;
+      };
+      return `${formatTime(start)} - ${formatTime(end)}`;
     },
     applyFilters() {
-      // Reset to first page when filters change
-      this.currentPage = 1
+      this.currentPage = 1;
     },
     viewEventDetails(event) {
-      // Future implementation for viewing event details
-      console.log('View details for event:', event)
-    }
+      console.log('View details for event:', event);
+    },
   },
   watch: {
     selectedProgram() {
-      // Reset section when program changes
-      this.selectedSection = ''
-      this.applyFilters()
+      this.selectedSection = '';
+      this.applyFilters();
     },
     selectedYear() {
-      // Reset section when year changes
-      this.selectedSection = ''
-      this.applyFilters()
+      this.selectedSection = '';
+      this.applyFilters();
     },
     selectedDay() {
-      this.applyFilters()
+      this.applyFilters();
     },
     selectedTimeOfDay() {
-      this.applyFilters()
+      this.applyFilters();
     },
     dateFilter() {
-      this.applyFilters()
+      this.applyFilters();
     },
     selectedSemester() {
-      this.applyFilters()
-    }
-  }
-}
+      this.applyFilters();
+    },
+  },
+  mounted() {
+    this.fetchScheduleEvents();
+  },
+};
 </script>
 
 <style scoped>
@@ -535,6 +441,10 @@ export default {
   background-color: white;
   cursor: pointer;
   font-family: 'Poppins', sans-serif;
+}
+.section{
+  font-weight: 500;
+  color: #1E293B;
 }
 
 .filter-group select:focus {
