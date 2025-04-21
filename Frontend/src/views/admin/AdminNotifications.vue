@@ -64,51 +64,42 @@
         
         <div class="notification-cards">
           <div 
-            v-for="(notification, index) in filteredNotifications" 
-            :key="index" 
-            class="notification-card" 
-            :class="{ 'unread': !notification.read }"
-          >
-            <div class="notification-item" @click="openNotificationModal(notification, getOriginalIndex(notification))">
-              <div class="notification-type">
-                <div class="notification-icon" :class="notification.type">
-                  <svg v-if="notification.type === 'booking'" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M19 4H5C3.89543 4 3 4.89543 3 6V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V6C21 4.89543 20.1046 4 19 4Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M16 2V6" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M8 2V6" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M3 10H21" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                  <svg v-else-if="notification.type === 'alert'" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M12 8V12" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M12 16H12.01" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                  <svg v-else-if="notification.type === 'password_reset'" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M19 11H5V21H19V11Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M17 7V11H7V7C7 5.93913 7.42143 4.92172 8.17157 4.17157C8.92172 3.42143 9.93913 3 11 3H13C14.0609 3 15.0783 3.42143 15.8284 4.17157C16.5786 4.92172 17 5.93913 17 7Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M12 16C12.5523 16 13 15.5523 13 15C13 14.4477 12.5523 14 12 14C11.4477 14 11 14.4477 11 15C11 15.5523 11.4477 16 12 16Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                  <svg v-else width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M18 8C18 6.4087 17.3679 4.88258 16.2426 3.75736C15.1174 2.63214 13.5913 2 12 2C10.4087 2 8.88258 2.63214 7.75736 3.75736C6.63214 4.88258 6 6.4087 6 8C6 15 3 17 3 17H21C21 17 18 15 18 8Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M13.73 21C13.5542 21.3031 13.3019 21.5547 12.9982 21.7295C12.6946 21.9044 12.3504 21.9965 12 21.9965C11.6496 21.9965 11.3054 21.9044 11.0018 21.7295C10.6982 21.5547 10.4458 21.3031 10.27 21" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                </div>
-              </div>
-              
-              <div class="notification-details">
-                <h3 class="notification-title">{{ notification.title }}</h3>
-                <p class="notification-message">{{ notification.message }}</p>
-                <span class="notification-time">{{ notification.time }}</span>
-              </div>
-            </div>
-            
-            <button class="delete-notification-button" @click.stop="deleteNotification(getOriginalIndex(notification))">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M18 6L6 18" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M6 6L18 18" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </button>
-          </div>
+  v-for="(notification, index) in filteredNotifications" 
+  :key="index" 
+  class="notification-card" 
+  :class="{ 'unread': !notification.read, 'highlighted': selectedNotification && selectedNotification === notification }"
+>
+  <div 
+    class="notification-item" 
+    @click="openNotificationModal(notification, getOriginalIndex(notification))"
+  >
+    <div class="notification-type">
+      <div class="notification-icon" :class="notification.type">
+        <svg v-if="notification.type === 'booking'" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M19 4H5C3.89543 4 3 4.89543 3 6V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V6C21 4.89543 20.1046 4 19 4Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M16 2V6" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M8 2V6" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M3 10H21" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <!-- Other icons for different notification types -->
+      </div>
+    </div>
+    <div class="notification-details">
+      <h3 class="notification-title">{{ notification.title }}</h3>
+      <p class="notification-message">{{ notification.message }}</p>
+      <span class="notification-time">{{ notification.time }}</span>
+    </div>
+  </div>
+  <button 
+    class="delete-notification-button" 
+    @click.stop="deleteNotification(getOriginalIndex(notification))"
+  >
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M18 6L6 18" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M6 6L18 18" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
+</div>
         </div>
       </div>
     </div>
@@ -203,28 +194,15 @@
           </button>
           
           <button 
-            v-if="selectedNotification && selectedNotification.type === 'booking'" 
-            class="modal-action-button primary"
-            @click="handleAction('confirm')"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right: 6px;">
-              <path d="M9 11L12 14L22 4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M21 12V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H16" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            Approve
-          </button>
-          
-          <button 
-            v-if="selectedNotification && selectedNotification.type === 'booking'" 
-            class="modal-action-button secondary"
-            @click="handleAction('reject')"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right: 6px;">
-              <path d="M18 6L6 18" stroke="#DD3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M6 6L18 18" stroke="#DD3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            Reject
-          </button>
+    v-if="selectedNotification && selectedNotification.type === 'booking'" 
+    class="modal-action-button primary"
+    @click="viewBookingDetails()"
+  >
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right: 6px;">
+      <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" fill="white"/>
+    </svg>
+    View Booking
+  </button>
         </div>
       </div>
     </Modal>
@@ -265,6 +243,9 @@ export default {
     }
   },
   computed: {
+    hasUnreadNotifications() {
+    return this.notifications.some(notification => !notification.read);
+  },
     filteredNotifications() {
       switch (this.activeFilter) {
         case 'all':
@@ -304,7 +285,28 @@ beforeUnmount() {
   clearInterval(this.notificationInterval);
   },
   methods: {
-    
+    viewBookingDetails() {
+    if (!this.selectedNotification || this.selectedNotification.type !== 'booking') return;
+
+    // Log the selected notification for debugging
+    console.log('Viewing booking details:', this.selectedNotification);
+
+    // Redirect to Booking Management with the booking ID
+    if (this.selectedNotification.bookingId) {
+      this.$router.push({
+        name: 'AdminBookings', // Replace with the actual route name for Booking Management
+        query: { bookingId: this.selectedNotification.bookingId },
+      });
+    } else {
+      console.error('Booking ID is missing in the selected notification.');
+    }
+
+    // Close the modal
+    this.closeModal();
+  },
+  
+  
+  
     async fetchNotifications() {
   try {
     const { data, error } = await supabaseBookings
@@ -537,6 +539,13 @@ openNotificationModal(notification, index) {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
+}
+.notification-card.highlighted {
+  border: 2px solid #DD3859; /* Highlight border color */
+  background-color: #FEF2F2; /* Light background color for emphasis */
+  box-shadow: 0 4px 8px rgba(221, 56, 89, 0.2); /* Subtle shadow for focus */
+  transform: scale(1.02); /* Slightly enlarge the card */
+  transition: all 0.2s ease; /* Smooth transition for the effect */
 }
 
 .filter-buttons {

@@ -20,7 +20,7 @@
                 <path d="M16 17C12.6863 17 10 19.6863 10 23C10 23.5523 10.4477 24 11 24H21C21.5523 24 22 23.5523 22 23C22 19.6863 19.3137 17 16 17Z" fill="white" />
               </svg>
             </div>
-            <div class="user-name">{{ userName }}</div>
+            <div class="user-name">{{ firstName }}</div>
             <div class="dropdown-icon">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M4 6L8 10L12 6" stroke="#64748B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -60,7 +60,9 @@ export default {
       profileImage: null,
       currentDate: '',
       currentTime: '',
+      firstName: '',
       dateTimeInterval: null
+      
     }
   },
   computed: {
@@ -81,27 +83,29 @@ export default {
       this.isDropdownOpen = !this.isDropdownOpen
     },
     loadUserData() {
-      try {
-        const userData = localStorage.getItem('labease_user_data')
-        if (userData) {
-          const parsedData = JSON.parse(userData)
-          if (parsedData.firstName && parsedData.lastName) {
-            this.userName = `${parsedData.firstName} ${parsedData.lastName}`
-          } else if (parsedData.name) {
-            this.userName = parsedData.name
-          }
-          
-          // Load profile image if available
-          if (parsedData.profileImage) {
-            this.profileImage = parsedData.profileImage
-          } else if (parsedData.photoUrl) {
-            this.profileImage = parsedData.photoUrl
-          }
-        }
-      } catch (error) {
-        console.error('Error loading user data:', error)
-      }
-    },
+  try {
+    const userData = localStorage.getItem('labease_user_data');
+    const storedFirstName = localStorage.getItem('firstName');
+
+    console.log('Retrieved firstName from localStorage:', storedFirstName);
+
+    // Assign firstName directly from localStorage or fallback to 'User'
+    this.firstName = storedFirstName?.trim() || 'User';
+
+    // Parse userData for additional properties like profileImage
+    if (userData) {
+      const parsedData = JSON.parse(userData);
+
+      // Assign profileImage if available
+      this.profileImage = parsedData.profileImage || parsedData.photoUrl || null;
+    }
+
+    console.log('Set firstName in component:', this.firstName);
+  } catch (error) {
+    console.error('Error loading user data:', error);
+    this.firstName = 'User'; // Fallback in case of error
+  }
+},
     startDateTimeUpdates() {
       // Initial update
       this.updateDateTime()
@@ -133,8 +137,8 @@ export default {
     }
   },
   created() {
-    this.loadUserData()
-    this.startDateTimeUpdates()
+    this.loadUserData();
+    this.startDateTimeUpdates();
   },
   mounted() {
     // Setup event listeners after the component is mounted

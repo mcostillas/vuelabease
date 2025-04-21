@@ -120,10 +120,10 @@ const handleLogin = async () => {
   try {
     // Clear any previous error messages
     errorMessage.value = '';
-    
+
     // Show loading animation
     loading.value = true;
-    
+
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email.value)) {
@@ -131,7 +131,7 @@ const handleLogin = async () => {
       loading.value = false;
       return;
     }
-    
+
     // Validate password (minimum 6 characters)
     if (password.value.length < 6) {
       errorMessage.value = 'Password must be at least 6 characters';
@@ -157,68 +157,45 @@ const handleLogin = async () => {
       return;
     }
 
-    // Fetch the user's role from the 'user' table
-    const { data: userRoleData, error: roleError } = await supabase
+    // Fetch the user's full name and role from the 'user' table
+    const { data: userData, error: userError } = await supabase
       .from('user')
-      .select('usertype')
+      .select('fullname, usertype')
       .eq('userid', data.user.id)
       .single();
-    console.log('Supabase Query Response:', { userRoleData, roleError });
-    if (roleError) {
-      console.error('Error fetching user role:', roleError.message);
-      
-      // Try alternative query with email as fallback
-      const { data: userDataByEmail, error: emailError } = await supabase
-        .from('user')
-        .select('usertype')
-        .eq('email', email.value)
-        .single();
-        
-      if (emailError) {
-        console.error('Email fallback error:', emailError.message);
-        errorMessage.value = 'An error occurred while determining your role.';
-        return;
-      }
-      
-      // Store the usertype in localStorage
-      localStorage.setItem('usertype', userDataByEmail.usertype);
-      console.log('Usertype stored in localStorage (from email):', userDataByEmail.usertype);
-      
-      // Redirect based on usertype
-      if (userDataByEmail.usertype === 'Admin') {
-        console.log('Redirecting to /admin/dashboard');
-        router.push('/admin/dashboard'); // Redirect to Admin Dashboard
-      } else if (userDataByEmail.usertype === 'Instructor') {
-        console.log('Redirecting to /instructor/dashboard');
-        router.push('/instructor/dashboard'); // Redirect to Instructor Dashboard
-      } else {
-        console.log('Invalid role:', userDataByEmail.usertype);
-        errorMessage.value = 'Invalid role. Please contact support.';
-      }
+
+    if (userError) {
+      console.error('Error fetching user data:', userError.message);
+      errorMessage.value = 'An error occurred while fetching user data.';
       return;
     }
 
-    // Store the usertype in localStorage
-    localStorage.setItem('usertype', userRoleData.usertype);
-    console.log('Usertype stored in localStorage:', userRoleData.usertype);
+    // Extract the first name from the full name
+    const fullName = userData.fullname || '';
+    const firstName = fullName.split(' ')[0]; // Get the first word as the first name
+
+    // Store the first name and usertype in localStorage
+    console.log('Extracted full name:', fullName);
+    console.log('Extracted first name:', firstName);
+    localStorage.setItem('firstName', firstName);
+    localStorage.setItem('usertype', userData.usertype);
 
     // Redirect based on usertype
-    if (userRoleData.usertype === 'Admin') {
+    if (userData.usertype === 'Admin') {
       console.log('Redirecting to /admin/dashboard');
       router.push('/admin/dashboard'); // Redirect to Admin Dashboard
-    } else if (userRoleData.usertype === 'Instructor') {
+    } else if (userData.usertype === 'Instructor') {
       console.log('Redirecting to /instructor/dashboard');
       router.push('/instructor/dashboard'); // Redirect to Instructor Dashboard
     } else {
-      console.log('Invalid role:', userRoleData.usertype);
+      console.log('Invalid role:', userData.usertype);
       errorMessage.value = 'Invalid role. Please contact support.';
     }
   } catch (error) {
     console.error('Error during login:', error.message);
     errorMessage.value = error.message || 'An error occurred during login';
-    // Hide loading animation on error
-    loading.value = false;
   } finally {
+    // Hide loading animation
     loading.value = false;
   }
 };
