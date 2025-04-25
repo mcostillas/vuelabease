@@ -13,6 +13,16 @@
       />
       
       <div class="logbook-section">
+        <!-- Action Buttons -->
+        <div class="logbook-actions">
+          <button class="manual-checkin-btn" @click="showManualCheckInForm()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Manual Check-in
+          </button>
+        </div>
+        
         <!-- Filters -->
         <div class="filters">
           <div class="filter-group">
@@ -72,6 +82,7 @@
             <div class="header-item">Instructor</div>
             <div class="header-item">Department</div>
             <div class="header-item">Date</div>
+            <div class="header-item">Scheduled</div>
             <div class="header-item">Time In</div>
             <div class="header-item">Time Out</div>
             <div class="header-item">Status</div>
@@ -87,8 +98,18 @@
                 <div class="instructor">{{ entry.name }}</div>
                 <div class="department">{{ entry.department }}</div>
                 <div class="date">{{ entry.date }}</div>
-                <div class="time-in">{{ entry.timeIn }}</div>
-                <div class="time-out">{{ entry.timeOut || '—' }}</div>
+                <div class="scheduled">
+                  {{ entry.scheduledStart }} - {{ entry.scheduledEnd }}
+                </div>
+                <div class="time-in">
+                  {{ entry.timeIn }}
+                  <span v-if="calculateLateness(entry)" class="time-diff late">+{{ calculateLateness(entry) }}m</span>
+                </div>
+                <div class="time-out">
+                  {{ entry.manualTimeOut || entry.timeOut || '—' }}
+                  <span v-if="calculateOvertime(entry)" class="time-diff overtime">+{{ calculateOvertime(entry) }}m</span>
+                  <span v-if="entry.autoLogout && !entry.manualTimeOut" class="auto-logout">Auto</span>
+                </div>
                 <div class="status">
                   <span class="status-badge" :class="entry.status">
                     {{ entry.status === 'in' ? 'Checked In' : 'Checked Out' }}
@@ -151,14 +172,16 @@
         <div class="modal-body">
           <div class="instructor-details" v-if="currentInstructor">
             <div class="instructor-photo">
-              <img :src="currentInstructor.photoUrl || currentInstructor.avatar" alt="Instructor Photo">
+              <div class="initials-avatar" style="background-color: #DD3859; color: white;">
+                {{ getInitials(currentInstructor.name) }}
+              </div>
             </div>
             <div class="instructor-info">
               <h3>{{ currentInstructor.name }}</h3>
               <div class="instructor-metadata">
                 <div class="metadata-item">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M20 21V19C20 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     <path d="M12 11C14.2091 11 16 9.20914 16 7C16 4.79086 14.2091 3 12 3C9.79086 3 8 4.79086 8 7C8 9.20914 9.79086 11 12 11Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                   </svg>
                   <span>ID: {{ currentInstructor.id }}</span>
@@ -202,6 +225,57 @@
       </div>
     </div>
     
+    <!-- Manual Check-in Modal -->
+    <div class="modal" v-if="showManualCheckInModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 8V12L15 15M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="#DD3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Manual Check-in
+          </h2>
+          <button class="close-btn" @click="closeManualCheckInModal">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="instructor-name">Instructor Name</label>
+            <select 
+              id="instructor-name" 
+              v-model="manualInstructorName" 
+              class="form-input"
+              @change="validateInstructor"
+              ref="manualNameInput"
+            >
+              <option value="">Select Instructor</option>
+              <option value="Marc Maurice Costillas">Marc Maurice Costillas</option>
+              <option value="Mark Anthony Nisnea">Mark Anthony Nisnea</option>
+              <option value="Rockford Jade Dagohoy">Rockford Jade Dagohoy</option>
+              <option value="Emily Davis">Emily Davis</option>
+              <option value="Maria Rodriguez">Maria Rodriguez</option>
+            </select>
+            <div class="form-help-text" v-if="instructorValidationMessage">
+              {{ instructorValidationMessage }}
+            </div>
+          </div>
+          
+          <div class="form-actions">
+            <button 
+              class="submit-btn" 
+              @click="submitManualCheckIn"
+              :disabled="!isManualFormValid"
+            >
+              Submit
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
     <!-- Notification -->
     <div class="notification" :class="[notification.type, { show: notification.show }]">
       {{ notification.message }}
@@ -214,80 +288,124 @@ import DashboardLayout from '@/components/layout/DashboardLayout.vue';
 import AdminHeader from '@/components/admin/AdminHeader.vue';
 
 export default {
-  name: 'AdminLogbook',
   components: {
     DashboardLayout,
     AdminHeader
   },
   data() {
     return {
-      // RFID related data
+      // RFID related
       rfidValue: '',
       showModal: false,
       currentInstructor: null,
       autoConfirmTimeout: null,
+      scanningActive: true,
+      lastScanTime: null,
       
-      // Logbook entries
+      // Manual check-in related
+      showManualCheckInModal: false,
+      manualInstructorName: '',
+      instructorValidationMessage: '',
+      knownInstructors: [
+        { name: 'Marc Maurice Costillas', rfid: '14230206', department: 'College of Computer Studies' },
+        { name: 'Mark Anthony Nisnea', rfid: '14409518', department: 'College of Computer Studies' },
+        { name: 'Rockford Jade Dagohoy', rfid: '16864846', department: 'College of Computer Studies' },
+        { name: 'Emily Davis', rfid: '12345678', department: 'College of Computer Studies' },
+        { name: 'Maria Rodriguez', rfid: '01641066', department: 'College of Computer Studies' }
+      ],
+      autoCheckoutInterval: null,
+            // Logbook entries
       logEntries: [
         {
-          id: 1,
-          name: 'John Doe',
-          department: 'Computer Science',
-          date: '2023-11-15',
+          id: "14230206",
+          name: 'Marc Maurice Costillas',
+          department: 'College of Computer Studies',
+          date: this.getCurrentDate(),
+          scheduledStart: '08:00 AM',
+          scheduledEnd: '12:00 PM',
           timeIn: '08:30 AM',
-          timeOut: '04:30 PM',
+          timeOut: '12:30 PM',
           status: 'out',
           photoUrl: 'https://randomuser.me/api/portraits/men/1.jpg',
           subject: 'Web Development',
-          section: 'CS-201'
+          section: 'BSIT-3A',
+          autoLogout: false
         },
         {
-          id: 2,
-          name: 'Jane Smith',
-          department: 'Information Technology',
-          date: '2023-11-15',
+          id: "14409518",
+          name: 'Mark Anthony Nisnea',
+          department: 'College of Computer Studies',
+          date: this.getCurrentDate(),
+          scheduledStart: '09:00 AM',
+          scheduledEnd: '12:00 PM',
           timeIn: '09:15 AM',
           timeOut: null,
           status: 'in',
-          photoUrl: 'https://randomuser.me/api/portraits/women/2.jpg',
+          photoUrl: 'https://randomuser.me/api/portraits/men/2.jpg',
           subject: 'Database Management',
-          section: 'IT-301'
+          section: 'BSIT-3B',
+          autoLogout: false
         },
         {
-          id: 3,
-          name: 'Robert Johnson',
-          department: 'Computer Engineering',
-          date: '2023-11-15',
+          id: "16864846",
+          name: 'Rockford Jade Dagohoy',
+          department: 'College of Computer Studies',
+          date: this.getCurrentDate(),
+          scheduledStart: '08:00 AM',
+          scheduledEnd: '03:00 PM',
           timeIn: '08:00 AM',
           timeOut: '03:45 PM',
           status: 'out',
           photoUrl: 'https://randomuser.me/api/portraits/men/3.jpg',
           subject: 'Digital Electronics',
-          section: 'CE-401'
+          section: 'BSIT-3A',
+          autoLogout: false
         },
         {
-          id: 4,
+          id: "12345678",
           name: 'Emily Davis',
-          department: 'Computer Science',
-          date: '2023-11-15',
+          department: 'College of Computer Studies',
+          date: this.getCurrentDate(-1), // Yesterday
+          scheduledStart: '09:00 AM',
+          scheduledEnd: '04:00 PM',
           timeIn: '10:00 AM',
-          timeOut: null,
-          status: 'in',
+          timeOut: '04:00 PM',
+          manualTimeOut: '04:35 PM',
+          status: 'out',
           photoUrl: 'https://randomuser.me/api/portraits/women/4.jpg',
           subject: 'Data Structures',
-          section: 'CS-202'
+          section: 'BSIT-3C',
+          autoLogout: true
         },
         {
-          id: 5,
-          name: 'Michael Wilson',
-          department: 'Information Technology',
-          date: '2023-11-14',
+          id: "01641066",
+          name: 'Maria Rodriguez',
+          department: 'College of Computer Studies',
+          date: this.getCurrentDate(-1), // Yesterday
+          scheduledStart: '08:30 AM',
+          scheduledEnd: '04:00 PM',
           timeIn: '08:30 AM',
           timeOut: '04:30 PM',
           status: 'out',
-          photoUrl: 'https://randomuser.me/api/portraits/men/5.jpg',
+          photoUrl: 'https://randomuser.me/api/portraits/women/5.jpg',
           subject: 'Network Security',
-          section: 'IT-401'
+          section: 'BSIT-4A',
+          autoLogout: false
+        },
+        {
+          id: "87654321",
+          name: 'John Smith',
+          department: 'College of Computer Studies',
+          date: this.getCurrentDate(-2), // Two days ago
+          scheduledStart: '10:00 AM',
+          scheduledEnd: '01:00 PM',
+          timeIn: '10:05 AM',
+          timeOut: '01:00 PM',
+          status: 'out',
+          photoUrl: 'https://randomuser.me/api/portraits/men/8.jpg',
+          subject: 'Software Engineering',
+          section: 'BSIT-4B',
+          autoLogout: true
         }
       ],
       
@@ -299,6 +417,7 @@ export default {
       },
       selectedDepartment: '',
       selectedStatus: '',
+      selectedInstructor: '',
       
       // Pagination
       currentPage: 1,
@@ -313,41 +432,53 @@ export default {
     };
   },
   computed: {
+    isManualFormValid() {
+      return this.manualInstructorName.trim() !== '';
+    },
+    uniqueInstructors() {
+      // Get unique instructor names from logbook entries
+      const instructorNames = this.logEntries.map(entry => entry.name);
+      return [...new Set(instructorNames)].sort();
+    },
     filteredLogEntries() {
       let filtered = [...this.logEntries];
       
       // Apply date filter
       if (this.dateFilter !== 'all') {
         const today = new Date();
-        const startOfDay = new Date(today.setHours(0, 0, 0, 0));
         const startOfWeek = new Date(today);
-        startOfWeek.setDate(today.getDate() - today.getDay());
-        startOfWeek.setHours(0, 0, 0, 0);
-        const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        startOfWeek.setDate(today.getDate() - today.getDay()); // Start of week (Sunday)
         
-        if (this.dateFilter === 'custom') {
-          const startDate = new Date(this.specificDate.start);
-          const endDate = new Date(this.specificDate.end);
-          // Set end date to end of day
-          endDate.setHours(23, 59, 59, 999);
+        const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1); // Start of month
+        
+        filtered = filtered.filter(entry => {
+          const entryDate = new Date(entry.date);
           
-          filtered = filtered.filter(entry => {
-            const entryDate = new Date(entry.date);
-            return entryDate >= startDate && entryDate <= endDate;
-          });
-        } else {
-          filtered = filtered.filter(entry => {
-            const entryDate = new Date(entry.date);
-            if (this.dateFilter === 'today') {
-              return entryDate >= startOfDay;
-            } else if (this.dateFilter === 'week') {
-              return entryDate >= startOfWeek;
-            } else if (this.dateFilter === 'month') {
-              return entryDate >= startOfMonth;
+          if (this.dateFilter === 'custom') {
+            const startDate = this.specificDate.start ? new Date(this.specificDate.start) : null;
+            const endDate = this.specificDate.end ? new Date(this.specificDate.end) : null;
+            
+            if (startDate && endDate) {
+              // Set end date to end of day
+              endDate.setHours(23, 59, 59, 999);
+              return entryDate >= startDate && entryDate <= endDate;
+            } else if (startDate) {
+              return entryDate >= startDate;
+            } else if (endDate) {
+              endDate.setHours(23, 59, 59, 999);
+              return entryDate <= endDate;
             }
             return true;
-          });
-        }
+          } else if (this.dateFilter === 'today') {
+            const todayStr = today.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+            return entry.date === todayStr;
+          } else if (this.dateFilter === 'week') {
+            return entryDate >= startOfWeek;
+          } else if (this.dateFilter === 'month') {
+            return entryDate >= startOfMonth;
+          }
+          return true;
+        });
       }
       
       // Apply department filter
@@ -358,6 +489,11 @@ export default {
       // Apply status filter
       if (this.selectedStatus) {
         filtered = filtered.filter(entry => entry.status === this.selectedStatus);
+      }
+      
+      // Apply instructor filter
+      if (this.selectedInstructor) {
+        filtered = filtered.filter(entry => entry.name === this.selectedInstructor);
       }
       
       return filtered;
@@ -379,6 +515,14 @@ export default {
     // Exclude clicks on select elements and their children
     document.addEventListener('click', this.handleDocumentClick);
     document.addEventListener('keydown', this.handleKeyDown);
+    
+    // Set up auto-checkout interval (check every minute)
+    this.autoCheckoutInterval = setInterval(this.checkForAutoCheckouts, 60000);
+    
+    // Set default schedule end time to 2 hours from now
+    const now = new Date();
+    now.setHours(now.getHours() + 2);
+    this.manualScheduleEnd = now.toTimeString().substring(0, 5); // Format: HH:MM
   },
   beforeUnmount() {
     // Remove event listeners
@@ -388,6 +532,11 @@ export default {
     // Clear any existing timeout
     if (this.autoConfirmTimeout) {
       clearTimeout(this.autoConfirmTimeout);
+    }
+    
+    // Clear auto-checkout interval
+    if (this.autoCheckoutInterval) {
+      clearInterval(this.autoCheckoutInterval);
     }
   },
   methods: {
@@ -416,20 +565,113 @@ export default {
         this.focusRfidInput();
       }
     },
+    getCurrentDate(daysOffset = 0) {
+      const date = new Date();
+      if (daysOffset) {
+        date.setDate(date.getDate() + daysOffset);
+      }
+      return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    },
+    
+    // Calculate lateness in minutes
+    calculateLateness(entry) {
+      if (!entry.timeIn || !entry.scheduledStart) return null;
+      
+      const scheduledTime = this.convertTimeToMinutes(entry.scheduledStart);
+      const actualTime = this.convertTimeToMinutes(entry.timeIn);
+      
+      // If the actual time is later than scheduled time, calculate the difference
+      if (actualTime > scheduledTime) {
+        return actualTime - scheduledTime;
+      }
+      
+      return null; // Not late
+    },
+    
+    // Calculate overtime in minutes
+    calculateOvertime(entry) {
+      // Use manual time-out if available, otherwise use regular time-out
+      const timeOut = entry.manualTimeOut || entry.timeOut;
+      if (!timeOut || !entry.scheduledEnd) return null;
+      
+      const scheduledTime = this.convertTimeToMinutes(entry.scheduledEnd);
+      const actualTime = this.convertTimeToMinutes(timeOut);
+      
+      // If the actual time is later than scheduled time, calculate the difference
+      if (actualTime > scheduledTime) {
+        return actualTime - scheduledTime;
+      }
+      
+      return null; // No overtime
+    },
+    
+    // Convert time string (e.g., "08:30 AM") to minutes since midnight
+    convertTimeToMinutes(timeStr) {
+      if (!timeStr) return 0;
+      
+      const [time, period] = timeStr.split(' ');
+      let [hours, minutes] = time.split(':').map(Number);
+      
+      // Convert to 24-hour format
+      if (period === 'PM' && hours < 12) {
+        hours += 12;
+      } else if (period === 'AM' && hours === 12) {
+        hours = 0;
+      }
+      
+      return hours * 60 + minutes;
+    },
     processRfidScan() {
       if (!this.rfidValue) return;
+      
+      // Prevent multiple scans in quick succession
+      const now = new Date().getTime();
+      if (this.lastScanTime && (now - this.lastScanTime) < 1000) {
+        // Less than 1 second since last scan, ignore
+        this.rfidValue = '';
+        return;
+      }
+      this.lastScanTime = now;
+      
+      // Play a beep sound to indicate scan
+      this.playBeepSound();
       
       // Find instructor by RFID ID using the findInstructorById method
       const instructor = this.findInstructorById(this.rfidValue);
       
       if (instructor) {
+        // Check if instructor has recently checked out (within the last hour)
+        const recentCheckout = this.logEntries.find(entry => 
+          entry.name === instructor.name && 
+          entry.status === 'out' &&
+          entry.checkoutTime && 
+          (now - entry.checkoutTime) < 3600000 // 1 hour in milliseconds
+        );
+        
+        if (recentCheckout && instructor.status === 'out') {
+          // Calculate time remaining in the buffer period
+          const minutesElapsed = Math.floor((now - recentCheckout.checkoutTime) / 60000);
+          const minutesRemaining = 60 - minutesElapsed;
+          
+          this.showNotification(`${instructor.name} has logged out recently. Please wait ${minutesRemaining} minutes before logging in again.`, 'error');
+          this.rfidValue = '';
+          return;
+        }
+        
         this.currentInstructor = instructor;
         this.showModal = true;
+        
+        // Auto-confirm after 5 seconds if modal is not interacted with
+        this.autoConfirmTimeout = setTimeout(() => {
+          if (this.showModal && this.currentInstructor) {
+            this.confirmAttendance();
+          }
+        }, 5000);
       } else {
-        this.showNotification('RFID not recognized', 'error');
+        this.showNotification('Unknown RFID card', 'error');
       }
       
-      // Clear RFID value
+      // Clear RFID input
       this.rfidValue = '';
     },
     findInstructorById(rfidId) {
@@ -546,6 +788,7 @@ export default {
           // Update existing entry
           this.logEntries[existingEntryIndex].timeOut = timeString;
           this.logEntries[existingEntryIndex].status = 'out';
+          this.logEntries[existingEntryIndex].checkoutTime = Date.now();
           
           this.showNotification(`${this.currentInstructor.name} has checked out`, 'success');
         } else {
@@ -597,7 +840,218 @@ export default {
     
     getDefaultEndDate() {
       return new Date().toISOString().split('T')[0]; // Today
-    }
+    },
+    
+    // Manual check-in methods
+    closeManualCheckInModal() {
+      this.showManualCheckInModal = false;
+      this.resetManualForm();
+    },
+    
+    resetManualForm() {
+      this.manualInstructorName = '';
+      this.instructorValidationMessage = '';
+    },
+    
+    validateInstructor() {
+      if (!this.manualInstructorName) {
+        this.instructorValidationMessage = '';
+        return;
+      }
+      
+      const instructor = this.knownInstructors.find(i => i.name === this.manualInstructorName);
+      if (instructor) {
+        this.instructorValidationMessage = 'Instructor found in system';
+      } else {
+        this.instructorValidationMessage = 'Instructor not found in system';
+      }
+    },
+    
+    // Focus the name input when modal opens
+    showManualCheckInForm() {
+      this.showManualCheckInModal = true;
+      this.$nextTick(() => {
+        if (this.$refs.manualNameInput) {
+          this.$refs.manualNameInput.focus();
+        }
+      });
+    },
+    
+    submitManualCheckIn() {
+      if (!this.isManualFormValid) return;
+      
+      // Find the instructor in our known list
+      const instructor = this.knownInstructors.find(i => i.name === this.manualInstructorName);
+      if (!instructor) {
+        this.showNotification('Instructor not found in system', 'error');
+        return;
+      }
+      
+      const now = new Date();
+      const timeString = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+      const dateString = this.getCurrentDate();
+      
+      // Generate a unique ID based on name and timestamp
+      const uniqueId = 'manual-' + Date.now().toString();
+      
+      // Set default end time to 2 hours from now
+      const endTime = new Date();
+      endTime.setHours(endTime.getHours() + 2);
+      const scheduleEnd = endTime.toTimeString().substring(0, 5); // Format: HH:MM
+      
+      // Check if instructor is already checked in
+      const existingEntryIndex = this.logEntries.findIndex(entry => 
+        entry.name === this.manualInstructorName && 
+        entry.status === 'in'
+      );
+      
+      if (existingEntryIndex !== -1) {
+        // Instructor is already checked in, so check them out
+        this.logEntries[existingEntryIndex].timeOut = timeString;
+        this.logEntries[existingEntryIndex].status = 'out';
+        this.logEntries[existingEntryIndex].checkoutTime = Date.now();
+        
+        this.showNotification(`${this.manualInstructorName} has checked out`, 'success');
+      } else {
+        // Check if instructor has recently checked out (within the last hour)
+        const recentCheckout = this.logEntries.find(entry => 
+          entry.name === this.manualInstructorName && 
+          entry.status === 'out' &&
+          entry.checkoutTime && 
+          (Date.now() - entry.checkoutTime) < 3600000 // 1 hour in milliseconds
+        );
+        
+        if (recentCheckout) {
+          // Calculate time remaining in the buffer period
+          const minutesElapsed = Math.floor((Date.now() - recentCheckout.checkoutTime) / 60000);
+          const minutesRemaining = 60 - minutesElapsed;
+          
+          this.showNotification(`This instructor has logged out recently. Please wait ${minutesRemaining} minutes before logging in again.`, 'error');
+          return;
+        }
+        
+        // Add new check-in entry
+        this.logEntries.unshift({
+          id: uniqueId,
+          name: this.manualInstructorName,
+          department: instructor.department,
+          date: dateString,
+          timeIn: timeString,
+          timeOut: null,
+          status: 'in',
+          subject: 'Laboratory Session', // Default subject
+          section: 'N/A',
+          scheduleEnd: scheduleEnd, // Store schedule end time
+          checkoutTime: null
+        });
+        
+        this.showNotification(`${this.manualInstructorName} has checked in`, 'success');
+      }
+      
+      // Close modal and reset form
+      this.closeManualCheckInModal();
+      
+      // Focus on RFID input after closing modal
+      this.$nextTick(() => {
+        this.focusRfidInput();
+      });
+    },
+    
+    checkForAutoCheckouts() {
+      // Get current time
+      const now = new Date();
+      const currentHours = now.getHours();
+      const currentMinutes = now.getMinutes();
+      const currentTimeInMinutes = currentHours * 60 + currentMinutes;
+      
+      // Check all active check-ins
+      this.logEntries.forEach((entry, index) => {
+        if (entry.status === 'in' && entry.scheduleEnd) {
+          // Extract schedule end time
+          const [endHours, endMinutes] = entry.scheduleEnd.split(':').map(Number);
+          const endTimeInMinutes = endHours * 60 + endMinutes;
+          
+          // If current time is past the schedule end time, auto-checkout
+          if (currentTimeInMinutes >= endTimeInMinutes) {
+            // Update entry
+            this.logEntries[index].timeOut = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            this.logEntries[index].status = 'out';
+            
+            // Show notification
+            this.showNotification(`${entry.name} has been automatically checked out`, 'info');
+          }
+        }
+      });
+    },
+    
+    getInitials(name) {
+      if (!name) return '';
+      
+      // Split the name by spaces
+      const parts = name.split(' ');
+      
+      // Get first letter of first name
+      const firstInitial = parts[0].charAt(0);
+      
+      // Get first letter of last name (if it exists)
+      const lastInitial = parts.length > 1 ? parts[parts.length - 1].charAt(0) : '';
+      
+      // Return the combined initials
+      return (firstInitial + lastInitial).toUpperCase();
+    },
+    
+    getAvatarColor(name) {
+      if (!name) return '#DD3859'; // Default color
+      
+      // Generate a consistent color based on the name
+      let hash = 0;
+      for (let i = 0; i < name.length; i++) {
+        hash = name.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      
+      // Use a predefined color palette for better aesthetics
+      const colors = [
+        '#DD3859', // Primary brand color
+        '#4CAF50', // Green
+        '#2196F3', // Blue
+        '#FF9800', // Orange
+        '#9C27B0', // Purple
+        '#00BCD4', // Cyan
+        '#3F51B5', // Indigo
+        '#795548', // Brown
+        '#607D8B', // Blue Grey
+        '#E91E63'  // Pink
+      ];
+      
+      // Use the hash to pick a color from the palette
+      const index = Math.abs(hash) % colors.length;
+      return colors[index];
+    },
+    
+    playBeepSound() {
+      // Create an audio context
+      try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.type = 'sine';
+        oscillator.frequency.value = 1000; // value in hertz
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        // Set volume
+        gainNode.gain.value = 0.1;
+        
+        // Start and stop the beep
+        oscillator.start();
+        setTimeout(() => {
+          oscillator.stop();
+        }, 150);
+      } catch (e) {
+        console.log('Audio not supported in this browser');
+      }
+    },
   }
 };
 </script>
@@ -622,7 +1076,7 @@ export default {
 
 .logbook-header {
   display: grid;
-  grid-template-columns: 1.5fr 1.5fr 1fr 1fr 1fr 1fr;
+  grid-template-columns: 1.5fr 1.5fr 1fr 1.2fr 1fr 1fr 0.8fr;
   gap: 16px;
   padding: 16px;
   background-color: #DD3859;
@@ -658,16 +1112,25 @@ export default {
 
 .logbook-item {
   display: grid;
-  grid-template-columns: 1.5fr 1.5fr 1fr 1fr 1fr 1fr;
+  grid-template-columns: 1.5fr 1.5fr 1fr 1.2fr 1fr 1fr 0.8fr;
   gap: 16px;
   align-items: center;
   padding: 16px;
 }
 
-.instructor, .department, .date, .time-in, .time-out {
+.instructor, .department, .date, .scheduled, .time-in, .time-out {
   font-size: 14px;
   color: #64748B;
   font-family: 'Poppins', sans-serif;
+}
+
+.scheduled {
+  font-weight: 500;
+  color: #4B5563;
+}
+
+.time-in, .time-out {
+  position: relative;
 }
 
 .instructor {
@@ -681,31 +1144,77 @@ export default {
 }
 
 .status-badge {
-  padding: 6px 12px;
-  border-radius: 8px;
+  padding: 4px 10px;
+  border-radius: 20px;
   font-size: 12px;
-  font-weight: 500;
-  color: #10B981;
+  font-weight: 600;
   display: inline-block;
-  border: 1px solid #10B981;
-  background-color: transparent;
+  text-align: center;
 }
 
 .status-badge.in {
-  color: #10B981;
-  border-color: #10B981;
+  background-color: #e6f7e6;
+  color: #22c55e;
 }
 
 .status-badge.out {
-  color: #DD3859;
-  border-color: #DD3859;
+  background-color: #f1f1f1;
+  color: #6b7280;
+}
+
+.time-diff {
+  display: inline-block;
+  font-size: 0.7rem;
+  padding: 2px 5px;
+  border-radius: 4px;
+  margin-left: 5px;
+  font-weight: bold;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.time-diff.late {
+  background-color: #FEE2E2;
+  color: #DC2626;
+  border: 1px solid #FECACA;
+}
+
+.time-diff.overtime {
+  background-color: #DBEAFE;
+  color: #2563EB;
+  border: 1px solid #BFDBFE;
+}
+
+.auto-logout {
+  display: inline-block;
+  font-size: 0.7rem;
+  padding: 2px 5px;
+  border-radius: 4px;
+  margin-left: 5px;
+  font-weight: bold;
+  background-color: #E5E7EB;
+  color: #4B5563;
+  border: 1px solid #D1D5DB;
+  vertical-align: middle;
+}
+
+.manual-logout {
+  display: block;
+  font-size: 0.7rem;
+  padding: 2px 5px;
+  margin-top: 4px;
+  font-weight: bold;
+  color: #4B5563;
+  background-color: #F3F4F6;
+  border-radius: 4px;
+  border: 1px solid #E5E7EB;
 }
 
 .empty-logbook {
   padding: 48px 0;
   text-align: center;
   color: #64748B;
-  font-family: 'Poppins', sans-serif;
+  font-size: 16px;
 }
 
 /* Pagination Styling */
@@ -830,6 +1339,19 @@ export default {
   border-radius: 50%;
   overflow: hidden;
   border: 2px solid #DD3859;
+}
+
+.instructor-photo .initials-avatar {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 600;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
 }
 
 .instructor-photo img {
@@ -1034,6 +1556,115 @@ export default {
 .date-range-picker span {
   color: #64748B;
   font-size: 14px;
+}
+
+.manual-checkin {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 16px;
+}
+
+.logbook-actions {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.manual-checkin-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #DD3859;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.manual-checkin-btn:hover {
+  background-color: #c9314f;
+}
+
+
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #64748B;
+}
+
+.form-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #1E293B;
+  background-color: white;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #DD3859;
+}
+
+.form-help-text {
+  font-size: 12px;
+  color: #64748B;
+  margin-top: 4px;
+  font-style: italic;
+}
+
+.check-type-options {
+  display: flex;
+  gap: 24px;
+  margin-top: 8px;
+}
+
+.check-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.form-actions {
+  margin-top: 24px;
+  display: flex;
+  justify-content: center;
+}
+
+.submit-btn {
+  padding: 10px 24px;
+  background-color: #DD3859;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.submit-btn:hover:not(:disabled) {
+  background-color: #c62c4c;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.submit-btn:disabled {
+  background-color: #E2E8F0;
+  color: #94A3B8;
+  cursor: not-allowed;
 }
 
 .logbook-section {

@@ -40,10 +40,10 @@
                 </svg>
               </div>
               <div class="metric-content">
-                <div class="metric-value">{{ dashboardStats.averageUsage }}%</div>
-                <div class="metric-label">Average Usage</div>
+                <div class="metric-value">{{ dashboardStats.totalUsage }} hours</div>
+                <div class="metric-label">Total Usage Hours</div>
                 <div class="metric-trend positive">
-                  +5% from last week
+                  +{{ dashboardStats.usageGrowth }} hours from last week
                 </div>
               </div>
             </div>
@@ -275,7 +275,8 @@ const supabaseSchedules = createClient(
         dashboardStats: {
           totalBookings: 0,
           averageUsage: 0,
-          totalUsage: 0,
+          totalUsage: 120,
+          usageGrowth: 15,
           mostUsedRoom: '',
           bookingTrend: 5,
           activeInstructors: 4,

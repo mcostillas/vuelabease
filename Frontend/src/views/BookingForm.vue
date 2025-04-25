@@ -92,21 +92,21 @@
               </div>
               <div class="form-group">
                 <label for="requestDate">Booking Request Date</label>
-                <div class="input-wrapper">
+                <div class="input-wrapper date-input-container">
                   <input
                     type="date"
                     id="requestDate"
                     v-model="requestDate"
                     required
                     class="custom-date-input"
-                    @change="
-                      updateSelectedDay;
-                      filterAvailableRooms;
-                    "
+                    @change="handleDateChange"
                   />
                   <span class="input-icon date-icon">
                     <CalendarIcon class="icon-primary" />
                   </span>
+                  <div v-if="dateRangeWarning" class="date-tooltip">
+                    {{ dateRangeWarning }}
+                  </div>
                 </div>
               </div>
             </div>
@@ -262,6 +262,7 @@
                   'current-day': day.isToday,
                   'selected-day': day.date === requestDate,
                   'available-day': day.available,
+                  'before-semester': day.isBeforeSemester,
                   'after-semester': day.isAfterSemester,
                   'past-date': day.isPastDate,
                 }"
@@ -269,6 +270,7 @@
                   console.log('Day clicked:', day);
                   selectDate(day);
                 "
+                :title="day.semesterMessage || ''"
               >
                 <template v-if="day.date">
                   <span class="day-number">{{ day.dayNumber }}</span>
@@ -706,8 +708,8 @@ export default {
       selectedTimeBlock: null,
       selectedDay: null,
       scheduleData: [], // Original schedule data
-    filteredScheduleData: [], // Schedules filtered by the selected day
-    selectedDayOfWeek: null, 
+      filteredScheduleData: [], // Schedules filtered by the selected day
+      selectedDayOfWeek: null, 
       // Weekly schedule filter
       weeklyScheduleFilter: {
         section: "all",
@@ -748,6 +750,7 @@ export default {
       notedBy: "",
       dateFilled: new Date().toISOString().substr(0, 10),
       errorMessage: "",
+      dateRangeWarning: "",
       showSuccessModal: false,
       showWeeklyScheduleModal: false,
       selectedRoom: "",
@@ -1497,46 +1500,93 @@ async filterAvailableRooms() {
     },
 
     selectDate(day) {
-  console.log("Day clicked:", day);
+      console.log("Day clicked:", day);
 
-  if (day.isPastDate) {
-    this.errorMessage = "Cannot book past dates";
-    setTimeout(() => {
-      this.errorMessage = "";
-    }, 3000);
-    return;
-  }
+      if (day.isPastDate) {
+        this.errorMessage = "Cannot book past dates";
+        setTimeout(() => {
+          this.errorMessage = "";
+        }, 3000);
+        return;
+      }
 
-  if (day.date) {
-    this.requestDate = day.date;
+      if (day.date) {
+        this.requestDate = day.date;
 
-    // Get the day of the week from the selected date
-    const date = new Date(day.date);
-    const daysOfWeek = [
-      "Sunday",
-      "Monday",
-      "Tuesday",
-      "Wednesday",
-      "Thursday",
-      "Friday",
-      "Saturday",
-    ];
-    this.selectedDayOfWeek = daysOfWeek[date.getDay()];
+        // Check if the selected date is outside the current semester range
+        this.checkSemesterDateRange();
 
-    console.log("Selected Day of Week:", this.selectedDayOfWeek);
+        // Get the day of the week from the selected date
+        const date = new Date(day.date);
+        const daysOfWeek = [
+          "Sunday",
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday",
+        ];
+        this.selectedDayOfWeek = daysOfWeek[date.getDay()];
+        
+        console.log("Selected Day of Week:", this.selectedDayOfWeek);
 
-    // Trigger filtering of schedules
-    this.updateRoomAvailability();
-  }
-},
+        // Trigger filtering of schedules
+        this.updateRoomAvailability();
+      }
+    },
 
-async fetchSchedulesForDay(dayOfWeek, timeSlot = null) {
-  try {
-    // Build the query with filters
-    let query = supabaseSchedules
-      .from("schedules")
-      .select("*")
-      .eq("day", dayOfWeek); // Filter by the selected day
+    // Check if the selected date is outside the semester range and show a tooltip
+    // Handle date change from the date input field
+    handleDateChange() {
+      // Update the selected day of week
+      this.updateSelectedDay();
+      
+      // Filter available rooms based on the new date
+      this.filterAvailableRooms();
+      
+      // Check if the date is outside semester range and show tooltip if needed
+      this.checkSemesterDateRange();
+    },
+    
+    checkSemesterDateRange() {
+      if (!this.requestDate) return;
+      
+      const selectedDate = new Date(this.requestDate);
+      const semesterStart = new Date(this.currentSemesterStart);
+      const semesterEnd = new Date(this.currentSemesterEnd);
+
+      console.log("Checking date range:", {
+        selectedDate,
+        semesterStart,
+        semesterEnd,
+        isBeforeSemester: selectedDate < semesterStart,
+        isAfterSemester: selectedDate > semesterEnd
+      });
+
+      if (selectedDate < semesterStart || selectedDate > semesterEnd) {
+        this.dateRangeWarning = selectedDate < semesterStart
+          ? "Note: Selected date is before the semester start date (" + this.formatDate(this.currentSemesterStart) + ")"
+          : "Note: Selected date is after the semester end date (" + this.formatDate(this.currentSemesterEnd) + ")";
+        
+        console.log("Setting date range warning:", this.dateRangeWarning);
+        
+        // Clear the warning after 5 seconds
+        setTimeout(() => {
+          this.dateRangeWarning = "";
+        }, 5000);
+      } else {
+        this.dateRangeWarning = "";
+      }
+    },
+
+    async fetchSchedulesForDay(dayOfWeek, timeSlot = null) {
+      try {
+        // Build the query with filters
+        let query = supabaseSchedules
+          .from("schedules")
+          .select("*")
+          .eq("day", dayOfWeek); // Filter by the selected day
 
     // If a time slot is provided, add time range filters
     if (timeSlot) {
@@ -1738,9 +1788,20 @@ async fetchSchedulesForDay(dayOfWeek, timeSlot = null) {
         // Check if date is in the past
         const isPastDate = formattedDate < formattedToday;
 
+        // Determine if this date is before the semester start or after the semester end
+        const isBeforeSemester = !isWithinSemester && formattedDate < this.currentSemesterStart;
+        const isAfterSemester = !isWithinSemester && formattedDate > this.currentSemesterEnd;
+
+        // Create tooltip messages for dates outside the semester
+        let semesterMessage = "";
+        if (isBeforeSemester) {
+          semesterMessage = `Date is before semester start (${this.formatDate(this.currentSemesterStart)})`;
+        } else if (isAfterSemester) {
+          semesterMessage = `Date is after semester end (${this.formatDate(this.currentSemesterEnd)})`;
+        }
+
         // Check if any room is available on this date
         const isAvailable =
-          isWithinSemester &&
           !isPastDate &&
           this.availableRooms.some(
             (room) =>
@@ -1748,23 +1809,15 @@ async fetchSchedulesForDay(dayOfWeek, timeSlot = null) {
               room.availableDates.includes(formattedDate)
           );
 
-        // Determine if this date is after the semester end
-        const isAfterSemester = formattedDate > this.currentSemesterEnd;
-
-        // Debugging logs (inside the loop)
-        console.log("Formatted Date:", formattedDate);
-        console.log("Is Within Semester:", isWithinSemester);
-        console.log("Is Past Date:", isPastDate);
-        console.log("Available Rooms:", this.availableRooms);
-        console.log("Is Available:", isAvailable);
-
         this.calendarDays.push({
           date: formattedDate,
           dayNumber: i,
           isToday: formattedDate === formattedToday,
           available: isAvailable,
+          isBeforeSemester: isBeforeSemester,
           isAfterSemester: isAfterSemester,
           isPastDate: isPastDate,
+          semesterMessage: semesterMessage
         });
       }
 
@@ -2722,6 +2775,22 @@ body {
   border: 1px solid #f0f0f0;
 }
 
+.calendar-cell.before-semester {
+  background-color: rgba(234, 179, 8, 0.1);
+  color: #854d0e;
+  cursor: pointer;
+  position: relative;
+}
+
+.calendar-cell.after-semester {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  cursor: pointer;
+  position: relative;
+}
+
+/* Removed warning icons */
+
 .after-semester,
 .past-date {
   color: #999;
@@ -3295,5 +3364,31 @@ body {
   .modal-schedule-table {
     min-width: 700px;
   }
+}
+
+
+.date-input-container {
+  position: relative;
+}
+
+.date-tooltip {
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 0;
+  right: 0;
+  background-color: #fff3cd;
+  color: #856404;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-left: 3px solid #ffeeba;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 </style>
