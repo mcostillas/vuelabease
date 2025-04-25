@@ -389,8 +389,8 @@
 <script>
 import DashboardLayout from '@/components/layout/DashboardLayout.vue';
 import AdminHeader from '@/components/admin/AdminHeader.vue';
-import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 export default {
   name: 'AdminReports',
@@ -793,7 +793,7 @@ export default {
       doc.text(`Peak Usage Time: ${this.getPeakUsageTime()}`, 14, 78);
       
       // Generate the table
-      doc.autoTable({
+      autoTable(doc, {
         head: [tableColumn],
         body: tableRows,
         startY: 85,
@@ -850,7 +850,7 @@ export default {
       });
       
       // Generate the table
-      doc.autoTable({
+      autoTable(doc, {
         head: [tableColumn],
         body: tableRows,
         startY: 85,
@@ -900,7 +900,7 @@ export default {
       ];
       
       // Generate the table
-      doc.autoTable({
+      autoTable(doc, {
         head: [tableColumn],
         body: tableRows,
         startY: 78,
@@ -946,7 +946,7 @@ export default {
       ];
       
       // Generate the table
-      doc.autoTable({
+      autoTable(doc, {
         head: [tableColumn],
         body: tableRows,
         startY: 85,
