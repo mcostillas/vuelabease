@@ -4,71 +4,36 @@
       <div class="header-container">
         <router-link to="/login" class="back-button">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M19 12H5" stroke="#dd3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M12 19L5 12L12 5" stroke="#dd3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M19 12H5" stroke="#dd3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M12 19L5 12L12 5" stroke="#dd3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
           </svg>
         </router-link>
-        <h1 class="form-title">Reset Password</h1>
+        <h1 class="form-title">Set New Password</h1>
       </div>
-      
+
       <div class="reset-password-form">
         <p class="subtitle">Enter your new password below</p>
-        
-        <form @submit.prevent="handleSubmit">
+
+        <form @submit.prevent="handleResetPassword">
           <div class="form-group">
             <label for="password">New Password</label>
             <div class="input-wrapper">
-              <input 
-                :type="showPassword ? 'text' : 'password'" 
-                id="password" 
-                v-model="password" 
+              <input
+                type="password"
+                id="password"
+                v-model="password"
                 placeholder="Enter your new password"
                 required
-              >
-              <span class="input-icon toggle-password" @click="togglePasswordVisibility">
-                <svg v-if="!showPassword" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M1 12C1 12 5 4 12 4C19 4 23 12 23 12C23 12 19 20 12 20C5 20 1 12 1 12Z" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <path d="M3 3L21 21" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M1 12C1 12 5 4 12 4C19 4 23 12 23 12C23 12 19 20 12 20C5 20 1 12 1 12Z" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </span>
-            </div>
-          </div>
-          
-          <div class="form-group">
-            <label for="confirmPassword">Confirm Password</label>
-            <div class="input-wrapper">
-              <input 
-                :type="showConfirmPassword ? 'text' : 'password'" 
-                id="confirmPassword" 
-                v-model="confirmPassword" 
-                placeholder="Confirm your new password"
-                required
-              >
-              <span class="input-icon toggle-password" @click="toggleConfirmPasswordVisibility">
-                <svg v-if="!showConfirmPassword" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M1 12C1 12 5 4 12 4C19 4 23 12 23 12C23 12 19 20 12 20C5 20 1 12 1 12Z" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <path d="M3 3L21 21" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M1 12C1 12 5 4 12 4C19 4 23 12 23 12C23 12 19 20 12 20C5 20 1 12 1 12Z" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </span>
+              />
             </div>
           </div>
 
           <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
           <div v-if="successMessage" class="success-message">{{ successMessage }}</div>
 
-          <button 
-            type="submit" 
-            class="submit-btn" 
+          <button
+            type="submit"
+            class="submit-btn"
             :disabled="isSubmitting"
           >
             <span v-if="isSubmitting">
@@ -77,7 +42,7 @@
               </svg>
               Submitting...
             </span>
-            <span v-else>Reset Password</span>
+            <span v-else>Set New Password</span>
           </button>
         </form>
 
@@ -90,82 +55,76 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, onMounted } from 'vue';
 import { supabase } from '@/lib/supabaseClient';
+import { useRouter, useRoute } from 'vue-router';
 
 // Reactive variables
 const password = ref('');
-const confirmPassword = ref('');
-const showPassword = ref(false);
-const showConfirmPassword = ref(false);
+const email = ref('');
 const errorMessage = ref('');
 const successMessage = ref('');
 const isSubmitting = ref(false);
 const router = useRouter();
+const route = useRoute();
 
-// Toggle password visibility
-function togglePasswordVisibility() {
-  showPassword.value = !showPassword.value;
-}
+// Retrieve email from query parameters
+onMounted(() => {
+  email.value = route.query.email || '';
+  if (!email.value) {
+    errorMessage.value = 'Invalid or missing email. Please request a new password reset link.';
+  }
+});
 
-// Toggle confirm password visibility
-function toggleConfirmPasswordVisibility() {
-  showConfirmPassword.value = !showConfirmPassword.value;
-}
-
-// Handle form submission
-async function handleSubmit() {
+// Handle password reset form submission
+async function handleResetPassword() {
   // Clear previous messages
   errorMessage.value = '';
   successMessage.value = '';
-  
-  // Validate password
-  if (password.value.length < 6) {
-    errorMessage.value = 'Password must be at least 6 characters long';
+
+  // Basic validation
+  if (!password.value) {
+    errorMessage.value = 'Please enter your new password';
     return;
   }
-  
-  // Check if passwords match
-  if (password.value !== confirmPassword.value) {
-    errorMessage.value = 'Passwords do not match';
+
+  if (!email.value) {
+    errorMessage.value = 'Invalid or missing email. Please request a new password reset link.';
     return;
   }
-  
+
   // Show loading state
   isSubmitting.value = true;
-  
+
   try {
-    // Get the hash fragment from the URL which contains the access token
-    const hash = window.location.hash.substring(1);
-    const params = new URLSearchParams(hash);
-    const accessToken = params.get('access_token');
-    
-    if (!accessToken) {
-      throw new Error('No access token found. Please request a new password reset link.');
-    }
-    
-    // Update the user's password
-    const { error } = await supabase.auth.updateUser({
-      password: password.value
+    // Update the password in Supabase Auth
+    const { error: authError } = await supabase.auth.updateUser({
+      password: password.value,
     });
-    
-    if (error) {
-      throw error;
+
+    if (authError) {
+      if (authError.message.includes('New password should be different from the old password')) {
+        errorMessage.value = 'Your new password must be different from your current password.';
+        return;
+      }
+      throw authError;
     }
-    
-    // Show success message
-    successMessage.value = 'Your password has been successfully reset.';
-    
-    // Clear form
-    password.value = '';
-    confirmPassword.value = '';
-    
-    // Redirect to login page after 3 seconds
+
+    // Update the password in the `user` table based on the email
+    const { error: dbError } = await supabase
+      .from('user') // Replace 'user' with your actual table name
+      .update({ password: password.value }) // Update the password column
+      .eq('email', email.value); // Match the user by their email
+
+    if (dbError) {
+      throw dbError;
+    }
+
+    // Show success message and redirect to login
+    successMessage.value = 'Your password has been updated successfully!';
     setTimeout(() => {
       router.push('/login');
-    }, 3000);
-    
+    }, 2000);
   } catch (error) {
     console.error('Error resetting password:', error.message);
     errorMessage.value = error.message || 'An error occurred. Please try again later.';

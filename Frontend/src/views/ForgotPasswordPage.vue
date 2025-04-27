@@ -67,70 +67,55 @@ async function handleSubmit() {
   // Clear previous messages
   errorMessage.value = '';
   successMessage.value = '';
-  
+
   // Basic validation
   if (!email.value) {
     errorMessage.value = 'Please enter your email address';
     return;
   }
-  
+
   // Email format validation
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email.value)) {
     errorMessage.value = 'Please enter a valid email address';
     return;
   }
-  
+
   // Show loading state
   isSubmitting.value = true;
-  
+
   try {
-    // Check if the email exists in the database
-    const { data: userData, error: userError } = await supabase
-      .from('user')
-      .select('userid, fullname')
-      .eq('email', email.value)
-      .single();
-    
-    if (userError) {
-      if (userError.code === 'PGRST116') {
-        // No user found with this email
-        throw new Error('No account found with this email address.');
-      }
-      throw userError;
+    // Send password reset email using Supabase
+    const { error } = await supabase.auth.resetPasswordForEmail(email.value, {
+  redirectTo: `${window.location.origin}/reset-password?email=${encodeURIComponent(email.value)}`,
+});
+
+    if (error) {
+      throw error;
     }
-    
-    // Create a notification for admin
+
+    // Reset form and show success message
+    successMessage.value = 'Password reset email sent! Please check your inbox.';
+    email.value = '';
+
+    // Optional: Log the notification for admin
     const notification = {
       type: 'password_reset',
-      userid: userData.userid,
-      fullname: userData.fullname,
       email: email.value,
       timestamp: new Date().toISOString(),
       status: 'pending',
-      message: `User ${userData.fullname} has requested a password reset.`
+      message: `A password reset request has been submitted for ${email.value}.`,
     };
-    
-    // Store the notification in localStorage for admin to see
+
     try {
-      // Get existing notifications or initialize empty array
       const existingNotifications = JSON.parse(localStorage.getItem('admin_notifications') || '[]');
-      
-      // Add the new notification
       existingNotifications.push(notification);
-      
-      // Save back to localStorage
       localStorage.setItem('admin_notifications', JSON.stringify(existingNotifications));
     } catch (storageError) {
       console.error('Error storing notification in localStorage:', storageError);
-      // Continue anyway, as this is not critical
     }
-    
-    // Reset form and show success message
-    successMessage.value = 'Your password reset request has been submitted. An administrator will contact you shortly.';
-    email.value = '';
   } catch (error) {
-    console.error('Error submitting password reset request:', error.message);
+    console.error('Error sending password reset email:', error.message);
     errorMessage.value = error.message || 'An error occurred. Please try again later.';
   } finally {
     isSubmitting.value = false;

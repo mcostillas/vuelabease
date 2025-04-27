@@ -47,134 +47,120 @@
             <div class="header-item">Status</div>
             <div class="header-item">Actions</div>
           </div>
-          
-          <div class="bookings-cards-container">
 
-          <div class="bookings-cards">
-            <div
-              v-for="(booking, index) in paginatedBookings"
-              :key="booking.id"
-              class="booking-card"
-            >
-              <div class="booking-item">
-                <div class="booking-id">{{ index + 1 }}</div>
-                <div class="department">{{ booking.department }}</div>
-                <div class="event">{{ booking.event }}</div>
-                <div class="date">{{ formatDate(booking.requestDate) }}</div>
-                <div class="person">{{ booking.person }}</div>
-                <div class="status">
-                  <span class="status-badge" :class="booking.status">
-                    {{ capitalizeFirstLetter(booking.status) }}
-                  </span>
-                </div>
-                <div class="actions">
-                  <div class="action-menu">
-                    <button class="menu-trigger" @click="toggleActionMenu(booking.id)">
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <circle cx="12" cy="6" r="2" fill="currentColor" />
-                        <circle cx="12" cy="12" r="2" fill="currentColor" />
-                        <circle cx="12" cy="18" r="2" fill="currentColor" />
-                      </svg>
-                    </button>
-                    <div class="action-dropdown" v-if="activeActionMenu === booking.id">
-                      <button
-                        class="action-btn approve-btn"
-                        @click="updateStatus(booking.id, 'approved')"
-                      >
-                        <svg
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
+          <div class="bookings-cards-container">
+            <div class="bookings-cards">
+              <div
+                v-for="(booking, index) in paginatedBookings"
+                :key="booking.id"
+                class="booking-card"
+              >
+                <div class="booking-item">
+                  <div class="booking-id">{{ index + 1 }}</div>
+                  <div class="department">{{ booking.department }}</div>
+                  <div class="event">{{ booking.event }}</div>
+                  <div class="date">{{ formatDate(booking.requestDate) }}</div>
+                  <div class="person">{{ booking.person }}</div>
+                  <div class="status">
+                    <span class="status-badge" :class="booking.status">
+                      {{ capitalizeFirstLetter(booking.status) }}
+                    </span>
+                  </div>
+                  <div class="actions">
+                    <button
+                          class="action-btn approve-btn"
+                          @click="openApprovalPrompt(booking.id)"
                         >
-                          <path
-                            d="M20 6L9 17L4 12"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
-                        </svg>
-                        <span>Approve</span>
-                      </button>
-                      <button
-                        class="action-btn reject-btn"
-                        @click="openRejectPrompt(booking.id)"
-                      >
-                        <svg
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            d="M18 6L6 18"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
-                          <path
-                            d="M6 6L18 18"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
-                        </svg>
-                        <span>Reject</span>
-                      </button>
-                      <button
-                        class="action-btn message-btn"
-                        @click="sendMessage(booking)"
-                      >
-                        <svg
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <rect
-                            x="2"
-                            y="4"
-                            width="20"
+                          <svg
+                            width="16"
                             height="16"
-                            rx="2"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
-                          <path
-                            d="M22 7L13.03 12.7C12.7213 12.8934 12.3643 13 12 13C11.6357 13 11.2787 12.8934 10.97 12.7L2 7"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                          />
-                        </svg>
-                        <span>Message</span>
-                      </button>
-                    </div>
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              d="M20 6L9 17L4 12"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                            />
+                          </svg>
+                          <span>Approve</span>
+                        </button>
+                        <button
+                          class="action-btn reject-btn"
+                          @click="openRejectPrompt(booking.id)"
+                        >
+                          <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              d="M18 6L6 18"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                            />
+                            <path
+                              d="M6 6L18 18"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                            />
+                          </svg>
+                          <span>Reject</span>
+                        </button>
+                        <button
+  class="action-btn details-btn"
+  @click="openBookingDetailsModal(booking)"
+>
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      d="M12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20Z"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+    <path
+      d="M12 8V12"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+    <path
+      d="M12 16H12.01"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+  </svg>
+  <span>Details</span>
+</button>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div v-if="filteredBookings.length === 0" class="empty-bookings">
-              <p>No bookings found.</p>
+              <div v-if="filteredBookings.length === 0" class="empty-bookings">
+                <p>No bookings found.</p>
+              </div>
             </div>
           </div>
-          </div> <!-- Close bookings-cards-container -->
+          <!-- Close bookings-cards-container -->
         </div>
 
         <!-- Pagination Controls -->
@@ -229,26 +215,190 @@
         </div>
       </div>
     </div>
-
+    <!-- Booking Details Modal -->
+    <div v-if="showBookingDetailsModal" class="modal-overlay">
+  <div class="modal booking-details-modal">
+    <div class="modal-header">
+      <h3>Booking Details</h3>
+      <button class="close-button" @click="closeBookingDetailsModal">
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M18 6L6 18"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+          <path
+            d="M6 6L18 18"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </button>
+    </div>
+    <div class="modal-content">
+      <div class="detail-item">
+        <div class="detail-label">Event: </div>
+        <div class="detail-value">{{ selectedBookingDetails.event }}</div>
+      </div>
+      <div class="detail-item">
+        <div class="detail-label">Person Responsible: </div>
+        <div class="detail-value">{{ selectedBookingDetails.person }}</div>
+      </div>
+      <div class="detail-item">
+        <div class="detail-label">Department: </div>
+        <div class="detail-value">{{ selectedBookingDetails.department }}</div>
+      </div>
+      <div class="detail-item">
+        <div class="detail-label">Date: </div>
+        <div class="detail-value">{{ formatDate(selectedBookingDetails.requestDate) }}</div>
+      </div>
+      <div class="detail-item">
+        <div class="detail-label">Time: </div>
+        <div class="detail-value">
+          {{ formatTime(selectedBookingDetails.startTime) }} - {{ formatTime(selectedBookingDetails.endTime) }}
+        </div>
+      </div>
+      <div class="detail-item">
+        <div class="detail-label">Requester: </div>
+        <div class="detail-value">{{ selectedBookingDetails.person }}</div>
+      </div>
+      <div class="detail-item">
+        <div class="detail-label">Selected Laboratory: </div>
+        <div class="detail-value">{{ selectedBookingDetails.selectedRoom }}</div>
+      </div>
+      <div class="detail-item">
+        <div class="detail-label">Status: </div>
+        <div class="detail-value">{{ capitalizeFirstLetter(selectedBookingDetails.status) }}</div>
+      </div>
+    </div>
+    <div class="form-actions center">
+      <button type="button" class="cancel-btn" @click="closeBookingDetailsModal">Close</button>
+    </div>
+  </div>
+</div>
+    <!-- Approval Prompt Modal -->
+    <div v-if="showApprovalPrompt" class="modal-overlay">
+      <div class="modal confirm-approval">
+        <div class="modal-header">
+          <h3>Approve Booking</h3>
+          <button class="close-button" @click="closeApprovalPrompt">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M18 6L6 18"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M6 6L18 18"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </button>
+        </div>
+        <div class="modal-content">
+          <div class="icon-container">
+            <svg
+              width="64"
+              height="64"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
+                stroke="#10B981"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </div>
+          <p class="approval-message">
+            Are you sure you want to approve this booking?
+          </p>
+        </div>
+        <div class="form-actions center">
+          <button type="button" class="cancel-btn" @click="closeApprovalPrompt">
+            Cancel
+          </button>
+          <button type="button" class="labease-btn" @click="confirmApproval">
+            Confirm Approval
+          </button>
+        </div>
+      </div>
+    </div>
     <!-- Rejection Prompt Modal -->
     <div v-if="showRejectPrompt" class="modal-overlay">
       <div class="modal confirm-reject">
         <div class="modal-header">
           <h3>Reject Booking</h3>
           <button class="close-button" @click="closeRejectPrompt">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M18 6L6 18"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M6 6L18 18"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
             </svg>
           </button>
         </div>
         <div class="modal-content">
           <div class="icon-container">
-            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" stroke="#DD3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <svg
+              width="64"
+              height="64"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
+                stroke="#DD3859"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
             </svg>
           </div>
-          <p class="reject-message">Please provide a reason for rejecting this booking:</p>
+          <p class="reject-message">
+            Please provide a reason for rejecting this booking:
+          </p>
           <textarea
             v-model="rejectionReason"
             placeholder="Enter rejection reason..."
@@ -257,8 +407,12 @@
           ></textarea>
         </div>
         <div class="form-actions center">
-          <button type="button" class="cancel-btn" @click="closeRejectPrompt">Cancel</button>
-          <button type="button" class="labease-btn" @click="confirmRejection">Confirm Rejection</button>
+          <button type="button" class="cancel-btn" @click="closeRejectPrompt">
+            Cancel
+          </button>
+          <button type="button" class="labease-btn" @click="confirmRejection">
+            Confirm Rejection
+          </button>
         </div>
       </div>
     </div>
@@ -284,7 +438,7 @@ export default {
   },
   setup() {
     const activeActionMenu = ref(null);
-    
+
     return {
       activeActionMenu,
     };
@@ -292,7 +446,7 @@ export default {
   data() {
     return {
       // Selected department filter
-      selectedDepartment: "", 
+      selectedDepartment: "",
       dateFilter: "all", // Selected date range filter
       currentPage: 1, // Current page for pagination
       itemsPerPage: 10, // Number of items per page
@@ -300,6 +454,9 @@ export default {
       showRejectPrompt: false, // Controls visibility of the rejection prompt modal
       rejectionReason: "", // Stores the reason for rejection
       selectedBookingId: null, // Stores the ID of the booking being rejected
+      showBookingDetailsModal: false, // Controls visibility of the booking details modal
+      selectedBookingDetails: null, 
+      showApprovalPrompt: false,
     };
   },
   computed: {
@@ -364,14 +521,35 @@ export default {
   },
   methods: {
     // Toggle the action menu dropdown
-    toggleActionMenu(bookingId) {
-      if (this.activeActionMenu === bookingId) {
-        this.activeActionMenu = null;
-      } else {
-        this.activeActionMenu = bookingId;
+    // Open the booking details modal
+    formatTime(time) {
+      if (!time || typeof time !== "string") {
+        return "Invalid Time"; // Handle undefined or invalid time
       }
+      const [hour, minute] = time.split(":").map(Number);
+      const period = hour >= 12 ? "PM" : "AM";
+      const formattedHour = hour % 12 || 12; // Convert to 12-hour format
+      return `${formattedHour}:${minute.toString().padStart(2, "0")} ${period}`;
     },
+   
+    openBookingDetailsModal(booking) {
+  console.log("Opening booking details modal for:", booking); // Debugging log
+  this.selectedBookingDetails = booking; // Set the selected booking details
+  this.showBookingDetailsModal = true; // Open the modal
+
+  // Ensure other modals are closed
+  this.showApprovalPrompt = false;
+  this.showRejectPrompt = false;
+},
+
+closeBookingDetailsModal() {
+  console.log("Closing booking details modal"); // Debugging log
+  this.showBookingDetailsModal = false; // Close the modal
+  this.selectedBookingDetails = null; // Clear the selected booking details
+},
+
     
+
     // Fetch bookings from Supabase
     async fetchBookings() {
       try {
@@ -399,7 +577,10 @@ export default {
         .single()
         .then(({ data: booking, error: fetchError }) => {
           if (fetchError) {
-            console.error("Error fetching booking details:", fetchError.message);
+            console.error(
+              "Error fetching booking details:",
+              fetchError.message
+            );
             return;
           }
 
@@ -413,7 +594,9 @@ export default {
                 console.error("Error updating status:", error.message);
               } else {
                 // Update the local state
-                const bookingIndex = this.bookings.findIndex((b) => b.id === id);
+                const bookingIndex = this.bookings.findIndex(
+                  (b) => b.id === id
+                );
                 if (bookingIndex !== -1) {
                   this.bookings[bookingIndex].status = newStatus;
                   this.bookings[bookingIndex].remarks = reason;
@@ -421,7 +604,7 @@ export default {
                 }
 
                 // Create a notification for the instructor if the booking is rejected
-                if (newStatus === 'rejected' && reason) {
+                if (newStatus === "rejected" && reason) {
                   this.createNotification(booking, reason);
                 }
               }
@@ -439,43 +622,64 @@ export default {
       this.rejectionReason = "";
       this.selectedBookingId = null;
     },
+    // Open the approval prompt modal
+    openApprovalPrompt(id) {
+      this.selectedBookingId = id;
+      this.showApprovalPrompt = true;
+    },
+
+    // Close the approval prompt modal
+    closeApprovalPrompt() {
+      this.showApprovalPrompt = false;
+      this.selectedBookingId = null;
+    },
+
+    // Confirm approval and update the booking status
+    confirmApproval() {
+      this.updateStatus(this.selectedBookingId, "approved");
+      this.closeApprovalPrompt();
+    },
     // Confirm rejection and update the booking status
     confirmRejection() {
       if (!this.rejectionReason.trim()) {
         alert("Please provide a reason for rejection.");
         return;
       }
-      this.updateStatus(this.selectedBookingId, "rejected", this.rejectionReason);
+      this.updateStatus(
+        this.selectedBookingId,
+        "rejected",
+        this.rejectionReason
+      );
       this.closeRejectPrompt();
     },
     // Create a notification for the instructor about the rejected booking
     createNotification(booking, reason) {
       const today = new Date();
       const formattedDate = today.toISOString();
-      
+
       // Create notification object
       const notification = {
         userid: booking.instructor_id, // The instructor who made the booking
-        title: 'Booking Rejected',
+        title: "Booking Rejected",
         message: `Your booking for "${booking.event_name}" has been rejected. Reason: ${reason}`,
         timestamp: formattedDate,
         read: false,
-        type: 'rejection'
+        type: "rejection",
       };
-      
+
       // Store notification in the database
       supabase
-        .from('notifications')
+        .from("notifications")
         .insert([notification])
         .then(({ error }) => {
           if (error) {
-            console.error('Error creating notification:', error.message);
+            console.error("Error creating notification:", error.message);
           } else {
-            console.log('Rejection notification created successfully');
+            console.log("Rejection notification created successfully");
           }
         });
     },
-    
+
     // Format a date string into a readable format
     formatDate(dateString) {
       if (!dateString) return "";
@@ -486,8 +690,6 @@ export default {
     capitalizeFirstLetter(string) {
       return string.charAt(0).toUpperCase() + string.slice(1);
     },
-    
-
   },
   created() {
     // Fetch bookings when the component is created
@@ -564,6 +766,38 @@ export default {
   font-weight: 600;
   color: white;
 }
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background-color: #f9fafb;
+  transition: background-color 0.2s ease;
+  gap: 16px; /* Add gap between label and value */
+}
+
+.detail-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #64748b; /* Grayish color for labels */
+  flex: 1; /* Allow labels to take up space */
+  text-align: left;
+  white-space: nowrap; /* Prevent text from wrapping */
+}
+
+.detail-value {
+  font-size: 14px;
+  font-weight: bolder;
+  color: #1e293b; /* Darker color for values */
+
+  text-align: right;
+  flex: 2; /* Allow values to take up more space */
+  white-space: nowrap; /* Prevent text from wrapping */
+ 
+ 
+}
 
 .header-item {
   font-size: 14px;
@@ -613,32 +847,35 @@ export default {
 }
 
 .status-badge {
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-    display: inline-block;
-    text-align: center;
-  }
-  
-  .status-badge.pending {
-    background-color: #FFF1F3;
-    color: #DD3859;
-  }
-  
-  .status-badge.confirmed {
-    background-color: #e6f7e6;
-    color: #22c55e;
-  }
-  
-  .status-badge.cancelled {
-    background-color: #f1f1f1;
-    color: #6b7280;
-  }
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-block;
+  text-align: center;
+}
+
+.status-badge.pending {
+  background-color: #fff1f3;
+  color: #dd3859;
+}
+
+.status-badge.confirmed {
+  background-color: #e6f7e6;
+  color: #22c55e;
+}
+
+.status-badge.cancelled {
+  background-color: #f1f1f1;
+  color: #6b7280;
+}
 
 /* Actions Section */
 .actions {
-  position: relative;
+  display: flex;
+  gap: 8px; /* Add spacing between buttons */
+  justify-content: center; /* Center the buttons */
+  align-items: center;
 }
 
 .action-menu {
@@ -669,8 +906,8 @@ export default {
 
 .action-dropdown {
   position: absolute;
-  top: -5px;
-  left: 36px; /* Width of button (32px) + small gap */
+  top: -10px;
+  left: 40px; /* Width of button (32px) + small gap */
   background-color: white;
   border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
@@ -680,19 +917,17 @@ export default {
 }
 
 .action-btn {
-  width: 100%;
-  height: auto;
-  padding: 8px 12px;
-  border-radius: 0;
   display: flex;
   align-items: center;
-  gap: 8px;
-  background: none;
-  border: none;
-  border-bottom: 1px solid #e2e8f0;
+  gap: 4px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
-  text-align: left;
+  background: none;
+  border: 1px solid #e2e8f0;
 }
 
 .action-btn:last-child {
@@ -709,18 +944,17 @@ export default {
 
 .approve-btn {
   color: #10b981;
+  border-color: #10b981;
 }
 
 .reject-btn {
   color: #ef4444;
+  border-color: #ef4444;
 }
 
-.message-btn {
-  color: #3b82f6;
-}
 
 .approve-btn:hover {
-  color: #10b981;
+  
   background-color: rgba(16, 185, 129, 0.1);
 }
 
@@ -729,9 +963,13 @@ export default {
   background-color: rgba(239, 68, 68, 0.1);
 }
 
-.message-btn:hover {
-  color: #3b82f6;
-  background-color: rgba(59, 130, 246, 0.1);
+.details-btn {
+  color: #3b82f6; /* Blue color for details */
+  border-color: #3b82f6;
+}
+
+.details-btn:hover {
+  background-color: rgba(59, 130, 246, 0.1); /* Light blue background on hover */
 }
 
 /* Empty Bookings */
@@ -831,15 +1069,15 @@ export default {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
-  color: #DD3859;
-  font-family: 'Poppins', sans-serif;
+  color: #dd3859;
+  font-family: "Poppins", sans-serif;
 }
 
 .close-button {
   background: none;
   border: none;
   cursor: pointer;
-  color: #DD3859;
+  color: #dd3859;
   padding: 4px;
   display: flex;
   align-items: center;
@@ -886,7 +1124,7 @@ export default {
 
 .reject-textarea:focus {
   outline: none;
-  border-color: #DD3859;
+  border-color: #dd3859;
   box-shadow: 0 0 0 2px rgba(221, 56, 89, 0.1);
 }
 
@@ -899,7 +1137,7 @@ export default {
 }
 
 .form-actions.center {
-  justify-content: center;
+  justify-content: center; 
 }
 
 .cancel-btn {
@@ -918,7 +1156,7 @@ export default {
 }
 
 .labease-btn {
-  background-color: #DD3859;
+  background-color: #dd3859;
   color: white;
   border: none;
   padding: 0.8rem 2rem;
@@ -929,7 +1167,7 @@ export default {
 }
 
 .labease-btn:hover {
-  background-color: #C8314F;
+  background-color: #c8314f;
 }
 
 @keyframes modal-appear {

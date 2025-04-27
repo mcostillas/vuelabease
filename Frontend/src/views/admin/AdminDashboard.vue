@@ -257,13 +257,13 @@ const supabaseSchedules = createClient(
           { id: 'IOT Lab', usage: 4 }
         ],
         roomAvailability: [
-          { name: 'L201', status: 'In Use', instructor: 'Clyde Balaman', time: '9:00 AM - 12:00 PM', purpose: 'Web Development', nextBooking: 'March 15, 2025' },
-          { name: 'L202', status: 'Available', nextBooking: 'March 16, 2025' },
-          { name: 'L203', status: 'In Use', instructor: 'Rogelio Badiang', time: '1:00 PM - 4:00 PM', purpose: 'Database Systems' },
-          { name: 'L204', status: 'Available', nextBooking: 'March 17, 2025' },
-          { name: 'L205', status: 'In Use', instructor: 'Shena Cloribel', time: '4:00 PM - 7:00 PM', purpose: 'Network Security' },
-          { name: 'Open Laboratory', status: 'Available', nextBooking: 'March 18, 2025' },
-          { name: 'IOT Lab', status: 'In Use', instructor: 'Nannette Casquejo', time: '9:00 AM - 12:00 PM', purpose: 'IOT Development' }
+          { name: 'L201', status: 'Available' },
+          { name: 'L202', status: 'In Use' },
+          { name: 'L203', status: 'Available' },
+          { name: 'L204', status: 'In Use' },
+          { name: 'L205', status: 'Available' },
+          { name: 'Open Lab', status: 'In Use' },
+          { name: 'IOT Lab', status: 'Available' }
         ],
         sessions: [],
         scheduleCount: {
@@ -290,36 +290,43 @@ const supabaseSchedules = createClient(
     },
     methods: {
       checkRoomAvailability() {
-    const currentTime = new Date();
-    const currentHour = currentTime.getHours();
-    const currentMinutes = currentTime.getMinutes();
-    const currentDay = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+  const currentTime = new Date();
+  const currentHour = currentTime.getHours();
+  const currentMinutes = currentTime.getMinutes();
+  const currentDay = new Date().toLocaleDateString('en-US', { weekday: 'long' });
 
-    // Iterate through each room and check if it is in use
-    this.roomAvailability = this.roomAvailability.map(room => {
-      const schedules = this.scheduleData.filter(schedule => 
-        schedule.labRoom === room.name && schedule.day === currentDay
-      );
+  // Group schedules by room for the current day
+  const schedulesByRoom = this.scheduleData
+    .filter(schedule => schedule.day === currentDay || schedule.second_day === currentDay) // Check both `day` and `second_day`
+    .reduce((acc, schedule) => {
+      acc[schedule.lab_room] = acc[schedule.lab_room] || [];
+      acc[schedule.lab_room].push(schedule);
+      return acc;
+    }, {});
 
-      // Check if the current time falls within any schedule for this room
-      const isInUse = schedules.some(schedule => {
-        const [startHour, startMinutes] = schedule.startTime.split(':').map(Number);
-        const [endHour, endMinutes] = schedule.endTime.split(':').map(Number);
+  // Iterate through each room and check if it is in use
+  this.roomAvailability = this.roomAvailability.map(room => {
+    const schedules = schedulesByRoom[room.name] || [];
 
-        const startTime = startHour * 60 + startMinutes;
-        const endTime = endHour * 60 + endMinutes;
-        const currentTimeInMinutes = currentHour * 60 + currentMinutes;
+    // Check if the current time falls within any schedule for this room
+    const isInUse = schedules.some(schedule => {
+      const [startHour, startMinutes] = schedule.start_time.split(':').map(Number);
+      const [endHour, endMinutes] = schedule.end_time.split(':').map(Number);
 
-        return currentTimeInMinutes >= startTime && currentTimeInMinutes < endTime;
-      });
+      const startTime = startHour * 60 + startMinutes;
+      const endTime = endHour * 60 + endMinutes;
+      const currentTimeInMinutes = currentHour * 60 + currentMinutes;
 
-      // Update the room status
-      return {
-        ...room,
-        status: isInUse ? 'In Use' : 'Available',
-      };
+      return currentTimeInMinutes >= startTime && currentTimeInMinutes < endTime;
     });
-  },
+
+    // Update the room status
+    return {
+      ...room,
+      status: isInUse ? 'In Use' : 'Available',
+    };
+  });
+},
       async fetchBookings() {
   try {
     const { data, error } = await supabaseBookings
@@ -443,13 +450,17 @@ async fetchSchedules() {
     computed: {
       // Filter rooms based on usage level
       filteredScheduleData() {
-    const filtered = this.scheduleData.filter(schedule => schedule.day === this.selectedDay);
+  // Filter schedules based on the selected day
+  const filtered = this.scheduleData.filter(schedule => schedule.day === this.selectedDay);
 
-    // Update the filtered count
-    this.scheduleCount.filtered = filtered.length;
+  // Sort the filtered schedules by date (newest first)
+  filtered.sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
 
-    return filtered;
-  },
+  // Update the filtered count
+  this.scheduleCount.filtered = filtered.length;
+
+  return filtered;
+},
       filteredRooms() {
         switch(this.usageFilter) {
           case 'high':

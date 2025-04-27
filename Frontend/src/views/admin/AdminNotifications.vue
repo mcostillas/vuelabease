@@ -160,7 +160,9 @@
   </div>
   <div class="detail-item">
     <div class="detail-label">Time</div>
-    <div class="detail-value">{{ notificationDetails.startTime }} - {{ notificationDetails.endTime }}</div>
+    <div class="detail-value">
+      {{ formatTime(notificationDetails.startTime) }} - {{ formatTime(notificationDetails.endTime) }}
+    </div>
   </div>
   <div class="detail-item">
     <div class="detail-label">Requester</div>
@@ -285,6 +287,15 @@ beforeUnmount() {
   clearInterval(this.notificationInterval);
   },
   methods: {
+    formatTime(time) {
+    if (!time || typeof time !== "string") {
+      return "Invalid Time"; // Handle undefined or invalid time
+    }
+    const [hour, minute] = time.split(":").map(Number);
+    const period = hour >= 12 ? "PM" : "AM";
+    const formattedHour = hour % 12 || 12; // Convert to 12-hour format
+    return `${formattedHour}:${minute.toString().padStart(2, "0")} ${period}`;
+  },
     viewBookingDetails() {
     if (!this.selectedNotification || this.selectedNotification.type !== 'booking') return;
 
@@ -321,7 +332,7 @@ beforeUnmount() {
     const newNotifications = data.map(booking => ({
   type: 'booking',
   title: 'New Booking Request',
-  message: `${booking.event} has requested to book ${booking.selectedRoom} on ${booking.requestDate} from ${booking.startTime} to ${booking.endTime}.`,
+  message: `${booking.event} has requested to book ${booking.selectedRoom} on ${booking.requestDate} from ${this.formatTime(booking.startTime)} to ${this.formatTime(booking.endTime)}.`,
   selectedRoom: booking.selectedRoom || 'N/A', // Laboratory
   requestDate: booking.requestDate || 'N/A', // Date
   startTime: booking.startTime || 'N/A', // Start time

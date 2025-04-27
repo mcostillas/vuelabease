@@ -111,10 +111,7 @@
           <div class="schedule-cards-container">
             <div class="schedule-cards">
               <div
-                v-for="booking in filteredBookings.slice(
-                  (currentPage - 1) * itemsPerPage,
-                  currentPage * itemsPerPage
-                )"
+                v-for="booking in filteredBookings"
                 :key="booking.id"
                 class="schedule-card"
               >
@@ -328,20 +325,22 @@ export default {
   },
   methods: {
     async fetchBookings() {
-      try {
-        console.log("Fetching answered bookings from Supabase...");
-        const { data, error } = await supabase
-          .from("bookings")
-          .select("*")
-          .eq("answered", true); // Fetch only answered bookings
-        if (error) throw error;
+  try {
+    console.log("Fetching answered bookings from Supabase...");
+    const { data, error } = await supabase
+      .from("bookings")
+      .select("*")
+      .eq("answered", true); // Fetch only answered bookings
+    if (error) throw error;
 
-        console.log("Fetched bookings:", data);
-        this.bookings = data;
-      } catch (error) {
-        console.error("Error fetching bookings:", error.message);
-      }
-    },
+    // Sort bookings by `updated_at` (or `created_at`) in descending order
+    this.bookings = data.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+
+    console.log("Sorted bookings:", this.bookings);
+  } catch (error) {
+    console.error("Error fetching bookings:", error.message);
+  }
+},
     formatDate(dateString) {
       const date = new Date(dateString);
       return date.toLocaleDateString("en-US", {
