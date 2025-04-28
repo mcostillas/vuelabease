@@ -270,7 +270,13 @@ export default {
   },
   created() {
   // Retrieve the userType from localStorage
-  this.fetchNotifications();
+  const storedNotifications = localStorage.getItem('notifications');
+  if (storedNotifications) {
+    this.notifications = JSON.parse(storedNotifications);
+  } else {
+    this.fetchNotifications(); // Fetch from the database if no local data exists
+  }
+
   const storedUserRole = localStorage.getItem('usertype');
   console.log('Retrieved usertype from localStorage:', storedUserRole); // Debugging log
 
@@ -336,8 +342,11 @@ async fetchNotifications() {
       statusClass: booking.status === 'approved' ? 'text-green' : 'text-red', // Add status class
     }));
 
-    // Add the new notifications to the existing notifications array
-    this.notifications = [...bookingNotifications, ...this.notifications];
+    // Save notifications to localStorage
+    localStorage.setItem('notifications', JSON.stringify(bookingNotifications));
+
+    // Load notifications into the component's state
+    this.notifications = bookingNotifications;
   } catch (error) {
     console.error('Error fetching notifications:', error.message);
   }
@@ -409,11 +418,16 @@ openNotificationModal(notification, index) {
       this.activeFilter = filter;
     },
     clearAllNotifications() {
-      this.notifications = [];
-    },
+  this.notifications = [];
+  localStorage.removeItem('notifications'); // Clear notifications from localStorage
+},
     deleteNotification(index) {
-      this.notifications.splice(index, 1);
-    },
+  // Remove the notification from the local state
+  this.notifications.splice(index, 1);
+
+  // Update localStorage
+  localStorage.setItem('notifications', JSON.stringify(this.notifications));
+},
     getOriginalIndex(notification) {
       return this.notifications.findIndex(n => n === notification);
     }
