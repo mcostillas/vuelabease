@@ -241,14 +241,18 @@ export default {
 },
   methods: {
     async fetchBookings() {
-      try {
-        const { data, error } = await supabase.from("bookings").select("*");
-        if (error) throw error;
-        this.bookings = data;
-      } catch (error) {
-        console.error("Error fetching bookings:", error.message);
-      }
-    },
+  try {
+    const { data, error } = await supabase
+      .from("bookings")
+      .select("*")
+      .order("created_at", { ascending: false }); // Sort by created_at in descending order
+
+    if (error) throw error;
+    this.bookings = data;
+  } catch (error) {
+    console.error("Error fetching bookings:", error.message);
+  }
+},
     applyFilters() {
       this.currentPage = 1;
     },

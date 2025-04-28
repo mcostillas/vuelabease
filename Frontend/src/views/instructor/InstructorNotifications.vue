@@ -57,137 +57,112 @@
         
         <div class="notification-cards">
           <div 
-            v-for="(notification, index) in filteredNotifications" 
-            :key="index" 
-            class="notification-card" 
-            :class="{ 'unread': !notification.read }"
-          >
-            <div class="notification-item" @click="openNotificationModal(notification, getOriginalIndex(notification))">
-              <div class="notification-type">
-                <div class="notification-icon" :class="notification.type">
-                  <svg v-if="notification.type === 'booking'" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M19 4H5C3.89543 4 3 4.89543 3 6V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V6C21 4.89543 20.1046 4 19 4Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M16 2V6" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M8 2V6" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M3 10H21" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                  <svg v-else-if="notification.type === 'alert'" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M12 8V12" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M12 16H12.01" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                  <svg v-else width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M18 8C18 6.4087 17.3679 4.88258 16.2426 3.75736C15.1174 2.63214 13.5913 2 12 2C10.4087 2 8.88258 2.63214 7.75736 3.75736C6.63214 4.88258 6 6.4087 6 8C6 15 3 17 3 17H21C21 17 18 15 18 8Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M13.73 21C13.5542 21.3031 13.3019 21.5547 12.9982 21.7295C12.6946 21.9044 12.3504 21.9965 12 21.9965C11.6496 21.9965 11.3054 21.9044 11.0018 21.7295C10.6982 21.5547 10.4458 21.3031 10.27 21" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                </div>
-              </div>
-              
-              <div class="notification-details">
-                <h3 class="notification-title">{{ notification.title }}</h3>
-                <p class="notification-message">{{ notification.message }}</p>
-                <span class="notification-time">{{ notification.time }}</span>
-              </div>
-            </div>
-            
-            <button class="delete-notification-button" @click.stop="deleteNotification(getOriginalIndex(notification))">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M18 6L6 18" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M6 6L18 18" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </button>
-          </div>
+  v-for="(notification, index) in filteredNotifications" 
+  :key="index" 
+  class="notification-card" 
+  :class="[
+    { 'unread': !notification.read },
+    notification.type === 'booking' && notification.title.includes('Accepted') ? 'accepted' : '',
+    notification.type === 'booking' && notification.title.includes('Declined') ? 'rejected' : ''
+  ]"
+>
+  <div class="notification-item" @click="openNotificationModal(notification, getOriginalIndex(notification))">
+    <div class="notification-type">
+      <div class="notification-icon" :class="notification.type">
+        <svg v-if="notification.type === 'booking'" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M19 4H5C3.89543 4 3 4.89543 3 6V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V6C21 4.89543 20.1046 4 19 4Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M16 2V6" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M8 2V6" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M3 10H21" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <svg v-else-if="notification.type === 'alert'" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M12 8V12" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M12 16H12.01" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
+    
+    <div class="notification-details">
+      <h3 class="notification-title">{{ notification.title }}</h3>
+      <p class="notification-message" :class="notification.statusClass">{{ notification.message }}</p>
+      <span class="notification-time">{{ notification.time }}</span>
+    </div>
+  </div>
+  
+  <button class="delete-notification-button" @click.stop="deleteNotification(getOriginalIndex(notification))">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M18 6L6 18" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M6 6L18 18" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
+</div>
         </div>
       </div>
     </div>
 
-    <!-- Notification Modal -->
     <Modal 
-      :show="showModal" 
-      :title="''" 
-      @close="closeModal"
-      :showFooter="false"
-    >
-      <div class="notification-modal-content">
-        <div class="modal-notification-header">
-          <div class="modal-notification-left">
-            <div class="modal-notification-icon" v-if="selectedNotification" :class="selectedNotification.type">
-              <svg v-if="selectedNotification && selectedNotification.type === 'booking'" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M19 4H5C3.89543 4 3 4.89543 3 6V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V6C21 4.89543 20.1046 4 19 4Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M16 2V6" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M8 2V6" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M3 10H21" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              <svg v-else-if="selectedNotification && selectedNotification.type === 'alert'" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M12 8V12" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M12 16H12.01" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              <svg v-else-if="selectedNotification" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M18 8C18 6.4087 17.3679 4.88258 16.2426 3.75736C15.1174 2.63214 13.5913 2 12 2C10.4087 2 8.88258 2.63214 7.75736 3.75736C6.63214 4.88258 6 6.4087 6 8C6 15 3 17 3 17H21C21 17 18 15 18 8Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M13.73 21C13.5542 21.3031 13.3019 21.5547 12.9982 21.7295C12.6946 21.9044 12.3504 21.9965 12 21.9965C11.6496 21.9965 11.3054 21.9044 11.0018 21.7295C10.6982 21.5547 10.4458 21.3031 10.27 21" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </div>
-            <h3 v-if="selectedNotification" class="modal-notification-title">{{ selectedNotification.title }}</h3>
-          </div>
-          
-          <div class="modal-notification-time" v-if="selectedNotification">
-            {{ selectedNotification.time }}
-          </div>
+  :show="showModal" 
+  :title="''" 
+  @close="closeModal"
+  :showFooter="false"
+>
+  <div class="notification-modal-content">
+    <div class="modal-notification-header">
+      <div class="modal-notification-left">
+        <div class="modal-notification-icon" v-if="selectedNotification" :class="selectedNotification.type">
+          <!-- Booking Icon -->
+          <svg v-if="selectedNotification && selectedNotification.type === 'booking'" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19 4H5C3.89543 4 3 4.89543 3 6V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V6C21 4.89543 20.1046 4 19 4Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M16 2V6" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M8 2V6" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M3 10H21" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <!-- Alert Icon -->
+          <svg v-else-if="selectedNotification && selectedNotification.type === 'alert'" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M12 8V12" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M12 16H12.01" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
         </div>
-        
-        <div class="modal-notification-body">
-          <p class="modal-notification-message" v-if="selectedNotification">
-            {{ selectedNotification.message }}
-          </p>
-          
-          <div v-if="selectedNotification && selectedNotification.type === 'booking'" class="modal-notification-details">
-            <div class="detail-item">
-              <div class="detail-label">Room</div>
-              <div class="detail-value">L201</div>
-            </div>
-            <div class="detail-item">
-              <div class="detail-label">Date</div>
-              <div class="detail-value">March 15, 2025</div>
-            </div>
-            <div class="detail-item">
-              <div class="detail-label">Time</div>
-              <div class="detail-value">1:00 PM - 3:00 PM</div>
-            </div>
-            <div class="detail-item">
-              <div class="detail-label">Requested by</div>
-              <div class="detail-value">John Smith</div>
-            </div>
-          </div>
+        <h3 v-if="selectedNotification" class="modal-notification-title">{{ selectedNotification.title }}</h3>
+      </div>
+      <div class="modal-notification-time" v-if="selectedNotification">
+        {{ selectedNotification.time }}
+      </div>
+    </div>
+
+    <div class="modal-notification-body">
+      <p class="modal-notification-message" v-if="selectedNotification">
+        {{ selectedNotification.message }}
+      </p>
+
+      <div v-if="selectedNotification && selectedNotification.type === 'booking'" class="modal-notification-details">
+        <div class="detail-item">
+          <div class="detail-label">Room</div>
+          <div class="detail-value">{{ selectedNotification.selectedRoom || 'N/A' }}</div>
         </div>
-        
-        <div class="modal-notification-actions">
-          <button 
-            v-if="selectedNotification && selectedNotification.type === 'booking'" 
-            class="modal-action-button primary"
-            @click="handleAction('confirm')"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right: 6px;">
-              <path d="M9 11L12 14L22 4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M21 12V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H16" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            Approve
-          </button>
-          
-          <button 
-            v-if="selectedNotification && selectedNotification.type === 'booking'" 
-            class="modal-action-button secondary"
-            @click="handleAction('reject')"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right: 6px;">
-              <path d="M18 6L6 18" stroke="#DD3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M6 6L18 18" stroke="#DD3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            Reject
-          </button>
+        <div class="detail-item">
+          <div class="detail-label">Date</div>
+          <div class="detail-value">{{ selectedNotification.requestDate || 'N/A' }}</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-label">Time</div>
+          <div class="detail-value">{{ selectedNotification.timeRange || 'N/A' }}</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-label">Requested by</div>
+          <div class="detail-value">{{ selectedNotification.person || 'N/A' }}</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-label">Noted by</div>
+          <div class="detail-value">{{ selectedNotification.notedBy || 'N/A' }}</div>
         </div>
       </div>
-    </Modal>
+    </div>
+  </div>
+</Modal>
+
   </DashboardLayout>
 </template>
 
@@ -195,6 +170,14 @@
 import DashboardLayout from '@/components/layout/DashboardLayout.vue'
 import InstructorHeader from '@/components/instructor/InstructorHeader.vue'
 import Modal from '@/components/ui/Modal.vue'
+
+import { createClient } from "@supabase/supabase-js";
+
+// Initialize Supabase client
+const supabase = createClient(
+  "https://bfmvnahlknvyrajofmdw.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmbXZuYWhsa252eXJham9mbWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ5OTc4NjUsImV4cCI6MjA2MDU3Mzg2NX0.xkeqAML3bYf9iOV6iG_GJ35_RD7rPKH_OuXFz1SQBLk"
+);
 
 export default {
   name: 'InstructorNotifications',
@@ -287,6 +270,7 @@ export default {
   },
   created() {
   // Retrieve the userType from localStorage
+  this.fetchNotifications();
   const storedUserRole = localStorage.getItem('usertype');
   console.log('Retrieved usertype from localStorage:', storedUserRole); // Debugging log
 
@@ -295,6 +279,7 @@ export default {
     this.$router.push('/');
     return;
   }
+  
 
   // Check if the userType matches 'instructor'
   if (storedUserRole.toLowerCase() !== 'instructor') {
@@ -307,26 +292,82 @@ export default {
   console.log('Usertype is valid:', storedUserRole);
 },
   methods: {
-    openNotificationModal(notification, index) {
-      this.selectedNotification = { ...notification };
-      this.selectedNotificationIndex = index;
-      this.showModal = true;
-      
-      // Mark as read when opened
-      if (!this.notifications[index].read) {
-        this.notifications[index].read = true;
+    formatDate(dateString) {
+  if (!dateString) return 'N/A'; // Handle invalid or missing dates
+
+  const options = { year: 'numeric', month: 'long', day: 'numeric' };
+  return new Date(dateString).toLocaleDateString('en-US', options);
+},
+formatTimeRange(startTime, endTime) {
+  if (!startTime || !endTime) return 'N/A'; // Handle invalid or missing times
+
+  const formatTime = (timeStr) => {
+    const [hour, minute] = timeStr.split(':').map(Number);
+    const period = hour >= 12 ? 'PM' : 'AM';
+    const formattedHour = hour % 12 || 12; // Convert to 12-hour format
+    return `${formattedHour}:${minute.toString().padStart(2, '0')} ${period}`;
+  };
+
+  return `${formatTime(startTime)} - ${formatTime(endTime)}`;
+},
+    
+async fetchNotifications() {
+  try {
+    const { data, error } = await supabase
+      .from('bookings')
+      .select('*')
+      .eq('answered', true) // Retrieve bookings where answered = true
+      .order('updated_at', { ascending: false }); // Sort by updated_at in descending order
+
+    if (error) throw error;
+
+    // Map the bookings to notification format
+    const bookingNotifications = data.map((booking) => ({
+      type: 'booking',
+      title: `Booking for ${booking.person} in ${booking.selectedRoom} is ${booking.status === 'approved' ? 'Accepted' : 'Declined'}`,
+      message: `The booking for ${booking.person} in ${booking.selectedRoom} on ${this.formatDate(booking.requestDate)} has been ${booking.status}.`,
+      time: new Date(booking.updated_at).toLocaleString(),
+      selectedRoom: booking.selectedRoom || 'N/A',
+      requestDate: this.formatDate(booking.requestDate) || 'N/A',
+      timeRange: this.formatTimeRange(booking.startTime, booking.endTime) || 'N/A',
+      person: booking.person || 'N/A',
+      notedBy: booking.notedBy || 'N/A',
+      read: false,
+      statusClass: booking.status === 'approved' ? 'text-green' : 'text-red', // Add status class
+    }));
+
+    // Add the new notifications to the existing notifications array
+    this.notifications = [...bookingNotifications, ...this.notifications];
+  } catch (error) {
+    console.error('Error fetching notifications:', error.message);
+  }
+},
+openNotificationModal(notification, index) {
+  this.selectedNotification = {
+    ...notification,
+    selectedRoom: notification.selectedRoom || 'N/A',
+    requestDate: notification.requestDate || 'N/A',
+    timeRange: notification.timeRange || 'N/A',
+    person: notification.person || 'N/A',
+  };
+  this.selectedNotificationIndex = index;
+  this.showModal = true;
+
+  // Mark as read when opened
+  if (!this.notifications[index].read) {
+    this.notifications[index].read = true;
+  }
+
+  // Add booking-modal class for booking notifications
+  if (notification.type === 'booking') {
+    setTimeout(() => {
+      const modalContainer = document.querySelector('.modal-container');
+      if (modalContainer) {
+        modalContainer.classList.add('booking-modal');
       }
-      
-      // Add booking-modal class for booking notifications
-      if (notification.type === 'booking') {
-        setTimeout(() => {
-          const modalContainer = document.querySelector('.modal-container');
-          if (modalContainer) {
-            modalContainer.classList.add('booking-modal');
-          }
-        }, 0);
-      }
-    },
+    }, 0);
+  }
+},
     closeModal() {
       this.showModal = false;
       this.selectedNotification = null;
@@ -428,6 +469,13 @@ export default {
   color: white;
   border-color: #DD3859;
 }
+.text-green {
+  color: #22C55E; /* Green color for accepted bookings */
+}
+
+.text-red {
+  color: #EF4444; /* Red color for declined bookings */
+}
 
 .clear-all-button {
   background: none;
@@ -495,6 +543,17 @@ export default {
 
 .notification-type {
   flex-shrink: 0;
+}
+/* Accepted Notification */
+.notification-card.accepted {
+  border-left: 4px solid #22C55E; /* Green border */
+  background-color: #D1FAE5; /* Light green background */
+}
+
+/* Rejected Notification */
+.notification-card.rejected {
+  border-left: 4px solid #EF4444; /* Red border */
+  background-color: #FEE2E2; /* Light red background */
 }
 
 .notification-icon {

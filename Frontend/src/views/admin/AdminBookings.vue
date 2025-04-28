@@ -522,6 +522,7 @@ export default {
   methods: {
     // Toggle the action menu dropdown
     // Open the booking details modal
+    
     formatTime(time) {
       if (!time || typeof time !== "string") {
         return "Invalid Time"; // Handle undefined or invalid time
@@ -552,65 +553,74 @@ closeBookingDetailsModal() {
 
     // Fetch bookings from Supabase
     async fetchBookings() {
-      try {
-        console.log("Fetching bookings from Supabase...");
-        const { data, error } = await supabase.from("bookings").select("*");
-        if (error) throw error;
+  try {
+    console.log("Fetching bookings from Supabase...");
+    const { data, error } = await supabase
+      .from("bookings")
+      .select("*")
+      .order("created_at", { ascending: false }); // Sort by created_at in descending order
 
-        console.log("Fetched bookings:", data);
-        this.bookings = data;
-      } catch (error) {
-        console.error("Error fetching bookings:", error.message);
-      }
-    },
+    if (error) throw error;
+
+    console.log("Fetched bookings:", data);
+    this.bookings = data;
+  } catch (error) {
+    console.error("Error fetching bookings:", error.message);
+  }
+},
     // Apply filters and reset to the first page
     applyFilters() {
       this.currentPage = 1;
     },
+
     // Update the status of a booking and mark it as answered
     updateStatus(id, newStatus, reason = null) {
-      // First get the booking details to create a proper notification
+  // Retrieve the logged-in user's name
+  const loggedInUser = localStorage.getItem('firstName'); // Replace 'userName' with the actual key
+
+  // First get the booking details to create a proper notification
+  supabase
+    .from("bookings")
+    .select("*")
+    .eq("id", id)
+    .single()
+    .then(({ data: booking, error: fetchError }) => {
+      if (fetchError) {
+        console.error("Error fetching booking details:", fetchError.message);
+        return;
+      }
+
+      // Now update the booking status and notedBy column
       supabase
         .from("bookings")
-        .select("*")
+        .update({
+          status: newStatus,
+          remarks: reason,
+          answered: true,
+          notedBy: loggedInUser, // Add the logged-in user's name
+        })
         .eq("id", id)
-        .single()
-        .then(({ data: booking, error: fetchError }) => {
-          if (fetchError) {
-            console.error(
-              "Error fetching booking details:",
-              fetchError.message
-            );
-            return;
+        .then(({ error }) => {
+          if (error) {
+            console.error("Error updating status:", error.message);
+          } else {
+            // Update the local state
+            const bookingIndex = this.bookings.findIndex((b) => b.id === id);
+            if (bookingIndex !== -1) {
+              this.bookings[bookingIndex].status = newStatus;
+              this.bookings[bookingIndex].remarks = reason;
+              this.bookings[bookingIndex].answered = true; // Mark as answered locally
+              this.bookings[bookingIndex].notedBy = loggedInUser; // Update locally
+            }
+
+            // Create a notification for the instructor if the booking is rejected
+            if (newStatus === "rejected" && reason) {
+              this.createNotification(booking, reason);
+            }
           }
-
-          // Now update the booking status
-          supabase
-            .from("bookings")
-            .update({ status: newStatus, remarks: reason, answered: true }) // Update status and set answered to true
-            .eq("id", id)
-            .then(({ error }) => {
-              if (error) {
-                console.error("Error updating status:", error.message);
-              } else {
-                // Update the local state
-                const bookingIndex = this.bookings.findIndex(
-                  (b) => b.id === id
-                );
-                if (bookingIndex !== -1) {
-                  this.bookings[bookingIndex].status = newStatus;
-                  this.bookings[bookingIndex].remarks = reason;
-                  this.bookings[bookingIndex].answered = true; // Mark as answered locally
-                }
-
-                // Create a notification for the instructor if the booking is rejected
-                if (newStatus === "rejected" && reason) {
-                  this.createNotification(booking, reason);
-                }
-              }
-            });
         });
-    },
+    });
+},
     // Open the rejection prompt modal
     openRejectPrompt(id) {
       this.selectedBookingId = id;

@@ -38,6 +38,7 @@
               <option value="CN">College of Nursing</option>
               <option value="CPC">College of Pharmacy and Chemistry</option>
               <option value="CTE">College of Teacher Education</option>
+              <option value="Guest">Guest</option>
             </select>
           </div>
 
