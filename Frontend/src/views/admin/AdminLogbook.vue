@@ -286,12 +286,6 @@
 <script>
 import DashboardLayout from '@/components/layout/DashboardLayout.vue';
 import AdminHeader from '@/components/admin/AdminHeader.vue';
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  'https://bfmvnahlknvyrajofmdw.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmbXZuYWhsa252eXJham9mbWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ5OTc4NjUsImV4cCI6MjA2MDU3Mzg2NX0.xkeqAML3bYf9iOV6iG_GJ35_RD7rPKH_OuXFz1SQBLk'
-);
 
 export default {
   components: {
@@ -646,37 +640,33 @@ export default {
   const instructor = this.findInstructorById(this.rfidValue);
 
   if (instructor) {
-    const nowDate = new Date();
-    const logData = {
-      rfid_id: instructor.id,
-      name: instructor.name,
-      department: instructor.department || null,
-      subject: instructor.subject || null,
-      section: instructor.section || null,
-      status: instructor.status === 'out' ? 'in' : 'out',
-      time_in: instructor.status === 'out' ? nowDate.toISOString() : null,
-      time_out: instructor.status === 'in' ? nowDate.toISOString() : null,
-    };
-
-    // Insert log into Supabase
-    supabase
-      .from('logs')
-      .insert([logData])
-      .then(({ data, error }) => {
-        if (error) {
-          console.error('Error inserting log:', error.message);
-          this.showNotification('Failed to log attendance. Please try again.', 'error');
-        } else {
-          console.log('Log inserted successfully:', data);
-          this.showNotification(`${instructor.name} has ${logData.status === 'in' ? 'checked in' : 'checked out'}`, 'success');
+     // Check if instructor has recently checked out (within the last hour)
+     const recentCheckout = this.logEntries.find(entry => 
+          entry.name === instructor.name && 
+          entry.status === 'out' &&
+          entry.checkoutTime && 
+          (now - entry.checkoutTime) < 3600000 // 1 hour in milliseconds
+        );
+        
+        if (recentCheckout && instructor.status === 'out') {
+          // Calculate time remaining in the buffer period
+          const minutesElapsed = Math.floor((now - recentCheckout.checkoutTime) / 60000);
+          const minutesRemaining = 60 - minutesElapsed;
+          
+          this.showNotification(`${instructor.name} has logged out recently. Please wait ${minutesRemaining} minutes before logging in again.`, 'error');
+          this.rfidValue = '';
+          return;
         }
-      });
-
-    // Update the instructor's status locally
-    instructor.status = logData.status;
-
-    // Clear RFID input
-    this.rfidValue = '';
+        
+        this.currentInstructor = instructor;
+        this.showModal = true;
+        
+        // Auto-confirm after 5 seconds if modal is not interacted with
+        this.autoConfirmTimeout = setTimeout(() => {
+          if (this.showModal && this.currentInstructor) {
+            this.confirmAttendance();
+          }
+        }, 5000);
   } else {
     this.showNotification('Unknown RFID card', 'error');
     this.rfidValue = '';
