@@ -1,28 +1,30 @@
 <template>
-  <transition name="modal-fade">
-    <div v-if="show" class="modal-overlay" @click="closeOnOverlayClick ? $emit('close') : null">
-      <div class="modal-container" @click.stop>
-        <div class="modal-header">
-          <h3>{{ title }}</h3>
-          <button class="close-button" @click="$emit('close')" aria-label="Close">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M18 6L6 18" stroke="#dd3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M6 6L18 18" stroke="#dd3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </button>
-        </div>
-        <div class="modal-body">
-          <slot></slot>
-        </div>
-        <div class="modal-footer" v-if="showFooter">
-          <slot name="footer">
-            <button class="modal-button primary" @click="$emit('confirm')">{{ confirmText }}</button>
-            <button class="modal-button secondary" @click="$emit('close')">{{ cancelText }}</button>
-          </slot>
+  <teleport to="body">
+    <transition name="modal-fade">
+      <div v-if="show" class="modal-overlay" @click="closeOnOverlayClick ? $emit('close') : null">
+        <div class="modal-container" @click.stop>
+          <div class="modal-header">
+            <h3>{{ title }}</h3>
+            <button class="close-button" @click="$emit('close')" aria-label="Close">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M18 6L6 18" stroke="#dd3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M6 6L18 18" stroke="#dd3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
+          <div class="modal-body">
+            <slot></slot>
+          </div>
+          <div class="modal-footer" v-if="showFooter">
+            <slot name="footer">
+              <button class="modal-button primary" @click="$emit('confirm')">{{ confirmText }}</button>
+              <button class="modal-button secondary" @click="$emit('close')">{{ cancelText }}</button>
+            </slot>
+          </div>
         </div>
       </div>
-    </div>
-  </transition>
+    </transition>
+  </teleport>
 </template>
 
 <script>
@@ -75,25 +77,27 @@ export default {
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 9999;
 }
 
 .modal-container {
   background-color: white;
   border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
   width: 90%;
-  max-width: 500px;
+  max-width: 650px;
   max-height: 90vh;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  animation: modal-appear 0.3s ease-out forwards;
+  position: relative;
 }
 
 .modal-header {
@@ -177,5 +181,16 @@ export default {
 .modal-fade-enter-from,
 .modal-fade-leave-to {
   opacity: 0;
+}
+
+@keyframes modal-appear {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 </style>

@@ -658,6 +658,8 @@ export default {
       time_out: instructor.status === 'in' ? nowDate.toISOString() : null,
     };
 
+    this.showModal = true;
+
     // Insert log into Supabase
     supabase
       .from('logs')

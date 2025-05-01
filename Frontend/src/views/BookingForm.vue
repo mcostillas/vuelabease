@@ -1,390 +1,294 @@
 <template>
   <div class="booking-container">
     <div class="booking-layout">
-      <div class="booking-form-wrapper">
-        <div class="form-header">
-          <router-link to="/" class="back-button">
-            <ArrowLeftIcon class="icon-primary" />
-          </router-link>
-          <h1>Laboratory Facility Booking Form</h1>
-        </div>
-
-        <form class="booking-form" @submit.prevent="handleBooking">
-          <section class="form-section">
-            <h2>REQUESTING PARTY</h2>
-            <div class="form-row">
-              <div class="form-group">
-                <label for="department">Department</label>
-                <div class="input-wrapper">
-                  <input
-                    type="text"
-                    id="department"
-                    v-model="department"
-                    required
-                  />
-                  <span class="input-icon">
-                    <BuildingOfficeIcon class="icon-primary" />
-                  </span>
-                </div>
-              </div>
-              <div class="form-group">
-                <label for="club">Club/Organization</label>
-                <div class="input-wrapper">
-                  <input type="text" id="club" v-model="club" />
-                  <span class="input-icon">
-                    <UserGroupIcon class="icon-primary" />
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label for="person">Person Responsible</label>
-                <div class="input-wrapper">
-                  <input type="text" id="person" v-model="person" required />
-                  <span class="input-icon">
-                    <UserIcon class="icon-primary" />
-                  </span>
-                </div>
-              </div>
-              <div class="form-group">
-                <label for="contact">Email Address</label>
-                <div class="input-wrapper">
-                  <input type="email" id="contact" v-model="contact" required />
-                  <span class="input-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 icon-primary">
-                     <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
-                    </svg>
-
-                  </span>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section class="form-section">
-            <h2>EVENT DETAILS</h2>
-            <div class="form-row">
-              <div class="form-group">
-                <label for="event">Name of Event</label>
-                <div class="input-wrapper">
-                  <input type="text" id="event" v-model="event" required />
-                  <span class="input-icon">
-                    <DocumentTextIcon class="icon-primary" />
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label for="attendance">Expected Attendees</label>
-                <div class="input-wrapper">
-                  <input
-                    type="text"
-                    inputmode="numeric"
-                    pattern="[0-9]*"
-                    id="attendance"
-                    v-model="attendance"
-                    required
-                    class="no-spinner"
-                  />
-                  <span class="input-icon">
-                    <UserGroupIcon class="icon-primary" />
-                  </span>
-                </div>
-              </div>
-              <div class="form-group">
-                <label for="requestDate">Booking Request Date</label>
-                <div class="input-wrapper date-input-container">
-                  <input
-                    type="date"
-                    id="requestDate"
-                    v-model="requestDate"
-                    required
-                    class="custom-date-input"
-                    @change="handleDateChange"
-                  />
-                  <span class="input-icon date-icon">
-                    <CalendarIcon class="icon-primary" />
-                  </span>
-                  <div v-if="dateRangeWarning" class="date-tooltip">
-                    {{ dateRangeWarning }}
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div class="form-row">
-              <div class="form-group">
-                <label for="startTime">Event Start Time</label>
-                <div class="input-wrapper">
-                  <input
-                    type="time"
-                    id="startTime"
-                    v-model="startTime"
-                    required
-                    class="time-input"
-                    @change="filterAvailableRooms"
-                  />
-                  <span class="input-icon time-icon">
-                    <ClockIcon class="icon-primary" />
-                  </span>
-                </div>
-              </div>
-              <div class="form-group">
-                <label for="endTime">Event End Time</label>
-                <div class="input-wrapper">
-                  <input
-                    type="time"
-                    id="endTime"
-                    v-model="endTime"
-                    required
-                    class="time-input"
-                    @change="filterAvailableRooms"
-                  />
-                  <span class="input-icon time-icon">
-                    <ClockIcon class="icon-primary" />
-                  </span>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section class="form-section">
-            <h2>LABORATORY SELECTION</h2>
-            <div class="form-group">
-  <label for="room">Choose a Laboratory</label>
-  <div class="input-wrapper select-wrapper">
-    <select id="room" v-model="selectedRoom" required>
-      <option value="" disabled selected>Choose a laboratory</option>
-      <option
-        v-for="room in filteredRooms"
-        :key="room.name"
-        :value="room.name"
-      >
-        {{ room.name }}
-      </option>
-    </select>
-    <span class="input-icon">
-      <ComputerDesktopIcon class="icon-primary" />
-    </span>
-  </div>
-</div>
-          </section>
-
-          <section class="form-section">
-            <h2>FACILITY</h2>
-            <div class="form-group">
-              <label for="facility">Laboratory Equipment</label>
-              <div class="input-wrapper">
-                <input
-                  type="text"
-                  id="facility"
-                  v-model="facility"
-                  placeholder="List equipment needed"
-                  required
-                />
-                <span class="input-icon">
-                  <ComputerDesktopIcon class="icon-primary" />
-                </span>
-              </div>
-            </div>
-          </section>
-
-          <section class="form-section">
-            <div class="form-row">
-              <div class="form-group">
-                <label for="notedBy">NOTED BY</label>
-                <input type="text" id="notedBy" v-model="notedBy" readonly />
-                <small class="input-caption"
-                  >Program Dean/Adviser/Moderator</small
-                >
-              </div>
-              <div class="form-group">
-                <label for="dateFilled">DATE FILLED</label>
-                <input
-                  type="date"
-                  id="dateFilled"
-                  v-model="dateFilled"
-                  readonly
-                  class="custom-date-input readonly-input"
-                />
-              </div>
-            </div>
-          </section>
-
-          <div v-if="errorMessage" class="error-message">
-            {{ errorMessage }}
-          </div>
-
-          <div class="form-actions">
-            <button
-              type="submit"
-              class="submit-btn"
-              @click.prevent="handleBooking"
-            >
-              Submit
-            </button>
-          </div>
-        </form>
+      <div class="header">
+        <router-link to="/" class="back-button">
+          <ArrowLeftIcon class="icon-primary" />
+        </router-link>
+        <h1>Laboratory Booking System</h1>
       </div>
 
       <!-- Schedule View -->
       <div class="schedule-wrapper">
         <div class="schedule-header">
-          <h2>Available Schedule</h2>
+          <h2>Laboratory Booking</h2>
         </div>
         <div class="schedule-content">
-          <div class="month-selector">
-            <button class="month-nav" @click="previousMonth">
-              <ArrowLeftIcon class="icon-small" />
-            </button>
-            <span>{{ currentMonthName }} {{ currentYear }}</span>
-            <button class="month-nav" @click="nextMonth">
-              <ArrowLeftIcon class="icon-small rotate-180" />
-            </button>
-          </div>
-
-          <div class="calendar">
-            <div class="calendar-header">
-              <div
-                v-for="day in weekDays"
-                :key="day"
-                class="calendar-cell header-cell"
-              >
-                {{ day }}
-              </div>
+          <!-- Calendar for date selection -->
+          <div class="date-selection-section">
+            <h3>Select a Date</h3>
+            <div class="month-selector">
+              <button class="month-nav" @click="previousMonth">
+                <ArrowLeftIcon class="icon-small" />
+              </button>
+              <span>{{ currentMonthName }} {{ currentYear }}</span>
+              <button class="month-nav" @click="nextMonth">
+                <ArrowLeftIcon class="icon-small rotate-180" />
+              </button>
             </div>
-            <div class="calendar-body">
-              <div
-                v-for="(day, index) in calendarDays"
-                :key="index"
-                class="calendar-cell"
-                :class="{
-                  'empty-cell': !day.date,
-                  'current-day': day.isToday,
-                  'selected-day': day.date === requestDate,
-                  'available-day': day.available,
-                  'before-semester': day.isBeforeSemester,
-                  'after-semester': day.isAfterSemester,
-                  'past-date': day.isPastDate,
-                }"
-                @click="
-                  console.log('Day clicked:', day);
-                  selectDate(day);
-                "
-                :title="day.semesterMessage || ''"
-              >
-                <template v-if="day.date">
-                  <span class="day-number">{{ day.dayNumber }}</span>
-                </template>
-              </div>
-            </div>
-          </div>
 
-          <div class="time-slot-schedule" v-if="requestDate">
-            <div class="schedule-section-header">
-              <div class="schedule-title-row">
-                <h3>
-                  Schedule for {{ formatDate(requestDate) }} ({{
-                    selectedDayOfWeek || "All Days"
-                  }})
-                </h3>
-              </div>
-              <div class="schedule-actions">
-                <button
-                  class="view-weekly-btn"
-                  @click="toggleWeeklyScheduleModal"
+            <div class="calendar">
+              <div class="calendar-header">
+                <div
+                  v-for="day in weekDays"
+                  :key="day"
+                  class="calendar-cell header-cell"
                 >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M19 4H5C3.89543 4 3 4.89543 3 6V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V6C21 4.89543 20.1046 4 19 4Z"
-                      stroke="#dd3859"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                    <path
-                      d="M16 2V6"
-                      stroke="#dd3859"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                    />
-                    <path
-                      d="M8 2V6"
-                      stroke="#dd3859"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                    />
-                    <path
-                      d="M3 10H21"
-                      stroke="#dd3859"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                    />
+                  {{ day }}
+                </div>
+              </div>
+              <div class="calendar-body">
+                <div
+                  v-for="(day, index) in calendarDays"
+                  :key="index"
+                  class="calendar-cell"
+                  :class="{
+                    'empty-cell': !day.date,
+                    'current-day': day.isToday,
+                    'selected-day': day.date === requestDate,
+                    'available-day': day.available,
+                    'before-semester': day.isBeforeSemester,
+                    'after-semester': day.isAfterSemester,
+                    'past-date': day.isPastDate,
+                  }"
+                  @click="selectDate(day)"
+                  :title="day.semesterMessage || ''"
+                >
+                  <template v-if="day.date">
+                    <span class="day-number">{{ day.dayNumber }}</span>
+                  </template>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Weekly Schedule Display (shown after selecting a date) -->
+          <div class="weekly-schedule-section" v-if="requestDate">
+            <div class="schedule-section-header">
+              <h3>Weekly Schedule for {{ formatDate(requestDate) }}</h3>
+              <div class="schedule-actions">
+                <button class="book-now-btn" @click="openBookingModal">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 5v14M5 12h14"></path>
                   </svg>
-                  View Weekly Schedule
+                  Book Now
                 </button>
               </div>
             </div>
 
-            <div class="weekly-schedule">
-  <table class="schedule-table">
-    <thead>
-      <tr>
-        <th class="time-header">Time</th>
-        <th v-for="day in displayedDays" :key="day">
-          {{ day }}
-        </th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr
-        v-for="timeSlot in timeSlots"
-        :key="timeSlot.value"
-        class="time-block-row"
-      >
-        <td class="time-cell">{{ timeSlot.time }}</td>
-        <td
-          v-for="day in displayedDays"
-          :key="`${timeSlot.value}-${day}`"
-          class="day-cell"
-          :class="{
-            'has-class': getScheduleForTimeSlotAndDay(timeSlot, day).length > 0,
-            'lunch-time': timeSlot.isLunch,
-          }"
-        >
-          <div
-            v-for="schedule in getScheduleForTimeSlotAndDay(timeSlot, day)"
-            :key="schedule.id"
-            class="class-info"
-          >
-            <div class="class-code">{{ schedule.course_code }}</div>
-            <div class="class-details">
-              <span class="class-section">{{ schedule.section }}</span>
-              <span class="class-room">{{ schedule.lab_room }}</span>
+            <!-- Weekly Schedule Table (similar to reference image) -->
+            <div class="weekly-schedule-table-container">
+              <table class="weekly-schedule-table">
+                <thead>
+                  <tr>
+                    <th class="time-column">Time</th>
+                    <th v-for="day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']" :key="day">{{ day }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- Time slots from 7:30 AM to 7:00 PM -->
+                  <tr v-for="timeSlot in timeSlots" :key="timeSlot.value" :class="{'lunch-row': timeSlot.isLunch}">
+                    <td class="time-cell">{{ timeSlot.time }}</td>
+                    <td 
+                      v-for="day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']" 
+                      :key="`${timeSlot.value}-${day}`"
+                      :class="{'has-class': getScheduleForTimeSlotAndDay(timeSlot, day).length > 0}"
+                    >
+                      <div 
+                        v-for="schedule in getScheduleForTimeSlotAndDay(timeSlot, day)" 
+                        :key="schedule.id"
+                        :class="['class-info', { 'pending-booking': schedule.isPending }]"
+                      >
+                        <div class="class-code">{{ schedule.course_code }}</div>
+                        <div class="class-section">{{ schedule.section }}</div>
+                        <div v-if="!schedule.isPending" class="class-instructor">{{ schedule.instructor }}</div>
+                        <div v-else class="pending-label">PENDING APPROVAL</div>
+                        <div class="class-room">{{ schedule.lab_room }}</div>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
-          </div>
-          <template v-if="!getScheduleForTimeSlotAndDay(timeSlot, day).length">
-            <span>No schedule</span>
-          </template>
-        </td>
-      </tr>
-    </tbody>
-  </table>
-</div>
           </div>
         </div>
       </div>
     </div>
   </div>
+  
+<!-- Direct Booking Form Modal -->
+<div v-if="showBookingModal" class="direct-modal-overlay">
+  <div class="direct-modal-container">
+    <div class="direct-modal-header">
+      <h3>Laboratory Booking Form</h3>
+      <button class="direct-close-button" @click="closeBookingModal" aria-label="Close">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M18 6L6 18" stroke="#dd3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M6 6L18 18" stroke="#dd3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+    <div class="direct-modal-body">
+      <form class="booking-form-modal" @submit.prevent="handleBooking">
+        <section class="form-section">
+          <h2>REQUESTING PARTY</h2>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="department">Department</label>
+              <div class="input-wrapper">
+                <input
+                  type="text"
+                  id="department"
+                  v-model="department"
+                  required
+                />
+                <span class="input-icon">
+                  <BuildingOfficeIcon class="icon-primary" />
+                </span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="club">Club/Organization</label>
+              <div class="input-wrapper">
+                <input type="text" id="club" v-model="club" />
+                <span class="input-icon">
+                  <UserGroupIcon class="icon-primary" />
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="person">Person Responsible</label>
+              <div class="input-wrapper">
+                <input type="text" id="person" v-model="person" required />
+                <span class="input-icon">
+                  <UserIcon class="icon-primary" />
+                </span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="contact">Email Address</label>
+              <div class="input-wrapper">
+                <input type="email" id="contact" v-model="contact" required />
+                <span class="input-icon">
+                  <EnvelopeIcon class="icon-primary" />
+                </span>
+              </div>
+            </div>
+          </div>
+        </section>
 
+        <section class="form-section">
+          <h2>EVENT DETAILS</h2>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="event">Name of Event</label>
+              <div class="input-wrapper">
+                <input type="text" id="event" v-model="event" required />
+                <span class="input-icon">
+                  <DocumentTextIcon class="icon-primary" />
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="attendance">Expected Attendees</label>
+              <div class="input-wrapper">
+                <input
+                  type="text"
+                  inputmode="numeric"
+                  pattern="[0-9]*"
+                  id="attendance"
+                  v-model="attendance"
+                  required
+                  class="no-spinner"
+                />
+                <span class="input-icon">
+                  <UserGroupIcon class="icon-primary" />
+                </span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="startTime">Event Start Time</label>
+              <div class="input-wrapper">
+                <input
+                  type="time"
+                  id="startTime"
+                  v-model="startTime"
+                  required
+                />
+                <span class="input-icon time-icon">
+                  <ClockIcon class="icon-primary" />
+                </span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="endTime">Event End Time</label>
+              <div class="input-wrapper">
+                <input
+                  type="time"
+                  id="endTime"
+                  v-model="endTime"
+                  required
+                />
+                <span class="input-icon time-icon">
+                  <ClockIcon class="icon-primary" />
+                </span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <h2>LABORATORY SELECTION</h2>
+          <div class="form-group">
+            <label for="room">Choose a Laboratory</label>
+            <div class="input-wrapper select-wrapper">
+              <select id="room" v-model="selectedRoom" required>
+                <option value="" disabled selected>Choose a laboratory</option>
+                <option
+                  v-for="room in filteredRooms"
+                  :key="room.name"
+                  :value="room.name"
+                >
+                  {{ room.name }}
+                </option>
+              </select>
+              <span class="input-icon">
+                <ComputerDesktopIcon class="icon-primary" />
+              </span>
+            </div>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <h2>FACILITY</h2>
+          <div class="form-group">
+            <label for="facility">Laboratory Equipment</label>
+            <div class="input-wrapper">
+              <textarea
+                id="facility"
+                v-model="facility"
+                rows="3"
+                placeholder="List any specific equipment or facilities needed"
+              ></textarea>
+            </div>
+          </div>
+        </section>
+
+        <div v-if="errorMessage" class="error-message">
+          {{ errorMessage }}
+        </div>
+      </form>
+    </div>
+    <div class="direct-modal-footer">
+      <button class="submit-btn" @click="handleBooking">Submit</button>
+    </div>
+  </div>
+</div>
+  
   <!-- Weekly Schedule Modal -->
   <Modal
     :show="showWeeklyScheduleModal"
@@ -489,19 +393,19 @@
 
         <!-- Weekly schedule table -->
         <div class="weekly-schedule-table-container">
-          <table class="weekly-schedule-table">
-            <thead>
-              <tr>
-                <th class="time-column">Time</th>
-                <th v-for="day in filteredWeekDays" :key="day">{{ day }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="timeSlot in timeSlots"
-                :key="timeSlot.value"
-                class="time-block-row"
-              >
+            <table class="weekly-schedule-table">
+              <thead>
+                <tr>
+                  <th class="time-column">Time</th>
+                  <th v-for="day in filteredWeekDays" :key="day">{{ day }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="timeSlot in timeSlots"
+                  :key="timeSlot.value"
+                  class="time-block-row"
+                >
                 <td class="time-cell">{{ timeSlot.time }}</td>
                 <td
                   v-for="day in filteredWeekDays"
@@ -672,10 +576,10 @@ import {
   BuildingOfficeIcon,
   UserIcon,
   UserGroupIcon,
-  CalendarIcon,
   ClockIcon,
   DocumentTextIcon,
   ComputerDesktopIcon,
+  EnvelopeIcon,
 } from "@heroicons/vue/24/outline";
 
 
@@ -697,19 +601,22 @@ export default {
     BuildingOfficeIcon,
     UserIcon,
     UserGroupIcon,
-   
-    CalendarIcon,
     ClockIcon,
     DocumentTextIcon,
     ComputerDesktopIcon,
+    EnvelopeIcon,
   },
   data() {
     return {
+      // Booking modal state
+      showBookingModal: false,
+      
       selectedSectionFilter: "all",
       selectedLabFilter: "all", // Default to showing all labs
       selectedTimeBlock: null,
       selectedDay: null,
       scheduleData: [], // Original schedule data
+      pendingBookings: [], // Bookings that are pending approval
       filteredScheduleData: [], // Schedules filtered by the selected day
       selectedDayOfWeek: null, 
       // Weekly schedule filter
@@ -932,8 +839,12 @@ export default {
     },
   },
   mounted() {
+    // Initialize the calendar
     this.generateCalendar();
+    // Fetch schedules
     this.fetchSchedules();
+    // Fetch pending bookings
+    this.fetchPendingBookings();
   },
   methods: {
     formatDate(date) {
@@ -953,6 +864,11 @@ export default {
       return {};
     },
     getScheduleColor(schedule) {
+      // If it's a pending booking, use a specific color
+      if (schedule.isPending) {
+        return "#FFF3CD"; // Light yellow for pending bookings
+      }
+      
       // Assign colors based on the room or other properties
       const roomColors = {
         L201: "#FFD580", // Yellow
@@ -964,7 +880,7 @@ export default {
         "Open Lab": "#FFC3A0", // Orange
       };
 
-      return roomColors[schedule.room] || "#E0E0E0"; // Default to gray if no match
+      return roomColors[schedule.lab_room] || "#E0E0E0"; // Default to gray if no match
     },
     getFilteredSchedules(timeSlot, day) {
       // First get all schedules for this time slot and day
@@ -1178,45 +1094,87 @@ async filterAvailableRooms() {
       }
       return aMinutes - bMinutes;
     },
+    
+    async fetchPendingBookings() {
+      try {
+        const { data, error } = await supabaseBookings
+          .from("bookings")
+          .select("*")
+          .eq("status", "pending");
+        
+        if (error) throw error;
+        
+        console.log("Pending bookings:", data);
+        
+        // Process the pending bookings to match the schedule data format
+        this.pendingBookings = data.map(booking => {
+          // Convert the booking date to a day of the week
+          const bookingDate = new Date(booking.requestDate);
+          const daysOfWeek = [
+            "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
+          ];
+          const dayOfWeek = daysOfWeek[bookingDate.getDay()];
+          
+          return {
+            id: booking.id,
+            day: dayOfWeek,
+            start_time: booking.startTime,
+            end_time: booking.endTime,
+            lab_room: booking.selectedRoom,
+            section: "Pending",
+            course_code: "PENDING",
+            course_name: booking.event,
+            isPending: true, // Flag to identify pending bookings
+            event: booking.event,
+            department: booking.department,
+            requestDate: booking.requestDate
+          };
+        });
+      } catch (error) {
+        console.error("Error fetching pending bookings:", error.message);
+        this.errorMessage = "Failed to fetch pending bookings.";
+      }
+    },
+
     async fetchSchedules() {
-  try {
-    const { data, error } = await supabaseSchedules
-      .from("schedules")
-      .select("*");
-    if (error) throw error;
+      try {
+        const { data, error } = await supabaseSchedules
+          .from("schedules")
+          .select("*");
+        if (error) throw error;
 
-    console.log("Raw data from API:", data); // Log raw data from the API
+        console.log("Raw data from API:", data); // Log raw data from the API
 
-    // Ensure periods is always populated
-    this.scheduleData = data.map((block) => {
-      console.log("Before processing block:", block); // Log each block before processing
-      const processedBlock = {
-        ...block,
-        periods: [
-          {
-            day: block.day,
-            start_time: block.start_time,
-            end_time: block.end_time,
-            lab_room: block.lab_room,
-            section: block.section,
-            course_code: block.course_code,
-            course_name: block.course_name,
-          },
-        ],
-      };
-       // Log each block after processing
-      return processedBlock;
-    });
+        // Ensure periods is always populated
+        this.scheduleData = data.map((block) => {
+          console.log("Before processing block:", block); // Log each block before processing
+          const processedBlock = {
+            ...block,
+            periods: [
+              {
+                day: block.day,
+                start_time: block.start_time,
+                end_time: block.end_time,
+                lab_room: block.lab_room,
+                section: block.section,
+                course_code: block.course_code,
+                course_name: block.course_name,
+              },
+            ],
+          };
+           // Log each block after processing
+          return processedBlock;
+        });
 
-   // Log the final scheduleData
-  } catch (error) {
-   
-    this.scheduleData = [];
-    this.errorMessage = "Failed to fetch schedules.";
-  }
-},
-
-    hasScheduleForTimeAndDay(timeSlot, day) {
+       // Log the final scheduleData
+      } catch (error) {
+       
+        this.scheduleData = [];
+        this.errorMessage = "Failed to fetch schedules.";
+      }
+    },
+    
+    hasScheduleForTimeAndDay(timeSlot) {
       if (!Array.isArray(this.scheduleData)) {
         return false; // Ensure scheduleData is defined and is an array
       }
@@ -1229,7 +1187,6 @@ async filterAvailableRooms() {
         if (block.time !== timeSlot) return false;
 
         return block.periods.some((period) => {
-          if (!period || period.day !== day) return false;
 
           // Additional filters
           if (
@@ -1285,14 +1242,39 @@ async filterAvailableRooms() {
 
         return isTimeMatch;
       });
+      
+      // Filter pending bookings for the given time slot and day
+      const pendingBookingsForSlot = [];
+      
+      if (Array.isArray(this.pendingBookings) && this.pendingBookings.length > 0) {
+        // Filter pending bookings for this day
+        const dayPendingBookings = this.pendingBookings.filter(booking => booking.day === day);
+        
+        // Filter by time slot
+        for (const booking of dayPendingBookings) {
+          const bookingStart = this.convertTimeToMinutes(booking.start_time);
+          const bookingEnd = this.convertTimeToMinutes(booking.end_time);
+          const slotStart = this.convertTimeToMinutes(timeSlot.value);
+          
+          // Check if the time slot falls within the booking's time range
+          if (slotStart >= bookingStart && slotStart < bookingEnd) {
+            pendingBookingsForSlot.push(booking);
+          }
+        }
+      }
+      
+      // Combine regular schedules and pending bookings
+      const combinedSchedules = [...filteredSchedules, ...pendingBookingsForSlot];
 
-      console.log("Filtered schedules for timeSlot and day:", {
+      console.log("Combined schedules for timeSlot and day:", {
         timeSlot,
         day,
-        filteredSchedules,
+        regularSchedules: filteredSchedules,
+        pendingBookings: pendingBookingsForSlot,
+        combinedSchedules
       });
 
-      return filteredSchedules;
+      return combinedSchedules;
     },
     
     // Methods for handling merged cells
@@ -1750,6 +1732,32 @@ async filterAvailableRooms() {
       this.dateFilled = new Date().toISOString().substr(0, 10);
       this.selectedRoom = "";
       this.selectedTimeSlot = "";
+      this.errorMessage = "";
+      this.showSuccessModal = false;
+      
+      // Reset calendar selection
+      this.generateCalendar();
+    },
+    
+    // Open the booking modal when Book Now button is clicked
+    openBookingModal() {
+      // Ensure we have a selected date before opening the modal
+      if (!this.requestDate) {
+        this.errorMessage = "Please select a date first";
+        return;
+      }
+      
+      // Set the date in the form to the selected date
+      this.dateFilled = this.formatDate(this.requestDate);
+      
+      // Show the booking modal
+      this.showBookingModal = true;
+    },
+    
+    // Close the booking modal
+    closeBookingModal() {
+      this.showBookingModal = false;
+      this.errorMessage = ""; // Clear any error messages
     },
     // ... methods ...
     generateCalendar() {
@@ -1895,19 +1903,28 @@ body {
   width: 100%;
   max-width: 1400px;
   display: flex;
+  flex-direction: column;
   gap: 1.5rem;
 }
 
-.booking-form-wrapper {
-  flex: 1;
-  max-width: 50%;
-  padding: 1.5rem;
-  border-right: 1px solid #eee;
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 1.5rem 0;
+  border-bottom: 1px solid #eee;
+}
+
+.header h1 {
+  color: #dd3859;
+  font-size: 2rem;
+  font-weight: 600;
+  text-align: center;
 }
 
 .schedule-wrapper {
-  flex: 1;
-  max-width: 50%;
+  width: 100%;
   padding: 1.5rem;
 }
 
@@ -1930,14 +1947,106 @@ body {
 /* Back Button */
 .back-button {
   position: absolute;
-  left: 0;
+  left: 1.5rem;
   cursor: pointer;
   transition: transform 0.3s ease;
+}
+
+.back-button:hover {
+  transform: translateX(-5px);
 }
 
 /* Booking Form */
 .booking-form {
   padding: 1.5rem;
+}
+
+/* Direct Modal Styles */
+.direct-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.direct-modal-container {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+  width: 90%;
+  max-width: 700px;
+  max-height: 85vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  animation: modal-appear 0.3s ease-out forwards;
+}
+
+.direct-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid #eee;
+}
+
+.direct-modal-header h3 {
+  margin: 0;
+  color: #dd3859;
+  font-weight: 600;
+  font-size: 1.25rem;
+}
+
+.direct-close-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s;
+}
+
+.direct-close-button:hover {
+  transform: scale(1.1);
+}
+
+.direct-modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+.direct-modal-footer {
+  padding: 1.5rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  border-top: 1px solid #eee;
+}
+
+.booking-form-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+@keyframes modal-appear {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Form Sections */
@@ -3357,6 +3466,125 @@ body {
   margin-right: 0.4rem;
 }
 
+/* New styles for the updated layout */
+.date-selection-section {
+  margin-bottom: 2rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 2rem;
+}
+
+.date-selection-section h3 {
+  color: #333;
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.weekly-schedule-section {
+  margin-top: 2rem;
+}
+
+.schedule-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.schedule-section-header h3 {
+  color: #333;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.book-now-btn {
+  background-color: #dd3859;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 6px rgba(221, 56, 89, 0.15);
+}
+
+.book-now-btn:hover {
+  background-color: #c62c4c;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 8px rgba(221, 56, 89, 0.2);
+}
+
+.weekly-schedule-table-container {
+  overflow-x: auto;
+  max-width: 100%;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  margin-bottom: 2rem;
+}
+
+/* Booking Modal Styles */
+.booking-modal {
+  max-width: 800px;
+}
+
+.booking-modal-content {
+  padding: 1.5rem;
+}
+
+.booking-form-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding: 1rem 0;
+}
+
+.booking-modal .modal-footer {
+  padding: 1.5rem;
+  border-top: 1px solid #eee;
+}
+
+.booking-modal .cancel-btn,
+.booking-modal .submit-btn {
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 500;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancel-btn:hover {
+  background-color: #e5e7eb;
+}
+
+.submit-btn {
+  background-color: #dd3859;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 6px rgba(221, 56, 89, 0.15);
+}
+
+.submit-btn:hover {
+  background-color: #c62c4c;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 8px rgba(221, 56, 89, 0.2);
+}
+
 .modal-schedule-table {
   min-width: 900px;
   width: 100%;
@@ -3387,6 +3615,31 @@ body {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   border-left: 3px solid #ffeeba;
   animation: fadeIn 0.3s ease-in-out;
+}
+
+.pending-booking {
+  background-color: #fff3cd;
+  border-left: 3px solid #ffc107;
+  animation: pulse 2s infinite;
+}
+
+.pending-label {
+  color: #856404;
+  font-weight: bold;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 5px rgba(255, 193, 7, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 193, 7, 0);
+  }
 }
 
 @keyframes fadeIn {

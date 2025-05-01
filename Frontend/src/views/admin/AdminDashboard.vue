@@ -105,9 +105,6 @@
                     <option value="medium">Medium Usage (2-3)</option>
                     <option value="low">Low Usage (0-1)</option>
                   </select>
-                  <button class="action-button">
-                    <i class="fas fa-download"></i> Export
-                  </button>
                 </div>
               </div>
             </div>

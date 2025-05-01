@@ -124,10 +124,10 @@ const handleLogin = async () => {
     // Show loading animation
     loading.value = true;
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    // Validate email format (must be @uic.edu.ph domain)
+    const emailRegex = /^[^\s@]+@uic\.edu\.ph$/;
     if (!emailRegex.test(email.value)) {
-      errorMessage.value = 'Please enter a valid email address';
+      errorMessage.value = 'Please enter a valid UIC email address (@uic.edu.ph)';
       loading.value = false;
       return;
     }
