@@ -332,7 +332,7 @@ beforeUnmount() {
     const newNotifications = data.map(booking => ({
   type: 'booking',
   title: 'New Booking Request',
-  message: `${booking.event} has requested to book ${booking.selectedRoom} on ${booking.requestDate} from ${this.formatTime(booking.startTime)} to ${this.formatTime(booking.endTime)}.`,
+  message: `${booking.person} has requested to book ${booking.selectedRoom} on ${booking.requestDate} from ${this.formatTime(booking.startTime)} to ${this.formatTime(booking.endTime)}.`,
   selectedRoom: booking.selectedRoom || 'N/A', // Laboratory
   requestDate: booking.requestDate || 'N/A', // Date
   startTime: booking.startTime || 'N/A', // Start time

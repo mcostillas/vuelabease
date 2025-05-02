@@ -89,7 +89,12 @@
 // Import necessary modules
 import { ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { supabase } from '../lib/supabaseClient.js';
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  "https://bfmvnahlknvyrajofmdw.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmbXZuYWhsa252eXJham9mbWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ5OTc4NjUsImV4cCI6MjA2MDU3Mzg2NX0.xkeqAML3bYf9iOV6iG_GJ35_RD7rPKH_OuXFz1SQBLk"
+);
 
 // Reactive state
 const name = ref('');
@@ -129,6 +134,13 @@ const handleSignup = async () => {
     return;
   }
 
+  // Validate email format
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@uic\.edu\.ph$/;
+  if (!emailRegex.test(email.value)) {
+    errorMessage.value = 'University email is required ';
+    return;
+  }
+
   if (password.value !== confirmPassword.value) {
     errorMessage.value = 'Passwords do not match';
     return;
@@ -160,13 +172,13 @@ const handleSignup = async () => {
       .from('user')
       .insert([
         {
-          userid: authData.user.id, // Use lowercase "userid"
-          fullname: name.value, // Use lowercase "fullname"
-          email: email.value, // Use lowercase "email"
-          department: department.value, // Use lowercase "department"
-          isverified: false, // Use lowercase "isverified"
-          password: password.value, // Use lowercase "password"
-        usertype: 'Instructor', // Use lowercase "usertype"
+          userid: authData.user.id,
+          fullname: name.value,
+          email: email.value,
+          department: department.value,
+          isverified: false,
+          password: password.value,
+          usertype: 'Instructor',
         },
       ]);
 
