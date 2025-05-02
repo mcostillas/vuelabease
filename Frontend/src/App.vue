@@ -45,6 +45,14 @@ export default {
         }, 200)
       }
     })
+    
+    // Force reset loading state after a timeout as a safety measure
+    // This ensures loading screen won't get stuck indefinitely
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        this.isLoading = false
+      }, 2000)
+    })
   }
 }
 </script>

@@ -116,6 +116,116 @@
     </div>
   </div>
   
+<!-- Requester Info Modal -->
+<div v-if="showRequesterModal" class="direct-modal-overlay">
+  <div class="direct-modal-container requester-modal">
+    <div class="direct-modal-header">
+      <h3>Requester Information</h3>
+      <button class="direct-close-button" @click="closeRequesterModal" aria-label="Close">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M18 6L6 18" stroke="#dd3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M6 6L18 18" stroke="#dd3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+    <div class="direct-modal-body">
+      <form class="requester-form" @submit.prevent="validateRequesterInfo">
+        <div class="form-group">
+          <label class="requester-type-label">I am a:</label>
+          <div class="requester-type-selector">
+            <label class="requester-type-option" :class="{ 'selected': requesterType === 'student' }">
+              <input type="radio" v-model="requesterType" value="student" class="requester-radio" checked>
+              <div class="requester-icon student-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M11.7 2.805a.75.75 0 01.6 0A60.65 60.65 0 0122.83 8.72a.75.75 0 01-.231 1.337 49.949 49.949 0 00-9.902 3.912l-.003.002-.34.18a.75.75 0 01-.707 0A50.009 50.009 0 007.5 12.174v-.224c0-.131.067-.248.172-.311a54.614 54.614 0 014.653-2.52.75.75 0 00-.65-1.352 56.129 56.129 0 00-4.78 2.589 1.858 1.858 0 00-.859 1.228 49.803 49.803 0 00-4.634-1.527.75.75 0 01-.231-1.337A60.653 60.653 0 0111.7 2.805z" />
+                  <path d="M13.06 15.473a48.45 48.45 0 017.666-3.282c.134 1.414.22 2.843.255 4.285a.75.75 0 01-.46.71 47.878 47.878 0 00-8.105 4.342.75.75 0 01-.832 0 47.877 47.877 0 00-8.104-4.342.75.75 0 01-.461-.71c.035-1.442.121-2.87.255-4.286A48.4 48.4 0 016 13.18v1.27a1.5 1.5 0 00-.14 2.508c-.09.38-.222.753-.397 1.11.452.213.901.434 1.346.661a6.729 6.729 0 00.551-1.608 1.5 1.5 0 00.14-2.67v-.645a48.549 48.549 0 013.44 1.668 2.25 2.25 0 002.12 0z" />
+                  <path d="M4.462 19.462c.42-.419.753-.89 1-1.394.453.213.902.434 1.347.661a6.743 6.743 0 01-1.286 1.794.75.75 0 11-1.06-1.06z" />
+                </svg>
+              </div>
+              <span class="requester-type-text">Student</span>
+            </label>
+            <label class="requester-type-option" :class="{ 'selected': requesterType === 'instructor' }">
+              <input type="radio" v-model="requesterType" value="instructor" class="requester-radio">
+              <div class="requester-icon instructor-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M11.584 2.376a.75.75 0 01.832 0l9 6a.75.75 0 11-.832 1.248L12 3.901 3.416 9.624a.75.75 0 01-.832-1.248l9-6z" />
+                  <path fill-rule="evenodd" d="M20.25 10.332v9.918H21a.75.75 0 010 1.5H3a.75.75 0 010-1.5h.75v-9.918a.75.75 0 01.634-.74A49.109 49.109 0 0112 9c2.59 0 5.134.202 7.616.592a.75.75 0 01.634.74zm-7.5 2.418a.75.75 0 00-1.5 0v6.75a.75.75 0 001.5 0v-6.75zm3-.75a.75.75 0 01.75.75v6.75a.75.75 0 01-1.5 0v-6.75a.75.75 0 01.75-.75zM9 12.75a.75.75 0 00-1.5 0v6.75a.75.75 0 001.5 0v-6.75z" clip-rule="evenodd" />
+                  <path d="M12 7.875a1.125 1.125 0 100-2.25 1.125 1.125 0 000 2.25z" />
+                </svg>
+              </div>
+              <span class="requester-type-text">Instructor</span>
+            </label>
+          </div>
+        </div>
+        
+        <!-- Student Fields -->
+        <div v-if="requesterType === 'student'">
+          <div class="form-group">
+            <label for="studentName">Full Name</label>
+            <div class="input-wrapper">
+              <input type="text" id="studentName" v-model="studentName" required />
+              <span class="input-icon">
+                <UserIcon class="icon-primary" />
+              </span>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="studentEmail">School Email</label>
+            <div class="input-wrapper">
+              <input type="email" id="studentEmail" v-model="studentEmail" required 
+                placeholder="example@uic.edu.ph" />
+              <span class="input-icon">
+                <EnvelopeIcon class="icon-primary" />
+              </span>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="studentDepartment">Department</label>
+            <div class="input-wrapper">
+              <input type="text" id="studentDepartment" v-model="studentDepartment" required />
+              <span class="input-icon">
+                <BuildingOfficeIcon class="icon-primary" />
+              </span>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="studentSection">Section</label>
+            <div class="input-wrapper">
+              <input type="text" id="studentSection" v-model="studentSection" required />
+              <span class="input-icon">
+                <UserGroupIcon class="icon-primary" />
+              </span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Instructor Fields -->
+        <div v-if="requesterType === 'instructor'">
+          <div class="form-group">
+            <label for="instructorName">Full Name</label>
+            <div class="input-wrapper">
+              <input type="text" id="instructorName" v-model="instructorName" required />
+              <span class="input-icon">
+                <UserIcon class="icon-primary" />
+              </span>
+            </div>
+          </div>
+        </div>
+        
+        <div v-if="requesterErrorMessage" class="error-message">
+          {{ requesterErrorMessage }}
+        </div>
+      </form>
+    </div>
+    <div class="direct-modal-footer">
+      <button class="submit-btn" @click="validateRequesterInfo">Continue</button>
+    </div>
+  </div>
+</div>
+
 <!-- Direct Booking Form Modal -->
 <div v-if="showBookingModal" class="direct-modal-overlay">
   <div class="direct-modal-container">
@@ -593,6 +703,12 @@ const supabaseSchedules = createClient(
   "https://yfiyhsazgjsxjmybsyar.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlmaXloc2F6Z2pzeGpteWJzeWFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI4ODE5MzEsImV4cCI6MjA1ODQ1NzkzMX0.j7oFwaqYvJq45jhPuQBPEtNU-itU-CRleOJcqm1fOOo"
 );
+
+// For user authentication and instructor validation
+const supabase = createClient(
+  "https://bfmvnahlknvyrajofmdw.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmbXZuYWhsa252eXJham9mbWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ5OTc4NjUsImV4cCI6MjA2MDU3Mzg2NX0.xkeqAML3bYf9iOV6iG_GJ35_RD7rPKH_OuXFz1SQBLk"
+);
 export default {
   name: "BookingForm",
   components: {
@@ -608,8 +724,18 @@ export default {
   },
   data() {
     return {
-      // Booking modal state
+      // Modal states
+      showRequesterModal: false,
       showBookingModal: false,
+      
+      // Requester info
+      requesterType: "student",
+      studentName: "",
+      studentEmail: "",
+      studentDepartment: "",
+      studentSection: "",
+      instructorName: "",
+      requesterErrorMessage: "",
       
       selectedSectionFilter: "all",
       selectedLabFilter: "all", // Default to showing all labs
@@ -1735,11 +1861,14 @@ async filterAvailableRooms() {
       this.errorMessage = "";
       this.showSuccessModal = false;
       
+      // Reset requester form
+      this.resetRequesterForm();
+      
       // Reset calendar selection
       this.generateCalendar();
     },
     
-    // Open the booking modal when Book Now button is clicked
+    // Open the requester info modal when Book Now button is clicked
     openBookingModal() {
       // Ensure we have a selected date before opening the modal
       if (!this.requestDate) {
@@ -1750,8 +1879,92 @@ async filterAvailableRooms() {
       // Set the date in the form to the selected date
       this.dateFilled = this.formatDate(this.requestDate);
       
-      // Show the booking modal
-      this.showBookingModal = true;
+      // Show the requester info modal first
+      this.showRequesterModal = true;
+    },
+    
+    // Close the requester info modal
+    closeRequesterModal() {
+      this.showRequesterModal = false;
+      this.requesterErrorMessage = "";
+      this.resetRequesterForm();
+    },
+    
+    // Reset the requester form fields
+    resetRequesterForm() {
+      this.requesterType = "student";
+      this.studentName = "";
+      this.studentEmail = "";
+      this.studentDepartment = "";
+      this.studentSection = "";
+      this.instructorName = "";
+    },
+    
+    // Validate requester info and proceed to booking form if valid
+    async validateRequesterInfo() {
+      try {
+        this.requesterErrorMessage = "";
+        
+        if (this.requesterType === "student") {
+          // Validate student fields
+          if (!this.studentName || !this.studentEmail || !this.studentDepartment || !this.studentSection) {
+            this.requesterErrorMessage = "Please fill in all required fields";
+            return;
+          }
+          
+          // Check if email is a valid UIC email (must be @uic.edu.ph domain)
+          const emailRegex = /^[^\s@]+@uic\.edu\.ph$/;
+          if (!emailRegex.test(this.studentEmail)) {
+            this.requesterErrorMessage = "Please enter a valid UIC email address (@uic.edu.ph)";
+            return;
+          }
+          
+          // Set the department and person fields for the booking form
+          this.department = this.studentDepartment;
+          this.person = this.studentName;
+          this.contact = this.studentEmail;
+          
+        } else if (this.requesterType === "instructor") {
+          // Validate instructor fields
+          if (!this.instructorName) {
+            this.requesterErrorMessage = "Please enter your name";
+            return;
+          }
+          
+          // Check if instructor exists in the 'user' table
+          const { data, error } = await supabase
+            .from('user')
+            .select('fullname, usertype, email')
+            .eq('usertype', 'Instructor')
+            .ilike('fullname', `%${this.instructorName}%`)
+            .limit(1);
+          
+          if (error) {
+            console.error('Error checking instructor:', error.message);
+            this.requesterErrorMessage = "An error occurred while validating your information. Please try again.";
+            return;
+          }
+          
+          if (data && data.length > 0) {
+            // Instructor found in database
+            this.department = "Faculty";
+            this.person = data[0].fullname; // Use the exact name from the database
+            this.contact = data[0].email || ""; // Use email from database if available
+            console.log("Instructor found in database:", data[0]);
+          } else {
+            // Instructor not found
+            this.requesterErrorMessage = "Instructor name not found in our records. Please check your name or contact the administrator.";
+            return;
+          }
+        }
+        
+        // Close requester modal and open booking modal
+        this.showRequesterModal = false;
+        this.showBookingModal = true;
+      } catch (error) {
+        console.error("Error validating requester info:", error.message);
+        this.requesterErrorMessage = "An error occurred while validating your information. Please try again.";
+      }
     },
     
     // Close the booking modal
@@ -3471,6 +3684,87 @@ body {
   margin-bottom: 2rem;
   border-bottom: 1px solid #eee;
   padding-bottom: 2rem;
+}
+
+/* Requester modal styles */
+.requester-modal {
+  max-width: 500px;
+}
+
+.requester-type-label {
+  display: block;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.requester-type-selector {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+  margin-bottom: 1.5rem;
+}
+
+.requester-type-option {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem 0.75rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background-color: #f9fafb;
+}
+
+.requester-type-option:hover {
+  border-color: #dd3859;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.requester-type-option.selected {
+  border-color: #dd3859;
+  background-color: rgba(221, 56, 89, 0.05);
+  box-shadow: 0 4px 8px rgba(221, 56, 89, 0.15);
+}
+
+.requester-radio {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.requester-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.75rem;
+  border-radius: 8px;
+  background-color: #f3f4f6;
+  padding: 0.5rem;
+  transition: all 0.2s ease;
+  color: #6b7280;
+}
+
+.requester-type-option.selected .requester-icon {
+  background-color: rgba(221, 56, 89, 0.15);
+  color: #dd3859;
+}
+
+.requester-type-text {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #4b5563;
+  transition: color 0.2s ease;
+}
+
+.requester-type-option.selected .requester-type-text {
+  color: #dd3859;
 }
 
 .date-selection-section h3 {

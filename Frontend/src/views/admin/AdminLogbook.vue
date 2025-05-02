@@ -286,6 +286,7 @@
 <script>
 import DashboardLayout from '@/components/layout/DashboardLayout.vue';
 import AdminHeader from '@/components/admin/AdminHeader.vue';
+import { supabase } from '@/lib/supabaseClient';
 
 export default {
   components: {

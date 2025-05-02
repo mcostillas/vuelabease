@@ -1,0 +1,1151 @@
+<template>
+  <div class="booking-container">
+    <div class="booking-layout">
+      <div class="header">
+        <router-link to="/" class="back-button">
+          <ArrowLeftIcon class="icon-primary" />
+        </router-link>
+        <h1>Laboratory Booking System</h1>
+      </div>
+
+      <!-- Schedule View -->
+      <div class="schedule-wrapper">
+        <div class="schedule-header">
+          <h2>Laboratory Booking</h2>
+        </div>
+        <div class="schedule-content">
+          <!-- Calendar for date selection -->
+          <div class="date-selection-section">
+            <h3>Select a Date</h3>
+            <div class="month-selector">
+              <button class="month-nav" @click="previousMonth">
+                <ArrowLeftIcon class="icon-small" />
+              </button>
+              <span>{{ currentMonthName }} {{ currentYear }}</span>
+              <button class="month-nav" @click="nextMonth">
+                <ArrowLeftIcon class="icon-small rotate-180" />
+              </button>
+            </div>
+
+            <div class="calendar">
+              <div class="calendar-header">
+                <div
+                  v-for="day in weekDays"
+                  :key="day"
+                  class="calendar-cell header-cell"
+                >
+                  {{ day }}
+                </div>
+              </div>
+              <div class="calendar-body">
+                <div
+                  v-for="(day, index) in calendarDays"
+                  :key="index"
+                  class="calendar-cell"
+                  :class="{
+                    'empty-cell': !day.date,
+                    'current-day': day.isToday,
+                    'selected-day': day.date === requestDate,
+                    'available-day': day.available,
+                    'before-semester': day.isBeforeSemester,
+                    'after-semester': day.isAfterSemester,
+                    'past-date': day.isPastDate,
+                  }"
+                  @click="selectDate(day)"
+                  :title="day.semesterMessage || ''"
+                >
+                  <template v-if="day.date">
+                    <span class="day-number">{{ day.dayNumber }}</span>
+                  </template>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Weekly Schedule Display (shown after selecting a date) -->
+          <div class="weekly-schedule-section" v-if="requestDate">
+            <div class="schedule-section-header">
+              <h3>Weekly Schedule for {{ formatDate(requestDate) }}</h3>
+              <div class="schedule-actions">
+                <button class="book-now-btn" @click="openRequesterInfoModal">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 5v14M5 12h14"></path>
+                  </svg>
+                  Book Now
+                </button>
+              </div>
+            </div>
+
+            <!-- Weekly Schedule Table (similar to reference image) -->
+            <div class="weekly-schedule-table-container">
+              <table class="weekly-schedule-table">
+                <thead>
+                  <tr>
+                    <th class="time-column">Time</th>
+                    <th v-for="day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']" :key="day">{{ day }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- Time slots from 7:30 AM to 7:00 PM -->
+                  <tr v-for="timeSlot in timeSlots" :key="timeSlot.value" :class="{'lunch-row': timeSlot.isLunch}">
+                    <td class="time-cell">{{ timeSlot.time }}</td>
+                    <td 
+                      v-for="day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']" 
+                      :key="`${timeSlot.value}-${day}`"
+                      :class="{'has-class': getScheduleForTimeSlotAndDay(timeSlot, day).length > 0}"
+                    >
+                      <div 
+                        v-for="schedule in getScheduleForTimeSlotAndDay(timeSlot, day)" 
+                        :key="schedule.id"
+                        :class="['class-info', { 'pending-booking': schedule.isPending }]"
+                      >
+                        <div class="class-code">{{ schedule.course_code }}</div>
+                        <div class="class-section">{{ schedule.section }}</div>
+                        <div v-if="!schedule.isPending" class="class-instructor">{{ schedule.instructor }}</div>
+                        <div v-else class="pending-label">PENDING APPROVAL</div>
+                        <div class="class-room">{{ schedule.lab_room }}</div>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+<!-- Requester Information Modal -->
+<div v-if="showRequesterInfoModal" class="direct-modal-overlay">
+  <div class="direct-modal-container">
+    <div class="direct-modal-header">
+      <h3>Requester Information</h3>
+      <button class="direct-close-button" @click="closeRequesterInfoModal" aria-label="Close">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M18 6L6 18" stroke="#dd3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M6 6L18 18" stroke="#dd3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+    <div class="direct-modal-body">
+      <form class="booking-form-modal" @submit.prevent="submitRequesterInfo">
+        <section class="form-section">
+          <h2>REQUESTER INFORMATION</h2>
+          
+          <!-- User Type Selector -->
+          <div class="form-row">
+            <div class="form-group user-type-selector">
+              <label>User Type</label>
+              <div class="radio-group">
+                <label class="radio-label">
+                  <input type="radio" v-model="userType" value="student" @change="clearPersonField">
+                  <span>Student</span>
+                </label>
+                <label class="radio-label">
+                  <input type="radio" v-model="userType" value="instructor" @change="clearPersonField">
+                  <span>Instructor</span>
+                </label>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Student Fields -->
+          <template v-if="userType === 'student'">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="studentName">Full Name</label>
+                <div class="input-wrapper">
+                  <input type="text" id="studentName" v-model="person" required placeholder="Enter your full name" />
+                  <span class="input-icon">
+                    <UserIcon class="icon-primary" />
+                  </span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="section">Section</label>
+                <div class="input-wrapper">
+                  <input type="text" id="section" v-model="section" required placeholder="e.g. BSIT 3-1" />
+                  <span class="input-icon">
+                    <UserGroupIcon class="icon-primary" />
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="department">Department</label>
+                <div class="input-wrapper">
+                  <input type="text" id="department" v-model="department" required placeholder="e.g. College of Computer Studies" />
+                  <span class="input-icon">
+                    <BuildingOfficeIcon class="icon-primary" />
+                  </span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="contact">Email Address</label>
+                <div class="input-wrapper">
+                  <input type="email" id="contact" v-model="contact" required placeholder="Enter your email address" />
+                  <span class="input-icon">
+                    <EnvelopeIcon class="icon-primary" />
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="club">Club/Organization (Optional)</label>
+                <div class="input-wrapper">
+                  <input type="text" id="club" v-model="club" placeholder="If applicable" />
+                  <span class="input-icon">
+                    <UserGroupIcon class="icon-primary" />
+                  </span>
+                </div>
+              </div>
+            </div>
+          </template>
+          
+          <!-- Instructor Fields -->
+          <template v-if="userType === 'instructor'">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="person">Select Your Name</label>
+                <div class="input-wrapper select-wrapper">
+                  <select id="person" v-model="person" required>
+                    <option value="" disabled selected>Select your name</option>
+                    <option v-for="instructor in instructors" :key="instructor.userid" :value="instructor.fullname">
+                      {{ instructor.fullname }}
+                    </option>
+                  </select>
+                  <span class="input-icon">
+                    <UserIcon class="icon-primary" />
+                  </span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="department">Department</label>
+                <div class="input-wrapper">
+                  <input type="text" id="department" v-model="department" required placeholder="e.g. College of Computer Studies" />
+                  <span class="input-icon">
+                    <BuildingOfficeIcon class="icon-primary" />
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="form-row" v-if="selectedInstructor">
+              <div class="form-group">
+                <label>Email Address</label>
+                <div class="input-wrapper disabled">
+                  <input type="email" v-model="contact" disabled />
+                  <span class="input-icon">
+                    <EnvelopeIcon class="icon-primary" />
+                  </span>
+                </div>
+                <div class="info-text">Email automatically retrieved from your account</div>
+              </div>
+            </div>
+          </template>
+        </section>
+        <div class="form-actions">
+          <button type="submit" class="submit-btn">Continue to Booking</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Booking Details Modal -->
+<div v-if="showBookingModal" class="direct-modal-overlay">
+  <div class="direct-modal-container">
+    <div class="direct-modal-header">
+      <h3>Laboratory Booking Form</h3>
+      <button class="direct-close-button" @click="closeBookingModal" aria-label="Close">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M18 6L6 18" stroke="#dd3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M6 6L18 18" stroke="#dd3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+    <div class="direct-modal-body">
+      <form class="booking-form-modal" @submit.prevent="handleBooking">
+        <section class="form-section">
+          <h2>REQUESTER INFORMATION</h2>
+          
+          <!-- User Type Selector -->
+          <div class="form-row">
+            <div class="form-group user-type-selector">
+              <label>User Type</label>
+              <div class="radio-group">
+                <label class="radio-label">
+                  <input type="radio" v-model="userType" value="student" @change="clearPersonField">
+                  <span>Student</span>
+                </label>
+                <label class="radio-label">
+                  <input type="radio" v-model="userType" value="instructor" @change="clearPersonField">
+                  <span>Instructor</span>
+                </label>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Student Fields -->
+          <template v-if="userType === 'student'">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="studentName">Full Name</label>
+                <div class="input-wrapper">
+                  <input type="text" id="studentName" v-model="person" required placeholder="Enter your full name" />
+                  <span class="input-icon">
+                    <UserIcon class="icon-primary" />
+                  </span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="section">Section</label>
+                <div class="input-wrapper">
+                  <input type="text" id="section" v-model="section" required placeholder="e.g. BSIT 3-1" />
+                  <span class="input-icon">
+                    <UserGroupIcon class="icon-primary" />
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="department">Department</label>
+                <div class="input-wrapper">
+                  <input type="text" id="department" v-model="department" required placeholder="e.g. College of Computer Studies" />
+                  <span class="input-icon">
+                    <BuildingOfficeIcon class="icon-primary" />
+                  </span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="contact">Email Address</label>
+                <div class="input-wrapper">
+                  <input type="email" id="contact" v-model="contact" required placeholder="Enter your email address" />
+                  <span class="input-icon">
+                    <EnvelopeIcon class="icon-primary" />
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="club">Club/Organization (Optional)</label>
+                <div class="input-wrapper">
+                  <input type="text" id="club" v-model="club" placeholder="If applicable" />
+                  <span class="input-icon">
+                    <UserGroupIcon class="icon-primary" />
+                  </span>
+                </div>
+              </div>
+            </div>
+          </template>
+          
+          <!-- Instructor Fields -->
+          <template v-if="userType === 'instructor'">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="person">Select Your Name</label>
+                <div class="input-wrapper select-wrapper">
+                  <select id="person" v-model="person" required>
+                    <option value="" disabled selected>Select your name</option>
+                    <option v-for="instructor in instructors" :key="instructor.userid" :value="instructor.fullname">
+                      {{ instructor.fullname }}
+                    </option>
+                  </select>
+                  <span class="input-icon">
+                    <UserIcon class="icon-primary" />
+                  </span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="department">Department</label>
+                <div class="input-wrapper">
+                  <input type="text" id="department" v-model="department" required placeholder="e.g. College of Computer Studies" />
+                  <span class="input-icon">
+                    <BuildingOfficeIcon class="icon-primary" />
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="form-row" v-if="selectedInstructor">
+              <div class="form-group">
+                <label>Email Address</label>
+                <div class="input-wrapper disabled">
+                  <input type="email" v-model="contact" disabled />
+                  <span class="input-icon">
+                    <EnvelopeIcon class="icon-primary" />
+                  </span>
+                </div>
+                <div class="info-text">Email automatically retrieved from your account</div>
+              </div>
+            </div>
+          </template>
+
+          <div class="form-actions">
+            <button type="submit" class="submit-btn">Continue to Booking</button>
+          </div>
+        </section>
+      </form>
+    </div>
+  </div>
+</div>
+
+</template>
+
+<script>
+import { ArrowLeftIcon, UserIcon, UserGroupIcon, BuildingOfficeIcon, EnvelopeIcon } from '@heroicons/vue/24/outline';
+import { supabase } from '../supabase';
+
+export default {
+  components: {
+    ArrowLeftIcon,
+    UserIcon,
+    UserGroupIcon,
+    BuildingOfficeIcon,
+    EnvelopeIcon
+  },
+  
+  data() {
+    return {
+      // Calendar data
+      currentMonth: new Date().getMonth(),
+      currentYear: new Date().getFullYear(),
+      weekDays: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+      calendarDays: [],
+      requestDate: null,
+      timeSlots: [],
+      
+      // Form data
+      person: "",
+      department: "",
+      contact: "",
+      club: "",
+      event: "",
+      attendance: "",
+      dateFilled: "",
+      startTime: "",
+      endTime: "",
+      facility: "",
+      selectedRoom: "",
+      errorMessage: "",
+      
+      // Room data
+      rooms: [
+        { name: "Computer Laboratory 1", capacity: 40, facilities: "40 Desktop Computers, Projector, Whiteboard" },
+        { name: "Computer Laboratory 2", capacity: 40, facilities: "40 Desktop Computers, Projector, Whiteboard" },
+        { name: "Computer Laboratory 3", capacity: 40, facilities: "40 Desktop Computers, Projector, Whiteboard" },
+        { name: "Computer Laboratory 4", capacity: 40, facilities: "40 Desktop Computers, Projector, Whiteboard" },
+        { name: "Computer Laboratory 5", capacity: 40, facilities: "40 Desktop Computers, Projector, Whiteboard" },
+      ],
+      availableRooms: [],
+      
+      // Schedule data
+      schedules: [],
+      pendingBookings: [],
+      
+      // Semester data
+      currentSemesterStart: "2025-01-15",
+      currentSemesterEnd: "2025-05-30",
+      
+      // Two-step modal data
+      userType: "student", // Default to student user type
+      section: "", // For student section
+      instructors: [], // List of instructors who have accounts in LabEase
+      selectedInstructor: null, // Selected instructor data
+      // Modal states
+      showRequesterInfoModal: false, // First modal for requester information
+      showBookingModal: false, // Second modal for booking details
+      requesterInfoCompleted: false // Flag to track if requester info is completed
+    };
+  },
+  
+  computed: {
+    currentMonthName() {
+      return new Date(this.currentYear, this.currentMonth).toLocaleString('default', { month: 'long' });
+    },
+    
+    filteredRooms() {
+      if (!this.requestDate) return this.rooms;
+      return this.availableRooms;
+    },
+  },
+  
+  watch: {
+    person: {
+      handler(newVal) {
+        if (this.userType === 'instructor') {
+          // Find the instructor in the list
+          const instructor = this.instructors.find(i => i.fullname === newVal);
+          if (instructor) {
+            this.selectedInstructor = instructor;
+            this.contact = instructor.email;
+          } else {
+            this.selectedInstructor = null;
+            this.contact = '';
+          }
+        }
+      },
+      immediate: true
+    }
+  },
+  
+  async mounted() {
+    this.generateCalendar();
+    this.initializeWeeklyTimeBlocks();
+    this.fetchSchedules();
+    this.fetchPendingBookings();
+    this.fetchInstructors();
+  },
+  
+  methods: {
+    // Calendar methods
+    generateCalendar() {
+      const year = this.currentYear;
+      const month = this.currentMonth;
+      
+      // Get first day of month and total days in month
+      const firstDay = new Date(year, month, 1).getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      
+      const today = new Date();
+      // Format today's date consistently to avoid timezone issues
+      const formattedToday = `${today.getFullYear()}-${String(
+        today.getMonth() + 1
+      ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+      
+      // Generate calendar days array
+      this.calendarDays = [];
+      
+      // Add empty cells for days before the first day of month
+      for (let i = 0; i < firstDay; i++) {
+        this.calendarDays.push({ date: null });
+      }
+      
+      // Add actual days of the month
+      for (let i = 1; i <= daysInMonth; i++) {
+        // Format date manually to avoid timezone issues
+        const formattedDate = `${year}-${String(month + 1).padStart(
+          2,
+          "0"
+        )}-${String(i).padStart(2, "0")}`;
+        
+        // Check if date is within the current semester period
+        const isWithinSemester =
+          formattedDate >= this.currentSemesterStart &&
+          formattedDate <= this.currentSemesterEnd;
+        
+        // Check if date is in the past
+        const isPastDate = formattedDate < formattedToday;
+        
+        // Determine if this date is before the semester start or after the semester end
+        const isBeforeSemester = !isWithinSemester && formattedDate < this.currentSemesterStart;
+        const isAfterSemester = !isWithinSemester && formattedDate > this.currentSemesterEnd;
+        
+        // Create tooltip messages for dates outside the semester
+        let semesterMessage = "";
+        if (isBeforeSemester) {
+          semesterMessage = `Date is before semester start (${this.formatDate(this.currentSemesterStart)})`;
+        } else if (isAfterSemester) {
+          semesterMessage = `Date is after semester end (${this.formatDate(this.currentSemesterEnd)})`;
+        }
+        
+        // Check if any room is available on this date
+        const isAvailable =
+          !isPastDate &&
+          this.availableRooms.some(
+            (room) =>
+              Array.isArray(room.availableDates) &&
+              room.availableDates.includes(formattedDate)
+          );
+        
+        this.calendarDays.push({
+          date: formattedDate,
+          dayNumber: i,
+          isToday: formattedDate === formattedToday,
+          available: isAvailable,
+          isBeforeSemester: isBeforeSemester,
+          isAfterSemester: isAfterSemester,
+          isPastDate: isPastDate,
+          semesterMessage: semesterMessage
+        });
+      }
+      
+      // Fill remaining cells to complete the grid (6 rows x 7 columns)
+      const totalCells = 42; // 6 rows x 7 columns
+      const remainingCells = totalCells - this.calendarDays.length;
+      
+      for (let i = 0; i < remainingCells; i++) {
+        this.calendarDays.push({ date: null });
+      }
+    },
+    
+    previousMonth() {
+      if (this.currentMonth === 0) {
+        this.currentMonth = 11;
+        this.currentYear--;
+      } else {
+        this.currentMonth--;
+      }
+      this.generateCalendar();
+    },
+    
+    nextMonth() {
+      if (this.currentMonth === 11) {
+        this.currentMonth = 0;
+        this.currentYear++;
+      } else {
+        this.currentMonth++;
+      }
+      this.generateCalendar();
+    },
+    
+    selectDate(day) {
+      if (!day.date || day.isPastDate || day.isBeforeSemester || day.isAfterSemester) {
+        return;
+      }
+      
+      this.requestDate = day.date;
+      this.dateFilled = this.formatDate(day.date);
+      this.errorMessage = "";
+    },
+    
+    formatDate(dateString) {
+      if (!dateString) return "";
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    },
+    
+    // Weekly schedule methods
+    initializeWeeklyTimeBlocks() {
+      this.timeSlots = [
+        { time: "7:30 AM - 8:30 AM", value: "07:30-08:30", isLunch: false },
+        { time: "8:30 AM - 9:30 AM", value: "08:30-09:30", isLunch: false },
+        { time: "9:30 AM - 10:30 AM", value: "09:30-10:30", isLunch: false },
+        { time: "10:30 AM - 11:30 AM", value: "10:30-11:30", isLunch: false },
+        { time: "11:30 AM - 12:30 PM", value: "11:30-12:30", isLunch: false },
+        { time: "12:30 PM - 1:30 PM", value: "12:30-13:30", isLunch: true },
+        { time: "1:30 PM - 2:30 PM", value: "13:30-14:30", isLunch: false },
+        { time: "2:30 PM - 3:30 PM", value: "14:30-15:30", isLunch: false },
+        { time: "3:30 PM - 4:30 PM", value: "15:30-16:30", isLunch: false },
+        { time: "4:30 PM - 5:30 PM", value: "16:30-17:30", isLunch: false },
+        { time: "5:30 PM - 6:30 PM", value: "17:30-18:30", isLunch: false },
+        { time: "6:30 PM - 7:30 PM", value: "18:30-19:30", isLunch: false },
+      ];
+    },
+    
+    getScheduleForTimeSlotAndDay(timeSlot, day) {
+      // This is a placeholder - in a real app, you'd filter your schedules based on the time slot and day
+      return this.schedules.filter(schedule => {
+        return schedule.day === day && schedule.time_slot === timeSlot.value;
+      });
+    },
+    
+    async fetchSchedules() {
+      // Placeholder for fetching schedules from your backend
+      // In a real app, you would make an API call to get the schedules
+      this.schedules = [
+        {
+          id: 1,
+          course_code: "CSIT321",
+          section: "BSIT 3-1",
+          instructor: "Dr. John Smith",
+          lab_room: "Computer Lab 1",
+          day: "Monday",
+          time_slot: "07:30-08:30",
+          isPending: false
+        },
+        {
+          id: 2,
+          course_code: "CSIT340",
+          section: "BSIT 3-2",
+          instructor: "Dr. Jane Doe",
+          lab_room: "Computer Lab 2",
+          day: "Wednesday",
+          time_slot: "13:30-14:30",
+          isPending: false
+        },
+        {
+          id: 3,
+          course_code: "CSIT310",
+          section: "BSIT 3-1",
+          instructor: "Prof. Robert Johnson",
+          lab_room: "Computer Lab 3",
+          day: "Friday",
+          time_slot: "09:30-10:30",
+          isPending: true
+        }
+      ];
+    },
+    
+    async fetchPendingBookings() {
+      // Placeholder for fetching pending bookings
+      // In a real app, you would make an API call to get pending bookings
+      this.pendingBookings = [
+        {
+          id: 101,
+          requester: "Maria Santos",
+          event: "Database Workshop",
+          date: "2025-05-15",
+          time: "1:30 PM - 4:30 PM",
+          room: "Computer Lab 3",
+          status: "pending"
+        }
+      ];
+    },
+    
+    async fetchInstructors() {
+      try {
+        // Fetch instructors from Supabase
+        const { data, error } = await supabase
+          .from('user')
+          .select('userid, fullname, email')
+          .eq('role', 'instructor');
+        
+        if (error) throw error;
+        
+        this.instructors = data || [];
+      } catch (error) {
+        console.error('Error fetching instructors:', error);
+        this.errorMessage = 'Failed to load instructors. Please try again later.';
+      }
+    },
+    
+    // Two-step modal methods
+    openRequesterInfoModal() {
+      // Ensure we have a selected date before opening the modal
+      if (!this.requestDate) {
+        this.errorMessage = "Please select a date first";
+        return;
+      }
+      
+      // Set the date in the form to the selected date
+      this.dateFilled = this.formatDate(this.requestDate);
+      
+      // Show the requester info modal
+      this.showRequesterInfoModal = true;
+    },
+    
+    closeRequesterInfoModal() {
+      this.showRequesterInfoModal = false;
+      this.errorMessage = ""; // Clear any error messages
+    },
+    
+    submitRequesterInfo(event) {
+      event.preventDefault();
+      
+      // Validate form based on user type
+      if (this.userType === "student" && !this.section) {
+        this.errorMessage = "Please enter your section";
+        return;
+      }
+      
+      if (!this.person || !this.department || !this.contact) {
+        this.errorMessage = "Please fill in all required fields";
+        return;
+      }
+      
+      // Close the requester info modal and open the booking modal
+      this.showRequesterInfoModal = false;
+      this.requesterInfoCompleted = true;
+      this.showBookingModal = true;
+    },
+    
+    closeBookingModal() {
+      this.showBookingModal = false;
+      this.errorMessage = ""; // Clear any error messages
+    },
+    
+    clearPersonField() {
+      this.person = "";
+      this.contact = "";
+      this.selectedInstructor = null;
+    },
+    
+    async handleBooking() {
+      // Validate booking form
+      if (!this.event || !this.attendance || !this.startTime || !this.endTime || !this.selectedRoom) {
+        this.errorMessage = "Please fill in all required fields";
+        return;
+      }
+      
+      // Check if end time is after start time
+      if (this.startTime >= this.endTime) {
+        this.errorMessage = "End time must be after start time";
+        return;
+      }
+      
+      try {
+        // Prepare booking data
+        const bookingData = {
+          person: this.person,
+          department: this.department,
+          contact: this.contact,
+          section: this.section,
+          club: this.club,
+          event: this.event,
+          attendance: this.attendance,
+          date: this.requestDate,
+          start_time: this.startTime,
+          end_time: this.endTime,
+          room: this.selectedRoom,
+          facility: this.facility,
+          status: "pending",
+          created_at: new Date().toISOString()
+        };
+        
+        // In a real app, you would save this data to your backend
+        console.log('Booking data:', bookingData);
+        
+        // Close the modal and reset form
+        this.showBookingModal = false;
+        this.resetForm();
+        
+        // Show success message
+        alert("Your booking request has been submitted and is pending approval.");
+      } catch (error) {
+        console.error('Error submitting booking:', error);
+        this.errorMessage = 'Failed to submit booking. Please try again later.';
+      }
+    },
+    
+    resetForm() {
+      this.person = "";
+      this.department = "";
+      this.contact = "";
+      this.section = "";
+      this.club = "";
+      this.event = "";
+      this.attendance = "";
+      this.startTime = "";
+      this.endTime = "";
+      this.facility = "";
+      this.selectedRoom = "";
+      this.errorMessage = "";
+      this.requesterInfoCompleted = false;
+    }
+  }
+};
+</script>
+
+<style scoped>
+/* Global Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Remove spinner buttons from number inputs for all browsers */
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* Custom class to remove any spinner buttons */
+.no-spinner {
+  -webkit-appearance: none;
+  appearance: none;
+  -moz-appearance: textfield;
+  appearance: textfield;
+  margin: 0;
+  /* Ensure no buttons are displayed */
+  background-image: none !important;
+  background-color: white !important;
+  border-radius: 8px !important;
+  padding-right: 40px !important;
+}
+
+body {
+  font-family: "Poppins", sans-serif;
+  background-color: #ffffff;
+}
+
+/* Booking Container */
+.booking-container {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  background-color: #ffffff;
+  padding: 2rem;
+}
+
+/* Layout */
+.booking-layout {
+  width: 100%;
+  max-width: 1400px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.month-selector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+  gap: 0.5rem;
+}
+
+.month-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  background-color: white;
+  border: 1px solid #eaeaea;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.month-nav:hover {
+  background-color: #f5f5f5;
+}
+
+.calendar {
+  margin-top: 1rem;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: white;
+  border: 1px solid #eaeaea;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  background-color: white;
+  gap: 1px;
+}
+
+.calendar-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #eaeaea;
+}
+
+.calendar-day-header {
+  padding: 0.5rem 0;
+  text-align: center;
+  font-weight: 500;
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.calendar-body {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-template-rows: repeat(6, 1fr);
+  gap: 2px;
+  padding: 8px;
+  background-color: #f9f9f9;
+}
+
+.calendar-cell {
+  position: relative;
+  height: 60px;
+  border-right: 1px solid #f0f0f0;
+  border-bottom: 1px solid #f0f0f0;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.calendar-cell.empty-cell {
+  background-color: transparent;
+  border: none;
+  cursor: default;
+}
+
+.calendar-cell.past-date {
+  background-color: #f8f8f8;
+  color: #aaa;
+  cursor: not-allowed;
+}
+
+.calendar-cell.before-semester {
+  background-color: rgba(234, 179, 8, 0.1);
+  color: #854d0e;
+}
+
+.calendar-cell.after-semester {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.calendar-cell.selected-day {
+  background-color: rgba(221, 56, 89, 0.2);
+  border: 2px solid #dd3859;
+}
+
+.calendar-cell:hover {
+  background-color: #f5f5f5;
+}
+
+.calendar-cell.disabled {
+  background-color: #f8f8f8;
+  color: #ccc;
+  cursor: not-allowed;
+}
+
+.calendar-cell.past-date {
+  background-color: #f8f8f8;
+  color: #aaa;
+  cursor: not-allowed;
+}
+
+.calendar-cell.selected {
+  background-color: rgba(221, 56, 89, 0.1);
+  border: 1px solid #dd3859;
+}
+
+.day-number {
+  font-size: 0.9rem;
+  font-weight: normal;
+}
+
+.current-day {
+  background-color: #f8f8f8;
+}
+
+.current-day .day-number {
+  font-weight: bold;
+  color: #dd3859;
+}
+
+.submit-btn {
+  background-color: #dd3859;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 6px rgba(221, 56, 89, 0.15);
+}
+
+.submit-btn:hover {
+  background-color: #c62c4c;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 8px rgba(221, 56, 89, 0.2);
+}
+
+.modal-schedule-table {
+  min-width: 900px;
+  width: 100%;
+}
+
+@media (max-width: 1200px) {
+  .modal-schedule-table {
+    min-width: 700px;
+  }
+}
+
+
+.date-input-container {
+  position: relative;
+}
+
+.date-tooltip {
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 0;
+  right: 0;
+  background-color: #fff3cd;
+  color: #856404;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-left: 3px solid #ffeeba;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.pending-booking {
+  background-color: #fff3cd;
+  border-left: 3px solid #ffc107;
+  animation: pulse 2s infinite;
+}
+
+.pending-label {
+  color: #856404;
+  font-weight: bold;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 5px rgba(255, 193, 7, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 193, 7, 0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+</style>
+ . b a c k - b u t t o n : h o v e r   {  
+     t r a n s f o r m :   t r a n s l a t e X ( - 5 p x ) ;  
+ }  
+  
+ . s c h e d u l e - w r a p p e r   {  
+     w i d t h :   1 0 0 % ;  
+     p a d d i n g :   1 . 5 r e m ;  
+ }  
+  
+ . s c h e d u l e - h e a d e r   {  
+     m a r g i n - b o t t o m :   1 . 5 r e m ;  
+     t e x t - a l i g n :   c e n t e r ;  
+     p a d d i n g - b o t t o m :   0 . 5 r e m ;  
+     b o r d e r - b o t t o m :   2 p x   s o l i d   r g b a ( 2 2 1 ,   5 6 ,   8 9 ,   0 . 1 ) ;  
+ }  
+  
+ . s c h e d u l e - h e a d e r   h 2   {  
+     c o l o r :   # d d 3 8 5 9 ;  
+     f o n t - s i z e :   1 . 5 r e m ;  
+     f o n t - w e i g h t :   6 0 0 ;  
+ }  
+  
+ . d a t e - s e l e c t i o n - s e c t i o n   {  
+     m a r g i n - b o t t o m :   2 r e m ;  
+     b o r d e r - b o t t o m :   1 p x   s o l i d   # e e e ;  
+     p a d d i n g - b o t t o m :   2 r e m ;  
+ }  
+  
+ . d a t e - s e l e c t i o n - s e c t i o n   h 3   {  
+     c o l o r :   # 3 3 3 ;  
+     f o n t - s i z e :   1 . 2 r e m ;  
+     m a r g i n - b o t t o m :   1 r e m ;  
+     f o n t - w e i g h t :   6 0 0 ;  
+     t e x t - a l i g n :   c e n t e r ;  
+ }  
+ 

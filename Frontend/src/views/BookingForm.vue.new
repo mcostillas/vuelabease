@@ -1,0 +1,1058 @@
+<!-- eslint-disable -->
+<template>
+  <div class="booking-container">
+    <div class="booking-layout">
+      <div class="header">
+        <router-link to="/" class="back-button">
+          <ArrowLeftIcon class="icon-primary" />
+        </router-link>
+        <h1>Laboratory Booking System</h1>
+      </div>
+
+      <!-- Schedule View -->
+      <div class="schedule-wrapper">
+        <div class="schedule-header">
+          <h2>Laboratory Booking</h2>
+        </div>
+        <div class="schedule-content">
+          <!-- Calendar for date selection -->
+          <div class="date-selection-section">
+            <h3>Select a Date</h3>
+            <div class="month-selector">
+              <button class="month-nav" @click="previousMonth">
+                <ArrowLeftIcon class="icon-small" />
+              </button>
+              <span>{{ currentMonthName }} {{ currentYear }}</span>
+              <button class="month-nav" @click="nextMonth">
+                <ArrowLeftIcon class="icon-small rotate-180" />
+              </button>
+            </div>
+
+            <div class="calendar">
+              <div class="calendar-header">
+                <div
+                  v-for="day in weekDays"
+                  :key="day"
+                  class="calendar-cell header-cell"
+                >
+                  {{ day }}
+                </div>
+              </div>
+              <div class="calendar-body">
+                <div
+                  v-for="(day, index) in calendarDays"
+                  :key="index"
+                  class="calendar-cell"
+                  :class="{
+                    'empty-cell': !day.date,
+                    'current-day': day.isToday,
+                    'selected-day': day.date === requestDate,
+                    'available-day': day.available,
+                    'before-semester': day.isBeforeSemester,
+                    'after-semester': day.isAfterSemester,
+                    'past-date': day.isPastDate,
+                  }"
+                  @click="selectDate(day)"
+                  :title="day.semesterMessage || ''"
+                >
+                  <template v-if="day.date">
+                    <span class="day-number">{{ day.dayNumber }}</span>
+                  </template>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Weekly Schedule Display (shown after selecting a date) -->
+          <div class="weekly-schedule-section" v-if="requestDate">
+            <div class="schedule-section-header">
+              <h3>Weekly Schedule for {{ formatDate(requestDate) }}</h3>
+              <div class="schedule-actions">
+                <button class="book-now-btn" @click="openBookingModal">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 5v14M5 12h14"></path>
+                  </svg>
+                  Book Now
+                </button>
+              </div>
+            </div>
+
+            <!-- Weekly Schedule Table (similar to reference image) -->
+            <div class="weekly-schedule-table-container">
+              <table class="weekly-schedule-table">
+                <thead>
+                  <tr>
+                    <th class="time-column">Time</th>
+                    <th v-for="day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']" :key="day">{{ day }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- Time slots from 7:30 AM to 7:00 PM -->
+                  <tr v-for="timeSlot in timeSlots" :key="timeSlot.value" :class="{'lunch-row': timeSlot.isLunch}">
+                    <td class="time-cell">{{ timeSlot.time }}</td>
+                    <td 
+                      v-for="day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']" 
+                      :key="`${timeSlot.value}-${day}`"
+                      :class="{'has-class': getScheduleForTimeSlotAndDay(timeSlot, day).length > 0}"
+                    >
+                      <div 
+                        v-for="schedule in getScheduleForTimeSlotAndDay(timeSlot, day)" 
+                        :key="schedule.id"
+                        :class="['class-info', { 'pending-booking': schedule.isPending }]"
+                      >
+                        <div class="class-code">{{ schedule.course_code }}</div>
+                        <div class="class-section">{{ schedule.section }}</div>
+                        <div v-if="!schedule.isPending" class="class-instructor">{{ schedule.instructor }}</div>
+                        <div v-else class="pending-label">PENDING APPROVAL</div>
+                        <div class="class-room">{{ schedule.lab_room }}</div>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import { createClient } from "@supabase/supabase-js";
+import {
+  BuildingOfficeIcon,
+  UserIcon,
+  UserGroupIcon,
+  ClockIcon,
+  DocumentTextIcon,
+  EnvelopeIcon,
+} from "@heroicons/vue/24/outline";
+import ArrowLeftIcon from '@/components/icons/ArrowLeftIcon.vue';
+
+const supabase = createClient(
+  "https://bfmvnahlknvyrajofmdw.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmbXZuYWhsa252eXJham9mbWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ5OTc4NjUsImV4cCI6MjA2MDU3Mzg2NX0.xkeqAML3bYf9iOV6iG_GJ35_RD7rPKH_OuXFz1SQBLk"
+);
+
+export default {
+  name: "BookingForm",
+  components: {
+    BuildingOfficeIcon,
+    UserIcon,
+    UserGroupIcon,
+    ClockIcon,
+    DocumentTextIcon,
+    EnvelopeIcon,
+    ArrowLeftIcon,
+  },
+  data() {
+    return {
+      // User type (student or instructor)
+      userType: "student",
+      section: "",
+      instructors: [],
+      selectedInstructor: null,
+      
+      selectedSectionFilter: "all",
+      selectedLabFilter: "all", 
+      selectedTimeBlock: null,
+      selectedDay: null,
+      scheduleData: [], 
+      pendingBookings: [], 
+      filteredScheduleData: [], 
+      selectedDayOfWeek: null, 
+      
+      weeklyScheduleFilter: {
+        section: "all",
+        lab: "all",
+      },
+      
+      hasScheduleData: true,
+      
+      availableSections: [
+        "BSIT-1A",
+        "BSIT-1B",
+        "BSCS-1",
+        "BSIT-2A",
+        "BSIT-2B",
+        "BSCS-2",
+        "BSIT-3A",
+        "BSIT-3B",
+        "BSCS-3",
+        "BSIT-4A",
+        "BSIT-4B",
+        "BSCS-4",
+      ],
+      
+      currentSemesterStart: "2024-12-10", 
+      currentSemesterEnd: "2025-04-25", 
+      
+      department: "",
+      club: "",
+      person: "",
+      contact: "",
+      event: "",
+      attendance: "",
+      requestDate: "",
+      startTime: "",
+      endTime: "",
+      facility: "",
+      notedBy: "",
+      dateFilled: new Date().toISOString().substr(0, 10),
+      // Error and warning messages
+      errorMessage: "",
+      dateRangeWarning: "",
+      showSuccessModal: false,
+      showBookingModal: false,
+      selectedRoom: "",
+      selectedTimeSlot: "",
+      currentDate: new Date(),
+      weekDays: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+      
+      timeSlots: [
+        {
+          time: "7:00 AM - 8:00 AM",
+          value: "07:00",
+          duration: 60,
+          isLunch: false,
+        },
+        {
+          time: "8:00 AM - 9:00 AM",
+          value: "08:00",
+          duration: 60,
+          isLunch: false,
+        },
+        {
+          time: "9:00 AM - 10:00 AM",
+          value: "09:00",
+          duration: 60,
+          isLunch: false,
+        },
+        {
+          time: "10:00 AM - 11:00 AM",
+          value: "10:00",
+          duration: 60,
+          isLunch: false,
+        },
+        {
+          time: "11:00 AM - 12:00 PM",
+          value: "11:00",
+          duration: 60,
+          isLunch: false,
+        },
+        {
+          time: "12:00 PM - 1:00 PM",
+          value: "12:00",
+          duration: 60,
+          isLunch: false,
+        },
+        {
+          time: "1:00 PM - 2:00 PM",
+          value: "13:00",
+          duration: 60,
+          isLunch: false,
+        },
+        {
+          time: "2:00 PM - 3:00 PM",
+          value: "14:00",
+          duration: 60,
+          isLunch: false,
+        },
+        {
+          time: "3:00 PM - 4:00 PM",
+          value: "15:00",
+          duration: 60,
+          isLunch: false,
+        },
+        {
+          time: "4:00 PM - 5:00 PM",
+          value: "16:00",
+          duration: 60,
+          isLunch: false,
+        },
+        {
+          time: "5:00 PM - 6:00 PM",
+          value: "17:00",
+          duration: 60,
+          isLunch: false,
+        },
+        {
+          time: "6:00 PM - 7:00 PM",
+          value: "18:00",
+          duration: 60,
+          isLunch: false,
+        },
+      ],
+      
+      weeklyTimeBlocks: [],
+      
+      availableRooms: [
+        { name: "L201", availableDates: ["2025-04-22", "2025-04-23"] },
+        { name: "L202", availableDates: ["2025-04-22", "2025-04-24"] },
+        { name: "L203", availableDates: ["2025-04-23", "2025-04-25"] },
+        { name: "L204", availableDates: ["2025-04-22", "2025-04-23"] },
+        { name: "L205", availableDates: ["2025-04-24", "2025-04-25"] },
+        { name: "IOT", availableDates: ["2025-04-22", "2025-04-23"] },
+        { name: "Open Lab", availableDates: ["2025-04-22", "2025-04-23"] },
+      ],
+      
+      filteredRooms: [],
+      
+      calendarDays: [],
+      
+      formErrors: {
+        person: "",
+        section: "",
+        department: "",
+        contact: "",
+        event: "",
+        attendance: "",
+        startTime: "",
+        endTime: "",
+        selectedRoom: ""
+      },
+    };
+  },
+  computed: {
+    currentMonthName() {
+      const months = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+      ];
+      return months[this.currentDate.getMonth()];
+    },
+    currentYear() {
+      return this.currentDate.getFullYear();
+    },
+  },
+  methods: {
+    async fetchScheduleData() {
+      try {
+        const { data, error } = await supabase
+          .from('schedules')
+          .select('*');
+
+        if (error) throw error;
+        
+        this.scheduleData = data || [];
+        this.hasScheduleData = this.scheduleData.length > 0;
+        
+        // Also fetch pending bookings
+        const { data: pendingData, error: pendingError } = await supabase
+          .from('pending_bookings')
+          .select('*');
+          
+        if (pendingError) throw pendingError;
+        
+        this.pendingBookings = pendingData || [];
+        
+        // Combine and process all schedule data
+        this.processScheduleData();
+      } catch (error) {
+        console.error('Error fetching schedule data:', error);
+      }
+    },
+    
+    processScheduleData() {
+      // Process and format schedule data for display
+      // This would combine regular schedules and pending bookings
+      this.filteredScheduleData = [...this.scheduleData];
+      
+      // Add pending bookings with a flag
+      this.pendingBookings.forEach(booking => {
+        this.filteredScheduleData.push({
+          ...booking,
+          isPending: true
+        });
+      });
+    },
+    
+    getScheduleForTimeSlotAndDay(timeSlot, day) {
+      // This would filter the schedule data for the given time slot and day
+      return this.filteredScheduleData.filter(schedule => {
+        // Convert day string to day number (0-6)
+        const dayMap = {
+          'Sunday': 0,
+          'Monday': 1,
+          'Tuesday': 2,
+          'Wednesday': 3,
+          'Thursday': 4,
+          'Friday': 5,
+          'Saturday': 6
+        };
+        
+        const scheduleDay = dayMap[day];
+        const scheduleStart = schedule.start_time;
+        
+        // Check if schedule is for this day and time slot
+        return schedule.day_of_week === scheduleDay && 
+               scheduleStart === timeSlot.value;
+      });
+    },
+    
+    previousMonth() {
+      const newDate = new Date(this.currentDate);
+      newDate.setMonth(newDate.getMonth() - 1);
+      this.currentDate = newDate;
+      this.generateCalendar();
+    },
+    
+    nextMonth() {
+      const newDate = new Date(this.currentDate);
+      newDate.setMonth(newDate.getMonth() + 1);
+      this.currentDate = newDate;
+      this.generateCalendar();
+    },
+    
+    generateCalendar() {
+      const year = this.currentDate.getFullYear();
+      const month = this.currentDate.getMonth();
+      
+      // First day of the month
+      const firstDay = new Date(year, month, 1);
+      // Last day of the month
+      const lastDay = new Date(year, month + 1, 0);
+      
+      // Day of the week for the first day (0-6, where 0 is Sunday)
+      const firstDayOfWeek = firstDay.getDay();
+      
+      // Total days in the month
+      const daysInMonth = lastDay.getDate();
+      
+      // Current date for highlighting today
+      const today = new Date();
+      const currentDateStr = today.toISOString().split('T')[0];
+      
+      // Semester date ranges for availability
+      const semesterStart = new Date(this.currentSemesterStart);
+      const semesterEnd = new Date(this.currentSemesterEnd);
+      
+      // Generate calendar days
+      const days = [];
+      
+      // Add empty cells for days before the first day of the month
+      for (let i = 0; i < firstDayOfWeek; i++) {
+        days.push({
+          date: null,
+          dayNumber: '',
+          isToday: false,
+          available: false
+        });
+      }
+      
+      // Add days of the month
+      for (let i = 1; i <= daysInMonth; i++) {
+        const date = new Date(year, month, i);
+        const dateStr = date.toISOString().split('T')[0];
+        
+        // Check if date is within semester
+        const isBeforeSemester = date < semesterStart;
+        const isAfterSemester = date > semesterEnd;
+        const isPastDate = date < today && dateStr !== currentDateStr;
+        
+        // Determine if the date is available for booking
+        // A date is available if it's within the semester and not in the past
+        const available = !isBeforeSemester && !isAfterSemester && !isPastDate;
+        
+        // Create message for semester status
+        let semesterMessage = '';
+        if (isBeforeSemester) {
+          semesterMessage = 'Before semester start';
+        } else if (isAfterSemester) {
+          semesterMessage = 'After semester end';
+        } else if (isPastDate) {
+          semesterMessage = 'Past date';
+        }
+        
+        days.push({
+          date: dateStr,
+          dayNumber: i,
+          isToday: dateStr === currentDateStr,
+          available,
+          isBeforeSemester,
+          isAfterSemester,
+          isPastDate,
+          semesterMessage
+        });
+      }
+      
+      this.calendarDays = days;
+    },
+    
+    selectDate(day) {
+      // Only allow selection of available days
+      if (!day.date || !day.available) return;
+      
+      this.requestDate = day.date;
+      this.selectedDayOfWeek = new Date(day.date).getDay();
+      
+      // Update available rooms for this date
+      this.updateAvailableRooms();
+    },
+    
+    updateAvailableRooms() {
+      if (!this.requestDate) return;
+      
+      // Filter rooms that are available on the selected date
+      this.filteredRooms = this.availableRooms.filter(room => 
+        room.availableDates.includes(this.requestDate)
+      );
+    },
+    
+    formatDate(dateString) {
+      if (!dateString) return '';
+      
+      const date = new Date(dateString);
+      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      return date.toLocaleDateString('en-US', options);
+    },
+    
+    openBookingModal() {
+      this.showBookingModal = true;
+      // Reset form errors
+      Object.keys(this.formErrors).forEach(key => {
+        this.formErrors[key] = '';
+      });
+    },
+    
+    closeBookingModal() {
+      this.showBookingModal = false;
+    },
+    
+    validateForm() {
+      let isValid = true;
+      
+      // Reset all errors
+      Object.keys(this.formErrors).forEach(key => {
+        this.formErrors[key] = '';
+      });
+      
+      // Validate required fields
+      if (!this.person.trim()) {
+        this.formErrors.person = 'Requester name is required';
+        isValid = false;
+      }
+      
+      if (!this.section.trim()) {
+        this.formErrors.section = 'Section is required';
+        isValid = false;
+      }
+      
+      if (!this.department.trim()) {
+        this.formErrors.department = 'Department is required';
+        isValid = false;
+      }
+      
+      if (!this.contact.trim()) {
+        this.formErrors.contact = 'Contact number is required';
+        isValid = false;
+      }
+      
+      if (!this.event.trim()) {
+        this.formErrors.event = 'Purpose/Event is required';
+        isValid = false;
+      }
+      
+      if (!this.attendance.trim()) {
+        this.formErrors.attendance = 'Expected attendance is required';
+        isValid = false;
+      }
+      
+      if (!this.startTime) {
+        this.formErrors.startTime = 'Start time is required';
+        isValid = false;
+      }
+      
+      if (!this.endTime) {
+        this.formErrors.endTime = 'End time is required';
+        isValid = false;
+      }
+      
+      if (!this.selectedRoom) {
+        this.formErrors.selectedRoom = 'Please select a room';
+        isValid = false;
+      }
+      
+      // Validate time range
+      if (this.startTime && this.endTime) {
+        const start = new Date(`2000-01-01T${this.startTime}`);
+        const end = new Date(`2000-01-01T${this.endTime}`);
+        
+        if (end <= start) {
+          this.formErrors.endTime = 'End time must be after start time';
+          isValid = false;
+        }
+      }
+      
+      return isValid;
+    },
+    
+    async submitBooking() {
+      if (!this.validateForm()) return;
+      
+      try {
+        // Prepare booking data
+        const bookingData = {
+          requester_name: this.person,
+          section: this.section,
+          department: this.department,
+          contact: this.contact,
+          purpose: this.event,
+          expected_attendance: this.attendance,
+          booking_date: this.requestDate,
+          start_time: this.startTime,
+          end_time: this.endTime,
+          lab_room: this.selectedRoom,
+          status: 'pending',
+          date_submitted: new Date().toISOString(),
+          day_of_week: new Date(this.requestDate).getDay()
+        };
+        
+        // Insert into pending_bookings table
+        const { error } = await supabase
+          .from('pending_bookings')
+          .insert([bookingData]);
+          
+        if (error) throw error;
+        
+        // Show success message
+        this.showSuccessModal = true;
+        this.closeBookingModal();
+        
+        // Reset form
+        this.resetForm();
+        
+        // Refresh schedule data
+        await this.fetchScheduleData();
+      } catch (error) {
+        console.error('Error submitting booking:', error);
+        this.errorMessage = 'Failed to submit booking. Please try again.';
+      }
+    },
+    
+    resetForm() {
+      this.person = '';
+      this.section = '';
+      this.department = '';
+      this.contact = '';
+      this.event = '';
+      this.attendance = '';
+      this.startTime = '';
+      this.endTime = '';
+      this.selectedRoom = '';
+      this.errorMessage = '';
+    },
+    
+    closeSuccessModal() {
+      this.showSuccessModal = false;
+    },
+  },
+  mounted() {
+    this.generateCalendar();
+    this.fetchScheduleData();
+  }
+}
+</script>
+
+<style scoped>
+.booking-container {
+  width: 100%;
+  min-height: 100vh;
+  background-color: #f5f7fa;
+  display: flex;
+  justify-content: center;
+}
+
+.booking-layout {
+  max-width: 1200px;
+  width: 100%;
+  padding: 20px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.back-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #f0f0f0;
+  margin-right: 15px;
+  text-decoration: none;
+  color: #333;
+}
+
+.icon-primary {
+  width: 20px;
+  height: 20px;
+  color: #333;
+}
+
+.icon-small {
+  width: 16px;
+  height: 16px;
+}
+
+.rotate-180 {
+  transform: rotate(180deg);
+}
+
+.schedule-wrapper {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.schedule-header {
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.schedule-content {
+  padding: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.date-selection-section {
+  flex: 1;
+  min-width: 300px;
+}
+
+.weekly-schedule-section {
+  flex: 2;
+  min-width: 500px;
+}
+
+.month-selector {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 15px;
+  font-weight: 500;
+}
+
+.month-nav {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: #f0f0f0;
+}
+
+.calendar {
+  width: 100%;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.calendar-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #eee;
+}
+
+.calendar-body {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.calendar-cell {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid #eee;
+  border-right: 1px solid #eee;
+  position: relative;
+}
+
+.calendar-cell:nth-child(7n) {
+  border-right: none;
+}
+
+.header-cell {
+  font-weight: 500;
+  color: #666;
+}
+
+.empty-cell {
+  background-color: #f8f9fa;
+}
+
+.current-day {
+  background-color: #e6f7ff;
+  font-weight: bold;
+}
+
+.selected-day {
+  background-color: #1890ff;
+  color: white;
+  font-weight: bold;
+}
+
+.available-day {
+  cursor: pointer;
+}
+
+.available-day:hover {
+  background-color: #e6f7ff;
+}
+
+.before-semester, .after-semester, .past-date {
+  color: #ccc;
+  background-color: #f8f9fa;
+}
+
+.schedule-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.book-now-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background-color: #1890ff;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.book-now-btn:hover {
+  background-color: #40a9ff;
+}
+
+.weekly-schedule-table-container {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.weekly-schedule-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #eee;
+}
+
+.weekly-schedule-table th, .weekly-schedule-table td {
+  border: 1px solid #eee;
+  padding: 10px;
+  text-align: center;
+  min-width: 100px;
+}
+
+.weekly-schedule-table th {
+  background-color: #f8f9fa;
+  font-weight: 500;
+}
+
+.time-column {
+  width: 120px;
+}
+
+.time-cell {
+  font-weight: 500;
+  color: #666;
+}
+
+.lunch-row {
+  background-color: #fffbe6;
+}
+
+.has-class {
+  background-color: #f0f5ff;
+  position: relative;
+}
+
+.class-info {
+  padding: 5px;
+  border-radius: 4px;
+  margin-bottom: 5px;
+  background-color: #e6f7ff;
+  border-left: 3px solid #1890ff;
+}
+
+.pending-booking {
+  background-color: #fff7e6;
+  border-left: 3px solid #fa8c16;
+}
+
+.class-code {
+  font-weight: bold;
+  font-size: 0.9em;
+}
+
+.class-section, .class-instructor, .class-room {
+  font-size: 0.8em;
+  color: #666;
+}
+
+.pending-label {
+  font-size: 0.7em;
+  color: #fa8c16;
+  font-weight: bold;
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-container {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.modal-close-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #999;
+}
+
+.modal-close-btn:hover {
+  color: #333;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+.form-input, .form-select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.form-input:focus, .form-select:focus {
+  border-color: #1890ff;
+  outline: none;
+}
+
+.form-error {
+  color: #f5222d;
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.cancel-btn {
+  background-color: #f0f0f0;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.submit-btn {
+  background-color: #1890ff;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.submit-btn:hover {
+  background-color: #40a9ff;
+}
+
+.success-modal {
+  text-align: center;
+  padding: 30px 20px;
+}
+
+.success-icon {
+  font-size: 50px;
+  color: #52c41a;
+  margin-bottom: 20px;
+}
+
+.success-message {
+  margin-bottom: 20px;
+}
+
+.success-btn {
+  background-color: #52c41a;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.success-btn:hover {
+  background-color: #73d13d;
+}
+
+@media (max-width: 768px) {
+  .schedule-content {
+    flex-direction: column;
+  }
+  
+  .date-selection-section,
+  .weekly-schedule-section {
+    width: 100%;
+  }
+}
+</style>
