@@ -86,28 +86,33 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <!-- Time slots from 7:30 AM to 7:00 PM -->
-                  <tr v-for="timeSlot in timeSlots" :key="timeSlot.value" :class="{'lunch-row': timeSlot.isLunch}">
-                    <td class="time-cell">{{ timeSlot.time }}</td>
-                    <td 
-                      v-for="day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']" 
-                      :key="`${timeSlot.value}-${day}`"
-                      :class="{'has-class': getScheduleForTimeSlotAndDay(timeSlot, day).length > 0}"
-                    >
-                      <div 
-                        v-for="schedule in getScheduleForTimeSlotAndDay(timeSlot, day)" 
-                        :key="schedule.id"
-                        :class="['class-info', { 'pending-booking': schedule.isPending }]"
-                      >
-                        <div class="class-code">{{ schedule.course_code }}</div>
-                        <div class="class-section">{{ schedule.section }}</div>
-                        <div v-if="!schedule.isPending" class="class-instructor">{{ schedule.instructor }}</div>
-                        <div v-else class="pending-label">PENDING APPROVAL</div>
-                        <div class="class-room">{{ schedule.lab_room }}</div>
-                      </div>
-                    </td>
-                  </tr>
-                </tbody>
+  <tr
+    v-for="timeSlot in timeSlots"
+    :key="timeSlot.value"
+    :class="{ 'lunch-row': timeSlot.isLunch }"
+  >
+    <td class="time-cell">{{ timeSlot.time }}</td>
+    <td
+  v-for="day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']"
+  :key="`${timeSlot.value}-${day}`"
+  :class="{ 'has-class': getScheduleForTimeSlotAndDay(timeSlot, day).length > 0 }"
+  @click="handleCellClick(timeSlot, day)"
+  :style="{ cursor: getScheduleForTimeSlotAndDay(timeSlot, day).length > 0 ? 'not-allowed' : 'pointer' }"
+>
+  <div
+    v-for="schedule in filteredSchedulesForDay.filter(schedule => schedule.day === day && isTimeSlotInRange(timeSlot.value, schedule.start_time, schedule.end_time))"
+    :key="schedule.id"
+    :class="['class-info', { 'pending-booking': schedule.isPending }]"
+  >
+    <div class="class-code">{{ schedule.course_code }}</div>
+    <div class="class-section">{{ schedule.section }}</div>
+    <div v-if="!schedule.isPending" class="class-instructor">{{ schedule.instructor }}</div>
+    <div v-else class="pending-label">PENDING APPROVAL</div>
+    <div class="class-room">{{ schedule.lab_room }}</div>
+  </div>
+</td>
+  </tr>
+</tbody>
               </table>
             </div>
           </div>
@@ -892,6 +897,8 @@ export default {
     return this.filteredWeekDays; // Return all days if no day is selected
   },
     filteredSchedulesForDay() {
+      console.log("Schedule Data:", this.scheduleData);
+    console.log("Selected Day of Week:", this.selectedDayOfWeek);
     if (!this.selectedDayOfWeek) {
       return this.scheduleData; // Return all schedules if no day is selected
     }
@@ -973,6 +980,25 @@ export default {
     this.fetchPendingBookings();
   },
   methods: {
+    handleCellClick(timeSlot, day) {
+    const hasSchedule = this.getScheduleForTimeSlotAndDay(timeSlot, day).length > 0;
+
+    if (hasSchedule) {
+      console.log("This cell already has a schedule and cannot be clicked.");
+      return;
+    }
+
+    // Handle the click event for empty cells
+    console.log("Cell clicked:", { timeSlot, day });
+
+    // Set the selected time slot and day
+    this.selectedTimeSlot = timeSlot.value;
+    this.selectedDay = day;
+
+    // Open the booking modal or perform any other action
+    this.openBookingModal();
+  },
+
     formatDate(date) {
     if (!date) return "";
     const options = { year: "numeric", month: "long", day: "numeric" };
@@ -1263,42 +1289,35 @@ async filterAvailableRooms() {
     },
 
     async fetchSchedules() {
-      try {
-        const { data, error } = await supabaseSchedules
-          .from("schedules")
-          .select("*");
-        if (error) throw error;
+  try {
+    const { data, error } = await supabaseSchedules
+      .from("schedules")
+      .select("*");
+    if (error) throw error;
 
-        console.log("Raw data from API:", data); // Log raw data from the API
+    console.log("Fetched schedules:", data); // Debugging log
 
-        // Ensure periods is always populated
-        this.scheduleData = data.map((block) => {
-          console.log("Before processing block:", block); // Log each block before processing
-          const processedBlock = {
-            ...block,
-            periods: [
-              {
-                day: block.day,
-                start_time: block.start_time,
-                end_time: block.end_time,
-                lab_room: block.lab_room,
-                section: block.section,
-                course_code: block.course_code,
-                course_name: block.course_name,
-              },
-            ],
-          };
-           // Log each block after processing
-          return processedBlock;
-        });
-
-       // Log the final scheduleData
-      } catch (error) {
-       
-        this.scheduleData = [];
-        this.errorMessage = "Failed to fetch schedules.";
-      }
-    },
+    this.scheduleData = data.map((block) => ({
+      ...block,
+      day: block.day, // Ensure the day field is included
+      periods: [
+        {
+          day: block.day,
+          start_time: block.start_time,
+          end_time: block.end_time,
+          lab_room: block.lab_room,
+          section: block.section,
+          course_code: block.course_code,
+          course_name: block.course_name,
+        },
+      ],
+    }));
+  } catch (error) {
+    console.error("Error fetching schedules:", error.message);
+    this.scheduleData = [];
+    this.errorMessage = "Failed to fetch schedules.";
+  }
+},
     
     hasScheduleForTimeAndDay(timeSlot) {
       if (!Array.isArray(this.scheduleData)) {
@@ -1610,41 +1629,38 @@ async filterAvailableRooms() {
     },
 
     selectDate(day) {
-      console.log("Day clicked:", day);
+  console.log("Day clicked:", day);
 
-      if (day.isPastDate) {
-        this.errorMessage = "Cannot book past dates";
-        setTimeout(() => {
-          this.errorMessage = "";
-        }, 3000);
-        return;
-      }
+  if (day.isPastDate) {
+    this.errorMessage = "Cannot book past dates";
+    setTimeout(() => {
+      this.errorMessage = "";
+    }, 3000);
+    return;
+  }
 
-      if (day.date) {
-        this.requestDate = day.date;
+  if (day.date) {
+    this.requestDate = day.date;
 
-        // Check if the selected date is outside the current semester range
-        this.checkSemesterDateRange();
+    // Get the day of the week from the selected date
+    const date = new Date(day.date);
+    const daysOfWeek = [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ];
+    this.selectedDayOfWeek = daysOfWeek[date.getDay()];
 
-        // Get the day of the week from the selected date
-        const date = new Date(day.date);
-        const daysOfWeek = [
-          "Sunday",
-          "Monday",
-          "Tuesday",
-          "Wednesday",
-          "Thursday",
-          "Friday",
-          "Saturday",
-        ];
-        this.selectedDayOfWeek = daysOfWeek[date.getDay()];
-        
-        console.log("Selected Day of Week:", this.selectedDayOfWeek);
+    console.log("Selected Day of Week:", this.selectedDayOfWeek);
 
-        // Trigger filtering of schedules
-        this.updateRoomAvailability();
-      }
-    },
+    // Trigger filtering of schedules
+    console.log("Filtered Schedules for Selected Day:", this.filteredSchedulesForDay);
+  }
+},
 
     // Check if the selected date is outside the semester range and show a tooltip
     // Handle date change from the date input field
@@ -1868,21 +1884,39 @@ async filterAvailableRooms() {
       this.generateCalendar();
     },
     
-    // Open the requester info modal when Book Now button is clicked
     openBookingModal() {
-      // Ensure we have a selected date before opening the modal
-      if (!this.requestDate) {
-        this.errorMessage = "Please select a date first";
-        return;
-      }
-      
-      // Set the date in the form to the selected date
-      this.dateFilled = this.formatDate(this.requestDate);
-      
-      // Show the requester info modal first
-      this.showRequesterModal = true;
-    },
-    
+  // Ensure we have a selected date before opening the modal
+  if (!this.requestDate) {
+    this.errorMessage = "Please select a date first";
+    return;
+  }
+
+  // Set the date in the form to the selected date
+  this.dateFilled = this.formatDate(this.requestDate);
+
+  // Get the day of the week from the selected date
+  const date = new Date(this.requestDate);
+  const daysOfWeek = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ];
+  this.selectedDayOfWeek = daysOfWeek[date.getDay()];
+
+  // Filter the schedule data for the selected day
+  this.filteredScheduleData = this.scheduleData.filter(
+    (schedule) => schedule.day === this.selectedDayOfWeek
+  );
+
+  console.log("Filtered schedules for the selected day:", this.filteredScheduleData);
+
+  // Show the requester info modal
+  this.showRequesterModal = true;
+},
     // Close the requester info modal
     closeRequesterModal() {
       this.showRequesterModal = false;
