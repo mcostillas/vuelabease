@@ -22,6 +22,14 @@
             Manual Check-in
           </button>
         </div>
+        <div class="rfid-simulator">
+  <button 
+    class="simulate-rfid-btn" 
+    @click="simulateRfidScan('12345678')"
+  >
+    Simulate RFID Scan
+  </button>
+</div>
         
         <!-- Filters -->
         <div class="filters">
@@ -82,7 +90,7 @@
             <div class="header-item">Instructor</div>
             <div class="header-item">Department</div>
             <div class="header-item">Date</div>
-            <div class="header-item">Scheduled</div>
+            <div class="header-item">Schedule</div>
             <div class="header-item">Time In</div>
             <div class="header-item">Time Out</div>
             <div class="header-item">Status</div>
@@ -170,43 +178,47 @@
           </button>
         </div>
         <div class="modal-body">
-          <div class="instructor-details" v-if="currentInstructor">
-            <div class="instructor-photo">
-              <div class="initials-avatar" style="background-color: #DD3859; color: white;">
-                {{ getInitials(currentInstructor.name) }}
-              </div>
-            </div>
-            <div class="instructor-info">
-              <h3>{{ currentInstructor.name }}</h3>
-              <div class="instructor-metadata">
-                <div class="metadata-item">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M20 21V19C20 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M12 11C14.2091 11 16 9.20914 16 7C16 4.79086 14.2091 3 12 3C9.79086 3 8 4.79086 8 7C8 9.20914 9.79086 11 12 11Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                  <span>ID: {{ currentInstructor.id }}</span>
-                </div>
-                <div class="metadata-item">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M19 3H5C3.89543 3 3 3.89543 3 5V19C3 20.1046 3.89543 21 5 21H19C20.1046 21 21 20.1046 21 19V5C21 3.89543 20.1046 3 19 3Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M3 9H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M9 21V9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                  <span>{{ currentInstructor.department }}</span>
-                </div>
-                <div class="metadata-item" v-if="currentInstructor.subject">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                  <span>{{ currentInstructor.subject }} <span v-if="currentInstructor.section">({{ currentInstructor.section }})</span></span>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="attendance-status">
+  <div class="instructor-details" v-if="currentInstructor">
+    <div class="instructor-photo">
+      <div class="initials-avatar" style="background-color: #DD3859; color: white;">
+        {{ getInitials(currentInstructor.name) }}
+      </div>
+    </div>
+    <div class="instructor-info">
+      <h3>{{ currentInstructor.name }}</h3>
+      <div class="instructor-metadata">
+        <div class="metadata-item">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M20 21V19C20 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M12 11C14.2091 11 16 9.20914 16 7C16 4.79086 14.2091 3 12 3C9.79086 3 8 4.79086 8 7C8 9.20914 9.79086 11 12 11Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>ID: {{ currentInstructor.id }}</span>
+        </div>
+        <div class="metadata-item">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19 3H5C3.89543 3 3 3.89543 3 5V19C3 20.1046 3.89543 21 5 21H19C20.1046 21 21 20.1046 21 19V5C21 3.89543 20.1046 3 19 3Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M3 9H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M9 21V9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>{{ currentInstructor.department }}</span>
+        </div>
+        <div class="metadata-item" v-if="currentSchedule">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>
+            Course: {{ currentSchedule.course_name }} ({{ currentSchedule.course_code }})<br />
+            Section: {{ currentSchedule.section }}<br />
+            Time: {{ currentSchedule.start_time }} - {{ currentSchedule.end_time }}<br />
+            Laboratory Room: {{ currentSchedule.lab_room }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="attendance-status">
             <div class="status-badge-large" :class="currentInstructor && currentInstructor.status === 'out' ? 'time-in' : 'time-out'" @click="confirmAttendance">
               <div class="status-icon">
                 <svg v-if="currentInstructor && currentInstructor.status === 'out'" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -221,7 +233,7 @@
               </div>
             </div>
           </div>
-        </div>
+</div>
       </div>
     </div>
     
@@ -284,9 +296,15 @@
 </template>
 
 <script>
+/* eslint-disable */
 import DashboardLayout from '@/components/layout/DashboardLayout.vue';
 import AdminHeader from '@/components/admin/AdminHeader.vue';
 import { supabase } from '@/lib/supabaseClient';
+import { createClient } from '@supabase/supabase-js';
+const supabaseSchedules = createClient(
+  'https://yfiyhsazgjsxjmybsyar.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlmaXloc2F6Z2pzeGpteWJzeWFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI4ODE5MzEsImV4cCI6MjA1ODQ1NzkzMX0.j7oFwaqYvJq45jhPuQBPEtNU-itU-CRleOJcqm1fOOo'
+);
 
 export default {
   components: {
@@ -364,7 +382,7 @@ export default {
         },
         {
           id: "12345678",
-          name: 'Emily Davis',
+          name: 'Michel Bolo',
           department: 'College of Computer Studies',
           date: this.getCurrentDate(-1), // Yesterday
           scheduledStart: '09:00 AM',
@@ -372,7 +390,7 @@ export default {
           timeIn: '10:00 AM',
           timeOut: '04:00 PM',
           manualTimeOut: '04:35 PM',
-          status: 'out',
+          status: 'in',
           photoUrl: 'https://randomuser.me/api/portraits/women/4.jpg',
           subject: 'Data Structures',
           section: 'BSIT-3C',
@@ -542,6 +560,25 @@ export default {
   },
   methods: {
     // RFID related methods
+    convertTimeToMinutes(timeStr) {
+  if (!timeStr) return 0;
+
+  const [time, period] = timeStr.split(' '); // Split time and AM/PM
+  let [hours, minutes] = time.split(':').map(Number);
+
+  // Convert to 24-hour format
+  if (period === 'PM' && hours < 12) {
+    hours += 12;
+  } else if (period === 'AM' && hours === 12) {
+    hours = 0;
+  }
+
+  return hours * 60 + minutes; // Return total minutes since midnight
+},
+    simulateRfidScan(rfidValue) {
+    this.rfidValue = rfidValue; // Set the RFID value
+    this.processRfidScan(); // Trigger the scan process
+  },
     focusRfidInput() {
       this.$refs.rfidInput.focus();
     },
@@ -622,81 +659,127 @@ export default {
       
       return hours * 60 + minutes;
     },
-    processRfidScan() {
+    async fetchSchedules(instructorName, day) {
+    try {
+      // Query the schedules table with the provided parameters
+      const { data: schedules, error } = await supabaseSchedules
+        .from('schedules')
+        .select('*')
+        .eq('instructor_name', instructorName) // Match instructor name
+        .eq('day', day); // Match the day of the week
+
+      if (error) {
+        console.error('Error fetching schedules:', error.message);
+        this.showNotification('Failed to fetch schedules. Please try again.', 'error');
+        return [];
+      }
+
+      console.log('Schedules fetched:', schedules);
+      return schedules; // Return the fetched schedules
+    } catch (err) {
+      console.error('Unexpected error fetching schedules:', err);
+      this.showNotification('An unexpected error occurred. Please try again.', 'error');
+      return [];
+    }
+  },
+  async processRfidScan() {
   if (!this.rfidValue) return;
 
-  // Prevent multiple scans in quick succession
   const now = new Date().getTime();
   if (this.lastScanTime && (now - this.lastScanTime) < 1000) {
-    // Less than 1 second since last scan, ignore
     this.rfidValue = '';
     return;
   }
   this.lastScanTime = now;
 
-  // Play a beep sound to indicate scan
   this.playBeepSound();
 
-  // Find instructor by RFID ID using the findInstructorById method
-  const instructor = this.findInstructorById(this.rfidValue);
+  try {
+    const { data: instructor, error: instructorError } = await supabase
+      .from('rfid')
+      .select('*')
+      .eq('id', this.rfidValue)
+      .single();
 
-  if (instructor) {
-    const nowDate = new Date();
-    
-    // Check if instructor has recently checked out (within the last hour)
-    const recentCheckout = this.logEntries.find(entry => 
-        entry.name === instructor.name && 
-        entry.status === 'out' &&
-        entry.checkoutTime && 
-        (now - entry.checkoutTime) < 3600000 // 1 hour in milliseconds
-    );
-    
-    if (recentCheckout && instructor.status === 'out') {
-        // Calculate time remaining in the buffer period
-        const minutesElapsed = Math.floor((now - recentCheckout.checkoutTime) / 60000);
-        const minutesRemaining = 60 - minutesElapsed;
-        
-        this.showNotification(`${instructor.name} has logged out recently. Please wait ${minutesRemaining} minutes before logging in again.`, 'error');
-        this.rfidValue = '';
-        return;
+    if (instructorError || !instructor) {
+      console.error('Error fetching RFID data:', instructorError?.message || 'No instructor found');
+      this.showNotification('Unknown RFID card', 'error');
+      this.rfidValue = '';
+      return;
     }
-    
+
+    console.log('Instructor found:', instructor);
+
+    const currentDay = "Monday"; // Simulate the current day
+    const simulatedTime = "09:30"; // Simulate 9:30 AM
+    const [currentHour, currentMinute] = simulatedTime.split(":").map(Number);
+    const currentTimeInMinutes = currentHour * 60 + currentMinute;
+
+    const schedules = await this.fetchSchedules(instructor.name, currentDay);
+
+    if (!schedules || schedules.length === 0) {
+      this.showNotification('No scheduled classes found for this instructor.', 'error');
+      this.rfidValue = '';
+      return;
+    }
+
+    console.log('Schedules found:', schedules);
+
+    const matchingSchedule = schedules.find(schedule => {
+      const startTimeInMinutes = this.convertTimeToMinutes(schedule.start_time);
+      const endTimeInMinutes = this.convertTimeToMinutes(schedule.end_time);
+
+      return currentTimeInMinutes >= startTimeInMinutes && currentTimeInMinutes <= endTimeInMinutes;
+    });
+
+    if (!matchingSchedule) {
+      console.log('No matching schedule found for the simulated time.');
+      this.showNotification('No scheduled classes at this time.', 'error');
+      this.rfidValue = '';
+      return;
+    }
+
+    console.log('Matching schedule:', matchingSchedule);
+
+    // Store the matching schedule for display in the modal
+    this.currentSchedule = matchingSchedule;
+
     const logData = {
       rfid_id: instructor.id,
       name: instructor.name,
       department: instructor.department || null,
-      subject: instructor.subject || null,
-      section: instructor.section || null,
-      status: instructor.status === 'out' ? 'in' : 'out',
-      time_in: instructor.status === 'out' ? nowDate.toISOString() : null,
-      time_out: instructor.status === 'in' ? nowDate.toISOString() : null,
+      subject: matchingSchedule.course_name || null,
+      section: matchingSchedule.section || null,
+      status: 'in',
+      time_in: new Date().toISOString(),
+      time_out: null,
     };
 
-    // Insert log into Supabase
-    supabase
+    const { data: logEntry, error: logError } = await supabase
       .from('logs')
-      .insert([logData])
-      .then(({ data, error }) => {
-        if (error) {
-          console.error('Error inserting log:', error.message);
-          this.showNotification('Failed to log attendance. Please try again.', 'error');
-        } else {
-          console.log('Log inserted successfully:', data);
-          this.showNotification(`${instructor.name} has ${logData.status === 'in' ? 'checked in' : 'checked out'}`, 'success');
-        }
-      });
-      
+      .insert([logData]);
+
+    if (logError) {
+      console.error('Error inserting log:', logError.message);
+      this.showNotification('Failed to log attendance. Please try again.', 'error');
+      return;
+    }
+
+    console.log('Log inserted successfully:', logEntry);
+
+    this.showNotification(`${instructor.name} has checked in for ${matchingSchedule.course_name}`, 'success');
     this.currentInstructor = instructor;
     this.showModal = true;
-    
-    // Auto-confirm after 5 seconds if modal is not interacted with
+
     this.autoConfirmTimeout = setTimeout(() => {
       if (this.showModal && this.currentInstructor) {
         this.confirmAttendance();
       }
     }, 5000);
-  } else {
-    this.showNotification('Unknown RFID card', 'error');
+  } catch (err) {
+    console.error('Unexpected error during RFID scan:', err);
+    this.showNotification('An unexpected error occurred. Please try again.', 'error');
+  } finally {
     this.rfidValue = '';
   }
 },
@@ -1250,6 +1333,26 @@ export default {
   align-items: center;
   gap: 16px;
   margin-top: 24px;
+}
+.rfid-simulator {
+  margin-top: 16px;
+  text-align: center;
+}
+
+.simulate-rfid-btn {
+  padding: 10px 20px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.simulate-rfid-btn:hover {
+  background-color: #45a049;
 }
 
 .pagination-button {
