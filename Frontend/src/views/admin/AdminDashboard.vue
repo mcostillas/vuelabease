@@ -243,6 +243,7 @@ const supabaseSchedules = createClient(
     },
     data() {
       return {
+        simulatedDateTime: new Date('2025-05-05T17:00:00'), // Simulate May 5, 2025, 5:00 PM
         selectedDay: new Date().toLocaleDateString('en-US', { weekday: 'long' }), // Default to today's day
         rooms: [
           { id: '201', usage: 4 },
@@ -287,32 +288,55 @@ const supabaseSchedules = createClient(
     },
     methods: {
       checkRoomAvailability() {
-  const currentTime = new Date();
+  const currentTime = this.simulatedDateTime; // Use simulated time
   const currentHour = currentTime.getHours();
   const currentMinutes = currentTime.getMinutes();
-  const currentDay = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+  const currentDay = currentTime.toLocaleDateString('en-US', { weekday: 'long' });
+
+  const parseTimeToMinutes = (timeStr) => {
+    if (!timeStr) return 0; // Handle missing or invalid time strings
+
+    const [time, period] = timeStr.split(' '); // Split time and AM/PM
+    let [hours, minutes] = time.split(':').map(Number);
+
+    // Convert to 24-hour format
+    if (period === 'PM' && hours < 12) {
+      hours += 12;
+    } else if (period === 'AM' && hours === 12) {
+      hours = 0;
+    }
+
+    return hours * 60 + minutes; // Return total minutes since midnight
+  };
 
   // Group schedules by room for the current day
   const schedulesByRoom = this.scheduleData
-    .filter(schedule => schedule.day === currentDay || schedule.second_day === currentDay) // Check both `day` and `second_day`
+    .filter(schedule => {
+      const normalizedDay = schedule.day?.toLowerCase();
+      const normalizedSecondDay = schedule.second_day?.toLowerCase();
+      const normalizedCurrentDay = currentDay.toLowerCase();
+
+      return normalizedDay === normalizedCurrentDay || normalizedSecondDay === normalizedCurrentDay;
+    })
     .reduce((acc, schedule) => {
-      acc[schedule.lab_room] = acc[schedule.lab_room] || [];
-      acc[schedule.lab_room].push(schedule);
+      acc[schedule.labRoom] = acc[schedule.labRoom] || [];
+      acc[schedule.labRoom].push(schedule);
       return acc;
     }, {});
 
+  console.log('Schedules for Current Day:', schedulesByRoom);
+
   // Iterate through each room and check if it is in use
   this.roomAvailability = this.roomAvailability.map(room => {
-    const schedules = schedulesByRoom[room.name] || [];
+    const schedules = schedulesByRoom[room.name.replace('L', '')] || []; // Normalize room name for matching
 
     // Check if the current time falls within any schedule for this room
     const isInUse = schedules.some(schedule => {
-      const [startHour, startMinutes] = schedule.start_time.split(':').map(Number);
-      const [endHour, endMinutes] = schedule.end_time.split(':').map(Number);
-
-      const startTime = startHour * 60 + startMinutes;
-      const endTime = endHour * 60 + endMinutes;
+      const startTime = parseTimeToMinutes(schedule.startTime);
+      const endTime = parseTimeToMinutes(schedule.endTime);
       const currentTimeInMinutes = currentHour * 60 + currentMinutes;
+
+      console.log(`Room: ${room.name}, Start: ${startTime}, End: ${endTime}, Current: ${currentTimeInMinutes}`);
 
       return currentTimeInMinutes >= startTime && currentTimeInMinutes < endTime;
     });
@@ -323,6 +347,8 @@ const supabaseSchedules = createClient(
       status: isInUse ? 'In Use' : 'Available',
     };
   });
+
+  console.log('Room Availability After Update:', this.roomAvailability);
 },
       async fetchBookings() {
   try {
@@ -447,11 +473,17 @@ async fetchSchedules() {
     computed: {
       // Filter rooms based on usage level
       filteredScheduleData() {
-  // Filter schedules based on the selected day
-  const filtered = this.scheduleData.filter(schedule => schedule.day === this.selectedDay);
+  const currentDay = this.simulatedDateTime.toLocaleDateString('en-US', { weekday: 'long' });
 
-  // Sort the filtered schedules by date (newest first)
-  filtered.sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
+  // Filter schedules based on the simulated day
+  const filtered = this.scheduleData.filter(schedule => schedule.day === currentDay);
+
+  // Sort the filtered schedules by start time
+  filtered.sort((a, b) => {
+    const startTimeA = new Date(`1970-01-01T${a.startTime}`);
+    const startTimeB = new Date(`1970-01-01T${b.startTime}`);
+    return startTimeA - startTimeB;
+  });
 
   // Update the filtered count
   this.scheduleCount.filtered = filtered.length;

@@ -5,23 +5,17 @@
       <div class="schedule-section">
         <div class="filters">
           <div class="filter-group">
-            <label for="program-filter">Program:</label>
-            <select id="program-filter" v-model="selectedProgram" @change="applyFilters">
-              <option value="">All Programs</option>
-              <option value="BSIT">BS Information Technology</option>
-              <option value="BSCS">BS Computer Science</option>
-            </select>
-          </div>
-          <div class="filter-group">
-            <label for="year-filter">Year Level:</label>
-            <select id="year-filter" v-model="selectedYear" @change="applyFilters">
-              <option value="">All Years</option>
-              <option value="1">1st Year</option>
-              <option value="2">2nd Year</option>
-              <option value="3">3rd Year</option>
-              <option value="4">4th Year</option>
-            </select>
-          </div>
+  <label for="search-filter">Search:</label>
+  <input 
+    id="search-filter" 
+    type="text" 
+    v-model="searchQuery" 
+    @input="applyFilters" 
+    placeholder="Search by course name, instructor, or section" 
+    class="search-input"
+  />
+</div>
+          
           <div class="filter-group">
             <label for="section-filter">Section:</label>
             <select id="section-filter" v-model="selectedSection" @change="applyFilters">
@@ -35,32 +29,17 @@
             <label for="day-filter">Day:</label>
             <select id="day-filter" v-model="selectedDay">
               <option value="">All Days</option>
-              <option value="Mon">Monday</option>
-              <option value="Tue">Tuesday</option>
-              <option value="Wed">Wednesday</option>
-              <option value="Thu">Thursday</option>
-              <option value="Fri">Friday</option>
-              <option value="Sat">Saturday</option>
-              <option value="Sun">Sunday</option>
+              <option value="Monday">Monday</option>
+              <option value="Tuesday">Tuesday</option>
+              <option value="Wednesday">Wednesday</option>
+              <option value="Thursday">Thursday</option>
+              <option value="Friday">Friday</option>
+              <option value="Saturday">Saturday</option>
+              <option value="Sunday">Sunday</option>
             </select>
           </div>
-          <div class="filter-group">
-            <label for="time-filter">Time:</label>
-            <select id="time-filter" v-model="selectedTimeOfDay">
-              <option value="">All Times</option>
-              <option value="morning">Morning (7:30 AM - 12:00 PM)</option>
-              <option value="afternoon">Afternoon (12:00 PM - 4:00 PM)</option>
-            </select>
-          </div>
-          <div class="filter-group">
-            <label for="date-filter">Date Range:</label>
-            <select id="date-filter" v-model="dateFilter" @change="applyFilters">
-              <option value="all">All Time</option>
-              <option value="week">This Week</option>
-              <option value="month">This Month</option>
-              <option value="semester">This Semester</option>
-            </select>
-          </div>
+          
+        
           <div class="filter-group" v-if="dateFilter === 'semester'">
             <label for="semester-filter">Select Semester:</label>
             <select id="semester-filter" v-model="selectedSemester" @change="applyFilters">
@@ -155,6 +134,7 @@ export default {
   },
   data() {
     return {
+      searchQuery: '',
       selectedProgram: '',
       selectedYear: '',
       selectedSection: '',
@@ -197,105 +177,103 @@ export default {
       return Array.from(sections).sort()
     },
     filteredEvents() {
-      let filtered = [...this.scheduleEvents]
-      
-      // Filter by program
-      if (this.selectedProgram) {
+  let filtered = [...this.scheduleEvents];
+
+  // Filter by search query
+  if (this.searchQuery) {
+    const query = this.searchQuery.toLowerCase();
+    filtered = filtered.filter(event => {
+      return (
+        (event.courseName && event.courseName.toLowerCase().includes(query)) ||
+        (event.instructorName && event.instructorName.toLowerCase().includes(query)) ||
+        (event.section && event.section.toLowerCase().includes(query))
+      );
+    });
+  }
+
+  // Filter by year
+  if (this.selectedYear) {
+    filtered = filtered.filter(event => {
+      if (!event.section) return false;
+      const sectionParts = event.section.split('-');
+      const yearSection = sectionParts[1];
+      return yearSection && yearSection.charAt(0) === this.selectedYear;
+    });
+  }
+
+  // Filter by section
+  if (this.selectedSection) {
+    filtered = filtered.filter(event => event.section === this.selectedSection);
+  }
+
+  // Filter by day
+  if (this.selectedDay) {
+    filtered = filtered.filter(event => event.day === this.selectedDay);
+  }
+
+  // Filter by time of day
+  if (this.selectedTimeOfDay) {
+    filtered = filtered.filter(event => {
+      const startHour = parseInt(event.startTime.split(':')[0]);
+
+      if (this.selectedTimeOfDay === 'morning') {
+        return startHour >= 7 && startHour < 12;
+      } else if (this.selectedTimeOfDay === 'afternoon') {
+        return startHour >= 12 && startHour < 16;
+      }
+
+      return true;
+    });
+  }
+
+  // Filter by date range
+  if (this.dateFilter !== 'all') {
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const currentMonth = today.getMonth();
+    const currentDate = today.getDate();
+    const currentDay = today.getDay(); // 0 = Sunday, 6 = Saturday
+
+    // Calculate start of week (Sunday)
+    const startOfWeek = new Date(currentYear, currentMonth, currentDate - currentDay);
+
+    // Calculate start of month
+    const startOfMonth = new Date(currentYear, currentMonth, 1);
+
+    // Filter based on selected date range
+    if (this.dateFilter === 'week') {
+      filtered = filtered.filter(event => {
+        const eventDate = new Date(event.date);
+        return eventDate >= startOfWeek;
+      });
+    } else if (this.dateFilter === 'month') {
+      filtered = filtered.filter(event => {
+        const eventDate = new Date(event.date);
+        return eventDate >= startOfMonth;
+      });
+    } else if (this.dateFilter === 'semester') {
+      // Implement semester filtering based on academic calendar
+      if (this.selectedSemester === 'current') {
+        const semesterStart = new Date('2025-01-01');
+        const semesterEnd = new Date('2025-05-31');
+
         filtered = filtered.filter(event => {
-          if (!event.section) return false
-          return event.section.startsWith(this.selectedProgram)
-        })
+          const eventDate = new Date(event.date);
+          return eventDate >= semesterStart && eventDate <= semesterEnd;
+        });
       }
-      
-      // Filter by year
-      if (this.selectedYear) {
-        filtered = filtered.filter(event => {
-          if (!event.section) return false
-          const sectionParts = event.section.split('-')
-          const yearSection = sectionParts[1]
-          return yearSection && yearSection.charAt(0) === this.selectedYear
-        })
-      }
-      
-      // Filter by section
-      if (this.selectedSection) {
-        filtered = filtered.filter(event => event.section === this.selectedSection)
-      }
-      
-      // Filter by day
-      if (this.selectedDay) {
-        filtered = filtered.filter(event => {
-          const date = new Date(event.date)
-          const day = date.toLocaleDateString('en-US', { weekday: 'short' })
-          return day.startsWith(this.selectedDay)
-        })
-      }
-      
-      // Filter by time of day
-      if (this.selectedTimeOfDay) {
-        filtered = filtered.filter(event => {
-          const startHour = parseInt(event.startTime.split(':')[0])
-          
-          if (this.selectedTimeOfDay === 'morning') {
-            return startHour >= 7 && startHour < 12
-          } else if (this.selectedTimeOfDay === 'afternoon') {
-            return startHour >= 12 && startHour < 16
-          }
-          
-          return true
-        })
-      }
-      
-      // Filter by date range
-      if (this.dateFilter !== 'all') {
-        const today = new Date()
-        const currentYear = today.getFullYear()
-        const currentMonth = today.getMonth()
-        const currentDate = today.getDate()
-        const currentDay = today.getDay() // 0 = Sunday, 6 = Saturday
-        
-        // Calculate start of week (Sunday)
-        const startOfWeek = new Date(currentYear, currentMonth, currentDate - currentDay)
-        
-        // Calculate start of month
-        const startOfMonth = new Date(currentYear, currentMonth, 1)
-        
-        // Filter based on selected date range
-        if (this.dateFilter === 'week') {
-          filtered = filtered.filter(event => {
-            const eventDate = new Date(event.date)
-            return eventDate >= startOfWeek
-          })
-        } else if (this.dateFilter === 'month') {
-          filtered = filtered.filter(event => {
-            const eventDate = new Date(event.date)
-            return eventDate >= startOfMonth
-          })
-        } else if (this.dateFilter === 'semester') {
-          // Implement semester filtering based on academic calendar
-          // This is a simplified version
-          if (this.selectedSemester === 'current') {
-            // Assume current semester is from January to May 2025
-            const semesterStart = new Date('2025-01-01')
-            const semesterEnd = new Date('2025-05-31')
-            
-            filtered = filtered.filter(event => {
-              const eventDate = new Date(event.date)
-              return eventDate >= semesterStart && eventDate <= semesterEnd
-            })
-          }
-        }
-      }
-      
-      // Sort by date and time
-      filtered.sort((a, b) => {
-        const dateA = new Date(a.date + 'T' + a.startTime)
-        const dateB = new Date(b.date + 'T' + b.startTime)
-        return dateA - dateB
-      })
-      
-      return filtered
-    },
+    }
+  }
+
+  // Sort by date and time
+  filtered.sort((a, b) => {
+    const dateA = new Date(a.date + 'T' + a.startTime);
+    const dateB = new Date(b.date + 'T' + b.startTime);
+    return dateA - dateB;
+  });
+
+  return filtered;
+},
     paginatedEvents() {
       const start = (this.currentPage - 1) * this.itemsPerPage
       const end = start + this.itemsPerPage
@@ -520,6 +498,32 @@ export default {
 .pagination-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+.search-input {
+  padding: 8px 12px;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #1E293B;
+  background-color: white;
+  font-family: 'Poppins', sans-serif;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  width: 200px;
+}
+
+.search-input::placeholder {
+  color: #94A3B8; /* Light gray for placeholder text */
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #DD3859; /* Highlight border on focus */
+  box-shadow: 0 0 0 3px rgba(221, 56, 89, 0.2); /* Subtle shadow effect */
+  
+}
+
+.search-input:hover {
+  border-color: #DD3859; /* Highlight border on hover */
 }
 
 .page-info {
