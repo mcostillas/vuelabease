@@ -357,26 +357,27 @@
         </section>
 
         <section class="form-section">
-          <h2>LABORATORY SELECTION</h2>
-          <div class="form-group">
-            <label for="room">Choose a Laboratory</label>
-            <div class="input-wrapper select-wrapper">
-              <select id="room" v-model="selectedRoom" required>
-                <option value="" disabled selected>Choose a laboratory</option>
-                <option
-                  v-for="room in filteredRooms"
-                  :key="room.name"
-                  :value="room.name"
-                >
-                  {{ room.name }}
-                </option>
-              </select>
-              <span class="input-icon">
-                <ComputerDesktopIcon class="icon-primary" />
-              </span>
-            </div>
-          </div>
-        </section>
+  <h2>LABORATORY SELECTION</h2>
+  <div class="form-group">
+    <label for="room">Choose a Laboratory</label>
+    <div class="input-wrapper select-wrapper">
+      <select id="room" v-model="selectedRoom" required>
+        <option value="" disabled selected>Choose a laboratory</option>
+        <option
+          v-for="room in filteredRooms"
+          :key="room.name"
+          :value="room.name"
+        >
+          {{ room.name }}
+        </option>
+      </select>
+      <span class="input-icon">
+        <ComputerDesktopIcon class="icon-primary" />
+      </span>
+    </div>
+    
+  </div>
+</section>
 
         <section class="form-section">
           <h2>FACILITY</h2>
@@ -750,6 +751,7 @@ export default {
       pendingBookings: [], // Bookings that are pending approval
       filteredScheduleData: [], // Schedules filtered by the selected day
       selectedDayOfWeek: null, 
+     
       // Weekly schedule filter
       weeklyScheduleFilter: {
         section: "all",
@@ -877,13 +879,13 @@ export default {
       // This can accommodate any time slot combination from the scheduling team
       weeklyTimeBlocks: [],
       availableRooms: [
-        { name: "L201", availableDates: ["2025-04-22", "2025-04-23"] },
-        { name: "L202", availableDates: ["2025-04-22", "2025-04-24"] },
-        { name: "L203", availableDates: ["2025-04-23", "2025-04-25"] },
-        { name: "L204", availableDates: ["2025-04-22", "2025-04-23"] },
-        { name: "L205", availableDates: ["2025-04-24", "2025-04-25"] },
-        { name: "IOT", availableDates: ["2025-04-22", "2025-04-23"] },
-        { name: "Open Lab", availableDates: ["2025-04-22", "2025-04-23"] },
+      { name: "L201" },
+      { name: "L202" },
+      { name: "L203" },
+      { name: "L204" },
+      { name: "L205" },
+      { name: "IOT" },
+      { name: "Open Lab" },
       ],
       filteredRooms: [],
       calendarDays: [],
@@ -979,6 +981,20 @@ export default {
     // Fetch pending bookings
     this.fetchPendingBookings();
   },
+  watch: {
+    startTime(newValue, oldValue) {
+      console.log("Start Time changed:", { oldValue, newValue });
+      this.filterAvailableRooms();
+    },
+    endTime(newValue, oldValue) {
+      console.log("End Time changed:", { oldValue, newValue });
+      this.filterAvailableRooms();
+    },
+    selectedDayOfWeek(newValue, oldValue) {
+      console.log("Selected Day of Week changed:", { oldValue, newValue });
+      this.filterAvailableRooms();
+    },
+  },
   methods: {
     handleCellClick(timeSlot, day) {
     const hasSchedule = this.getScheduleForTimeSlotAndDay(timeSlot, day).length > 0;
@@ -1067,9 +1083,14 @@ export default {
   const [hours, minutes] = time.split(":").map(Number);
   return hours * 60 + minutes;
 },
+
 async filterAvailableRooms() {
-    if (!this.requestDate || !this.startTime || !this.endTime) {
+  console.log("Selected Day of Week:", this.selectedDayOfWeek);
+  console.log("Start Time:", this.startTime);
+  console.log("End Time:", this.endTime);
+    if (!this.selectedDayOfWeek || !this.startTime || !this.endTime) {
       this.filteredRooms = []; // Clear the dropdown if no date or time is selected
+      
       return;
     }
 
@@ -1084,31 +1105,40 @@ async filterAvailableRooms() {
 
       console.log("Fetched schedules:", data);
 
-      // Filter out rooms that are already booked during the selected time range
       const unavailableRooms = data
-        .filter((schedule) => {
-          const scheduleStart = this.convertTimeToMinutes(schedule.start_time);
-          const scheduleEnd = this.convertTimeToMinutes(schedule.end_time);
-          const bookingStart = this.convertTimeToMinutes(this.startTime);
-          const bookingEnd = this.convertTimeToMinutes(this.endTime);
+  .filter((schedule) => {
+    const scheduleStart = this.convertTimeToMinutes(schedule.start_time);
+    const scheduleEnd = this.convertTimeToMinutes(schedule.end_time);
+    const bookingStart = this.convertTimeToMinutes(this.startTime);
+    const bookingEnd = this.convertTimeToMinutes(this.endTime);
 
-          // Check if the selected time range overlaps with the schedule
-          return (
-            (bookingStart >= scheduleStart && bookingStart < scheduleEnd) || // Booking starts during the schedule
-            (bookingEnd > scheduleStart && bookingEnd <= scheduleEnd) || // Booking ends during the schedule
-            (bookingStart <= scheduleStart && bookingEnd >= scheduleEnd) // Booking fully overlaps the schedule
-          );
-        })
-        .map((schedule) => schedule.lab_room);
+    console.log("Schedule:", {
+      labRoom: schedule.lab_room,
+      scheduleStart,
+      scheduleEnd,
+      bookingStart,
+      bookingEnd,
+    });
 
-      console.log("Unavailable rooms:", unavailableRooms);
+    // Check if the selected time range overlaps with the schedule
+    return (
+      (bookingStart >= scheduleStart && bookingStart < scheduleEnd) || // Booking starts during the schedule
+      (bookingEnd > scheduleStart && bookingEnd <= scheduleEnd) || // Booking ends during the schedule
+      (bookingStart <= scheduleStart && bookingEnd >= scheduleEnd) // Booking fully overlaps the schedule
+    );
+  })
+  .map((schedule) => schedule.lab_room);
 
-      // Filter available rooms
-      this.filteredRooms = this.availableRooms.filter(
-        (room) => !unavailableRooms.includes(room.name)
-      );
+  console.log("Available Rooms:", this.availableRooms);
+console.log("Unavailable Rooms:", unavailableRooms);
 
-      console.log("Filtered available rooms:", this.filteredRooms);
+this.filteredRooms = this.availableRooms.filter((room) => {
+  const isUnavailable = unavailableRooms.includes(room.name);
+  console.log(`Room: ${room.name}, Is Unavailable: ${isUnavailable}`);
+  return !isUnavailable;
+});
+
+console.log("Filtered Available Rooms:", this.filteredRooms);
     } catch (error) {
       console.error("Error fetching room schedules:", error.message);
       this.errorMessage = "Failed to fetch room availability.";
@@ -1360,16 +1390,11 @@ async filterAvailableRooms() {
         return [];
       }
 
-      console.log("Checking schedules for timeSlot:", timeSlot, "and day:", day);
+      
 
       // Filter schedules for the given time slot
       const filteredSchedules = this.filteredSchedulesForDay.filter((schedule) => {
-        console.log("Raw time values:", {
-          timeSlotValue: timeSlot.value,
-          scheduleStartTime: schedule.start_time,
-          scheduleEndTime: schedule.end_time,
-        });
-
+        
         // Convert times to minutes for comparison
         const scheduleStart = this.convertTimeToMinutes(schedule.start_time);
         const scheduleEnd = this.convertTimeToMinutes(schedule.end_time);
@@ -1378,12 +1403,7 @@ async filterAvailableRooms() {
         // Check if the time slot falls within the schedule's time range
         const isTimeMatch = slotStart >= scheduleStart && slotStart < scheduleEnd;
 
-        console.log("Time comparison:", {
-          slotStart,
-          scheduleStart,
-          scheduleEnd,
-          isTimeMatch,
-        });
+     
 
         return isTimeMatch;
       });
@@ -1411,13 +1431,7 @@ async filterAvailableRooms() {
       // Combine regular schedules and pending bookings
       const combinedSchedules = [...filteredSchedules, ...pendingBookingsForSlot];
 
-      console.log("Combined schedules for timeSlot and day:", {
-        timeSlot,
-        day,
-        regularSchedules: filteredSchedules,
-        pendingBookings: pendingBookingsForSlot,
-        combinedSchedules
-      });
+      
 
       return combinedSchedules;
     },
@@ -1853,6 +1867,7 @@ async filterAvailableRooms() {
 
         console.log("Booking submitted:", data);
         this.showSuccessModal = true;
+        console.log("showSuccessModal:", this.showSuccessModal);
         this.resetForm();
       } catch (error) {
         console.error("Error submitting booking:", error.message);
@@ -1875,7 +1890,7 @@ async filterAvailableRooms() {
       this.selectedRoom = "";
       this.selectedTimeSlot = "";
       this.errorMessage = "";
-      this.showSuccessModal = false;
+      
       
       // Reset requester form
       this.resetRequesterForm();

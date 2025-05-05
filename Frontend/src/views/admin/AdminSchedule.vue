@@ -324,15 +324,20 @@ export default {
       return day
     },
     formatEventTime(start, end) {
-      // Format time from 24-hour to 12-hour format
-      const formatTime = (timeStr) => {
-        const [hours, minutes] = timeStr.split(':')
-        const hour = parseInt(hours)
-        return `${hour % 12 || 12}:${minutes} ${hour >= 12 ? 'PM' : 'AM'}`
-      }
-      
-      return `${formatTime(start)} - ${formatTime(end)}`
-    },
+  // Format time from 24-hour to 12-hour format
+  const formatTime = (timeStr) => {
+    if (timeStr.toLowerCase().includes("am") || timeStr.toLowerCase().includes("pm")) {
+      // If the time already includes AM/PM, return it as is
+      return timeStr;
+    }
+
+    const [hours, minutes] = timeStr.split(":");
+    const hour = parseInt(hours);
+    return `${hour % 12 || 12}:${minutes} ${hour >= 12 ? "PM" : "AM"}`;
+  };
+
+  return `${formatTime(start)} - ${formatTime(end)}`;
+},
     applyFilters() {
       this.currentPage = 1
     },
