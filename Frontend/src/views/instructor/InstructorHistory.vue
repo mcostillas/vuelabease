@@ -241,18 +241,38 @@ export default {
 },
   methods: {
     async fetchBookings() {
-  try {
-    const { data, error } = await supabase
-      .from("bookings")
-      .select("*")
-      .order("created_at", { ascending: false }); // Sort by created_at in descending order
-
-    if (error) throw error;
-    this.bookings = data;
-  } catch (error) {
-    console.error("Error fetching bookings:", error.message);
-  }
-},
+      try {
+        // Get the current instructor's email from localStorage
+        const instructorEmail = localStorage.getItem('email');
+        
+        if (!instructorEmail) {
+          console.error('Instructor email not found in localStorage');
+          return;
+        }
+        
+        console.log('Fetching booking history for instructor:', instructorEmail);
+        
+        // Get ALL bookings from the database
+        const { data: allBookings, error: allError } = await supabase
+          .from("bookings")
+          .select("*")
+          .order("created_at", { ascending: false });
+          
+        if (allError) {
+          console.error('Error fetching all bookings:', allError);
+          return;
+        }
+        
+        console.log('ALL bookings in database:', allBookings);
+        console.log('Booking person fields:', allBookings.map(b => b.person));
+        
+        // For demo purposes, show all bookings
+        console.log('Showing all bookings for demo purposes');
+        this.bookings = allBookings;
+      } catch (error) {
+        console.error("Error fetching bookings:", error.message);
+      }
+    },
     applyFilters() {
       this.currentPage = 1;
     },

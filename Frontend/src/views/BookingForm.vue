@@ -342,6 +342,9 @@
     <div v-if="showBookingModal" class="direct-modal-overlay">
       <div class="direct-modal-container">
         <div class="direct-modal-header">
+          <button class="modal-back-button" @click="backToRequesterModal" aria-label="Back">
+            <ArrowLeftIcon class="icon-primary" />
+          </button>
           <h3>Laboratory Booking Form</h3>
           <button class="direct-close-button" @click="closeBookingModal" aria-label="Close">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -2013,8 +2016,8 @@ async fetchSchedules() {
     },
     async handleBooking() {
       try {
+        // Create booking data object
         const bookingData = {
-
           department: this.department,
           club: this.club,
           person: this.person,
@@ -2030,22 +2033,78 @@ async fetchSchedules() {
           selectedRoom: this.selectedRoom,
           status: "pending",
           notification_sent: false,
+          // Note: timeRange is calculated when needed but not stored directly in the database
         };
+        
+        // Store the instructor's email in the 'person' field since instructorEmail column doesn't exist
+        console.log('Requester type:', this.requesterType);
+        console.log('Contact field value:', this.contact);
+        
+        // If this is an instructor booking, store their email in the person field
+        if (this.requesterType === 'instructor') {
+          let instructorEmail;
+          if (this.contact && this.contact.includes('@')) {
+            instructorEmail = this.contact;
+          } else {
+            // Use email from localStorage or a default
+            instructorEmail = localStorage.getItem('email') || 'mcostillas_220000000711@uic.edu.ph';
+          }
+          
+          // Store instructor email in the person field (which exists in the database)
+          bookingData.person = instructorEmail;
+          console.log('Storing instructor email in person field:', instructorEmail);
+        }
+        
+        console.log('Final booking data:', bookingData);
 
+        console.log('Submitting booking with data:', bookingData);
+        
+        // Insert the booking into the database
         const { data, error } = await supabaseBookings
           .from("bookings")
           .insert([bookingData]);
+          
         if (error) throw error;
-
-        console.log("Booking submitted:", data);
+        
+        console.log("Booking submitted successfully:", data);
+        
+        // Show success modal
         this.showSuccessModal = true;
         console.log("showSuccessModal:", this.showSuccessModal);
+        
+        // Reset form
         this.resetForm();
       } catch (error) {
         console.error("Error submitting booking:", error.message);
-        this.errorMessage = "Failed to submit booking.";
+        
+        // Provide more specific error messages based on the error
+        if (error.message.includes('duplicate key')) {
+          this.errorMessage = "You already have a booking for this time slot.";
+        } else if (error.message.includes('violates foreign key constraint')) {
+          this.errorMessage = "Invalid reference to another record. Please check your form inputs.";
+        } else if (error.message.includes('violates not-null constraint')) {
+          this.errorMessage = "Missing required field. Please fill out all required fields.";
+        } else if (error.message.includes('network')) {
+          this.errorMessage = "Network error. Please check your internet connection and try again.";
+        } else if (error.message.includes('timeout')) {
+          this.errorMessage = "Request timed out. Please try again later.";
+        } else if (error.message.includes('permission')) {
+          this.errorMessage = "You don't have permission to make this booking. Please contact an administrator.";
+        } else {
+          // If we can't determine a specific error, show the actual error message
+          this.errorMessage = `Failed to submit booking: ${error.message}`;
+        }
+        
+        // Show the error message to the user
+        this.$nextTick(() => {
+          const errorElement = document.querySelector('.error-message');
+          if (errorElement) {
+            errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        });
       }
     },
+    
     resetForm() {
       this.department = "";
       this.club = "";
@@ -2062,7 +2121,6 @@ async fetchSchedules() {
       this.selectedRoom = "";
       this.selectedTimeSlot = "";
       this.errorMessage = "";
-      
       
       // Reset requester form
       this.resetRequesterForm();
@@ -2191,6 +2249,12 @@ async fetchSchedules() {
     // Close the booking modal
     closeBookingModal() {
       this.showBookingModal = false;
+      this.errorMessage = ""; // Clear any error messages
+    },
+    // Go back to requester info modal
+    backToRequesterModal() {
+      this.showBookingModal = false;
+      this.showRequesterModal = true;
       this.errorMessage = ""; // Clear any error messages
     },
     // ... methods ...
@@ -2453,6 +2517,22 @@ body {
   align-items: center;
   padding: 1.5rem;
   border-bottom: 1px solid #eee;
+}
+
+.modal-back-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  margin-right: 1rem;
+  transition: transform 0.2s ease;
+}
+
+.modal-back-button:hover {
+  transform: translateX(-2px);
 }
 
 .direct-modal-header h3 {

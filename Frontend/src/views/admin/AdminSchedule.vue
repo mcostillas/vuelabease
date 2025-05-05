@@ -145,6 +145,7 @@ export default {
       currentPage: 1,
       itemsPerPage: 10,
       scheduleEvents: [], // Dynamically fetched data will be stored here
+      isLoading: false,
     }
   },
   

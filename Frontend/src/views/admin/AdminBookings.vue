@@ -22,17 +22,45 @@
             </select>
           </div>
           <div class="filter-group">
-            <label for="date-filter">Date Range:</label>
+            <label for="status-filter">Status:</label>
             <select
-              id="date-filter"
-              v-model="dateFilter"
+              id="status-filter"
+              v-model="statusFilter"
               @change="applyFilters"
             >
-              <option value="all">All Time</option>
-              <option value="today">Today</option>
-              <option value="week">This Week</option>
-              <option value="month">This Month</option>
+              <option value="">All Statuses</option>
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
             </select>
+          </div>
+          <div class="search-group">
+            <label for="search-input">Search:</label>
+            <div class="search-input-container">
+              <input
+                type="text"
+                id="search-input"
+                v-model="searchQuery"
+                placeholder="Search by event, person, or department..."
+                @input="applyFilters"
+              />
+              <svg
+                class="search-icon"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </div>
           </div>
         </div>
 
@@ -67,10 +95,22 @@
                     </span>
                   </div>
                   <div class="actions">
-                    <button
-                          class="action-btn approve-btn"
-                          @click="openApprovalPrompt(booking.id)"
+                    <div class="action-menu">
+                      <button class="menu-trigger" @click="toggleActionMenu(booking.id)">
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
                         >
+                          <circle cx="12" cy="6" r="2" fill="currentColor" />
+                          <circle cx="12" cy="12" r="2" fill="currentColor" />
+                          <circle cx="12" cy="18" r="2" fill="currentColor" />
+                        </svg>
+                      </button>
+                      <div class="action-dropdown" v-if="activeActionMenu === booking.id">
+                        <button class="action-btn approve-btn" @click="openApprovalPrompt(booking.id)">
                           <svg
                             width="16"
                             height="16"
@@ -88,10 +128,7 @@
                           </svg>
                           <span>Approve</span>
                         </button>
-                        <button
-                          class="action-btn reject-btn"
-                          @click="openRejectPrompt(booking.id)"
-                        >
+                        <button class="action-btn reject-btn" @click="openRejectPrompt(booking.id)">
                           <svg
                             width="16"
                             height="16"
@@ -116,41 +153,40 @@
                           </svg>
                           <span>Reject</span>
                         </button>
-                        <button
-  class="action-btn details-btn"
-  @click="openBookingDetailsModal(booking)"
->
-  <svg
-    width="16"
-    height="16"
-    viewBox="0 0 24 24"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path
-      d="M12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20Z"
-      stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    />
-    <path
-      d="M12 8V12"
-      stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    />
-    <path
-      d="M12 16H12.01"
-      stroke="currentColor"
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    />
-  </svg>
-  <span>Details</span>
-</button>
+                        <button class="action-btn details-btn" @click="openBookingDetailsModal(booking)">
+                          <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              d="M12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C7.58172 4 4 7.58172 4 12C4 16.4183 7.58172 20 12 20Z"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                            />
+                            <path
+                              d="M12 8V12"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                            />
+                            <path
+                              d="M12 16H12.01"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                            />
+                          </svg>
+                          <span>Details</span>
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -217,75 +253,75 @@
     </div>
     <!-- Booking Details Modal -->
     <div v-if="showBookingDetailsModal" class="modal-overlay">
-  <div class="modal booking-details-modal">
-    <div class="modal-header">
-      <h3>Booking Details</h3>
-      <button class="close-button" @click="closeBookingDetailsModal">
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M18 6L6 18"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-          <path
-            d="M6 6L18 18"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-        </svg>
-      </button>
-    </div>
-    <div class="modal-content">
-      <div class="detail-item">
-        <div class="detail-label">Event: </div>
-        <div class="detail-value">{{ selectedBookingDetails.event }}</div>
-      </div>
-      <div class="detail-item">
-        <div class="detail-label">Person Responsible: </div>
-        <div class="detail-value">{{ selectedBookingDetails.person }}</div>
-      </div>
-      <div class="detail-item">
-        <div class="detail-label">Department: </div>
-        <div class="detail-value">{{ selectedBookingDetails.department }}</div>
-      </div>
-      <div class="detail-item">
-        <div class="detail-label">Date: </div>
-        <div class="detail-value">{{ formatDate(selectedBookingDetails.requestDate) }}</div>
-      </div>
-      <div class="detail-item">
-        <div class="detail-label">Time: </div>
-        <div class="detail-value">
-          {{ formatTime(selectedBookingDetails.startTime) }} - {{ formatTime(selectedBookingDetails.endTime) }}
+      <div class="modal booking-details-modal">
+        <div class="modal-header">
+          <h3>Booking Details</h3>
+          <button class="close-button" @click="closeBookingDetailsModal">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M18 6L6 18"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M6 6L18 18"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </button>
+        </div>
+        <div class="modal-content">
+          <div class="detail-item">
+            <div class="detail-label">Event: </div>
+            <div class="detail-value">{{ selectedBookingDetails.event }}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Person Responsible: </div>
+            <div class="detail-value">{{ selectedBookingDetails.person }}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Department: </div>
+            <div class="detail-value">{{ selectedBookingDetails.department }}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Date: </div>
+            <div class="detail-value">{{ formatDate(selectedBookingDetails.requestDate) }}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Time: </div>
+            <div class="detail-value">
+              {{ formatTime(selectedBookingDetails.startTime) }} - {{ formatTime(selectedBookingDetails.endTime) }}
+            </div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Requester: </div>
+            <div class="detail-value">{{ selectedBookingDetails.person }}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Selected Laboratory: </div>
+            <div class="detail-value">{{ selectedBookingDetails.selectedRoom }}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Status: </div>
+            <div class="detail-value">{{ capitalizeFirstLetter(selectedBookingDetails.status) }}</div>
+          </div>
+        </div>
+        <div class="form-actions center">
+          <button type="button" class="cancel-btn" @click="closeBookingDetailsModal">Close</button>
         </div>
       </div>
-      <div class="detail-item">
-        <div class="detail-label">Requester: </div>
-        <div class="detail-value">{{ selectedBookingDetails.person }}</div>
-      </div>
-      <div class="detail-item">
-        <div class="detail-label">Selected Laboratory: </div>
-        <div class="detail-value">{{ selectedBookingDetails.selectedRoom }}</div>
-      </div>
-      <div class="detail-item">
-        <div class="detail-label">Status: </div>
-        <div class="detail-value">{{ capitalizeFirstLetter(selectedBookingDetails.status) }}</div>
-      </div>
     </div>
-    <div class="form-actions center">
-      <button type="button" class="cancel-btn" @click="closeBookingDetailsModal">Close</button>
-    </div>
-  </div>
-</div>
     <!-- Approval Prompt Modal -->
     <div v-if="showApprovalPrompt" class="modal-overlay">
       <div class="modal confirm-approval">
@@ -438,16 +474,27 @@ export default {
   },
   setup() {
     const activeActionMenu = ref(null);
+    
+    // Toggle action menu function
+    const toggleActionMenu = (bookingId) => {
+      if (activeActionMenu.value === bookingId) {
+        activeActionMenu.value = null;
+      } else {
+        activeActionMenu.value = bookingId;
+      }
+    };
 
     return {
       activeActionMenu,
+      toggleActionMenu,
     };
   },
   data() {
     return {
       // Selected department filter
       selectedDepartment: "",
-      dateFilter: "all", // Selected date range filter
+      searchQuery: "", // Search query for filtering bookings
+      statusFilter: "", // Status filter for bookings
       currentPage: 1, // Current page for pagination
       itemsPerPage: 10, // Number of items per page
       bookings: [], // Array to store bookings fetched from Supabase
@@ -460,14 +507,25 @@ export default {
     };
   },
   computed: {
-    // Filtered bookings based on department, date range, and unanswered status
+    // Filtered bookings based on department, search query, status, and unanswered status
     filteredBookings() {
       let filtered = [...this.bookings];
 
-      // Filter by unanswered bookings (status = 'pending' and answered = false)
-      filtered = filtered.filter(
-        (booking) => booking.status === "pending" && booking.answered === false
-      );
+      // If no status filter is selected, only show pending unanswered bookings by default
+      if (!this.statusFilter) {
+        filtered = filtered.filter(
+          (booking) => booking.status === "pending" && booking.answered === false
+        );
+      } else {
+        // Otherwise, filter by the selected status
+        filtered = filtered.filter((booking) => {
+          if (this.statusFilter === "pending") {
+            return booking.status === "pending" && booking.answered === false;
+          } else {
+            return booking.status === this.statusFilter;
+          }
+        });
+      }
 
       // Filter by department
       if (this.selectedDepartment) {
@@ -476,33 +534,16 @@ export default {
         );
       }
 
-      // Filter by date range
-      if (this.dateFilter !== "all") {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        if (this.dateFilter === "today") {
-          filtered = filtered.filter((booking) => {
-            const bookingDate = new Date(booking.request_date);
-            bookingDate.setHours(0, 0, 0, 0);
-            return bookingDate.getTime() === today.getTime();
-          });
-        } else if (this.dateFilter === "week") {
-          const weekStart = new Date(today);
-          weekStart.setDate(today.getDate() - today.getDay());
-
-          filtered = filtered.filter((booking) => {
-            const bookingDate = new Date(booking.request_date);
-            return bookingDate >= weekStart;
-          });
-        } else if (this.dateFilter === "month") {
-          const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-
-          filtered = filtered.filter((booking) => {
-            const bookingDate = new Date(booking.request_date);
-            return bookingDate >= monthStart;
-          });
-        }
+      // Filter by search query
+      if (this.searchQuery.trim() !== "") {
+        const query = this.searchQuery.toLowerCase().trim();
+        filtered = filtered.filter((booking) => {
+          return (
+            (booking.event && booking.event.toLowerCase().includes(query)) ||
+            (booking.person && booking.person.toLowerCase().includes(query)) ||
+            (booking.department && booking.department.toLowerCase().includes(query))
+          );
+        });
       }
 
       return filtered;
@@ -590,21 +631,24 @@ closeBookingDetailsModal() {
         return;
       }
 
+      console.log('Retrieved booking details for notification:', booking);
+
       // Now update the booking status and notedBy column
       supabase
         .from("bookings")
         .update({
           status: newStatus,
           remarks: reason,
-          answered: true,
-          notedBy: loggedInUser, // Add the logged-in user's name
+          answered: true, // Mark as answered
+          notedBy: loggedInUser, // Add the admin's name who processed the booking
         })
         .eq("id", id)
-        .then(({ error }) => {
-          if (error) {
-            console.error("Error updating status:", error.message);
+        .then(({ error: updateError }) => {
+          if (updateError) {
+            console.error("Error updating booking status:", updateError.message);
           } else {
-            // Update the local state
+            console.log(`Booking ${id} status updated to ${newStatus}`);
+            // Update the local bookings array to reflect the changes
             const bookingIndex = this.bookings.findIndex((b) => b.id === id);
             if (bookingIndex !== -1) {
               this.bookings[bookingIndex].status = newStatus;
@@ -613,9 +657,13 @@ closeBookingDetailsModal() {
               this.bookings[bookingIndex].notedBy = loggedInUser; // Update locally
             }
 
-            // Create a notification for the instructor if the booking is rejected
-            if (newStatus === "rejected" && reason) {
-              this.createNotification(booking, reason);
+            // Create a notification for both approved and rejected bookings
+            if (booking.instructorEmail) {
+              console.log(`Creating ${newStatus} notification for instructor: ${booking.instructorEmail}`);
+              // Pass only the booking object to the createNotification method
+              this.createNotification(booking);
+            } else {
+              console.log('No instructor email found in booking, cannot create notification');
             }
           }
         });
@@ -662,34 +710,34 @@ closeBookingDetailsModal() {
       );
       this.closeRejectPrompt();
     },
-    // Create a notification for the instructor about the rejected booking
-    createNotification(booking, reason) {
-      const today = new Date();
-      const formattedDate = today.toISOString();
+    
+    // Create a notification for the instructor about booking status changes
+    createNotification(booking) {
+      console.log('Creating notification for booking:', booking);
+      console.log('Instructor email:', booking.instructorEmail);
+      
+      // Calculate timeRange from startTime and endTime
+      const timeRange = booking.startTime && booking.endTime ? 
+        `${booking.startTime} - ${booking.endTime}` : 'Not specified';
+      
+      console.log('Calculated timeRange for notification:', timeRange);
 
-      // Create notification object
-      const notification = {
-        userid: booking.instructor_id, // The instructor who made the booking
-        title: "Booking Rejected",
-        message: `Your booking for "${booking.event_name}" has been rejected. Reason: ${reason}`,
-        timestamp: formattedDate,
-        read: false,
-        type: "rejection",
-      };
-
-      // Store notification in the database
+      // Update the booking to mark notification as sent
       supabase
-        .from("notifications")
-        .insert([notification])
-        .then(({ error }) => {
-          if (error) {
-            console.error("Error creating notification:", error.message);
+        .from("bookings")
+        .update({
+          notification_sent: true
+        })
+        .eq("id", booking.id)
+        .then(({ error: updateError }) => {
+          if (updateError) {
+            console.error("Error updating booking notification status:", updateError.message);
           } else {
-            console.log("Rejection notification created successfully");
+            console.log(`Booking ${booking.id} marked as notification sent`);
           }
         });
     },
-
+    
     // Format a date string into a readable format
     formatDate(dateString) {
       if (!dateString) return "";
@@ -758,6 +806,49 @@ closeBookingDetailsModal() {
 .filter-group select:focus {
   outline: none;
   border-color: #dd3859;
+}
+
+/* Search Group Styles */
+.search-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-width: 250px;
+}
+
+.search-group label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.search-input-container {
+  position: relative;
+}
+
+.search-group input {
+  padding: 8px 12px 8px 36px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #1e293b;
+  background-color: white;
+  width: 100%;
+  font-family: "Poppins", sans-serif;
+}
+
+.search-group input:focus {
+  outline: none;
+  border-color: #dd3859;
+}
+
+.search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #64748b;
 }
 
 /* Bookings Content */
@@ -866,26 +957,36 @@ closeBookingDetailsModal() {
 }
 
 .status-badge.pending {
-  background-color: #fff1f3;
-  color: #dd3859;
+  background-color: #FFF1F3;
+  color: #DD3859;
 }
 
-.status-badge.confirmed {
+.status-badge.approved, .status-badge.confirmed {
   background-color: #e6f7e6;
   color: #22c55e;
 }
 
-.status-badge.cancelled {
+.status-badge.cancelled, .status-badge.rejected {
   background-color: #f1f1f1;
   color: #6b7280;
+}
+
+.status-badge.active {
+  background-color: #e6f7e6;
+  color: #22c55e;
+}
+
+.status-badge.inactive {
+  background-color: #FFF1F3;
+  color: #DD3859;
 }
 
 /* Actions Section */
 .actions {
   display: flex;
-  gap: 8px; /* Add spacing between buttons */
-  justify-content: center; /* Center the buttons */
+  justify-content: flex-start; /* Align to the left to match header */
   align-items: center;
+  padding-left: 16px; /* Add padding to align with header text */
 }
 
 .action-menu {
@@ -927,17 +1028,19 @@ closeBookingDetailsModal() {
 }
 
 .action-btn {
+  width: 100%;
+  height: auto;
+  padding: 8px 12px;
+  border-radius: 0;
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 8px 12px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
+  gap: 8px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid #e2e8f0;
   cursor: pointer;
   transition: all 0.2s ease;
-  background: none;
-  border: 1px solid #e2e8f0;
+  text-align: left;
 }
 
 .action-btn:last-child {
@@ -954,17 +1057,16 @@ closeBookingDetailsModal() {
 
 .approve-btn {
   color: #10b981;
-  border-color: #10b981;
+  border-color: #e2e8f0;
 }
 
 .reject-btn {
   color: #ef4444;
-  border-color: #ef4444;
+  border-color: #e2e8f0;
 }
 
 
 .approve-btn:hover {
-  
   background-color: rgba(16, 185, 129, 0.1);
 }
 

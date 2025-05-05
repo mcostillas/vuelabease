@@ -120,6 +120,38 @@ async function handleResetPassword() {
       throw dbError;
     }
 
+    // Create a notification for the user about the password change
+    try {
+      // Get user email from the form
+      const userEmail = email.value;
+      
+      console.log('Creating password change notification for:', userEmail);
+      
+      // Store notification in the database using the bookings table
+      const { error: notificationError } = await supabase
+        .from('bookings')
+        .insert([{
+          instructorEmail: userEmail,
+          event: 'Password Change',
+          person: userEmail,
+          requestDate: new Date().toISOString().split('T')[0],
+          status: 'approved',
+          answered: true,
+          notification_sent: true,
+          timeRange: new Date().toLocaleTimeString(),
+          selectedRoom: 'Security',
+          notedBy: 'System'
+        }]);
+        
+      if (notificationError) {
+        console.error('Error creating password change notification:', notificationError.message);
+      } else {
+        console.log('Password change notification created successfully');
+      }
+    } catch (notificationError) {
+      console.error('Error creating notification:', notificationError);
+    }
+    
     // Show success message and redirect to login
     successMessage.value = 'Your password has been updated successfully!';
     setTimeout(() => {

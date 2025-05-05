@@ -187,71 +187,15 @@ export default {
     Modal
   },
   data() {
-    return {
-      showModal: false,
-      selectedNotification: null,
-      selectedNotificationIndex: -1,
-      activeFilter: 'all',
-      notifications: [
-        {
-          type: 'booking',
-          title: 'New Booking Request',
-          message: 'John Smith from College of Computer Studies has requested to book L201 on March 15, 2025 from 1:00 PM to 3:00 PM.',
-          time: '2 hours ago',
-          read: false
-        },
-        {
-          type: 'alert',
-          title: 'Maintenance Alert',
-          message: 'L203 requires maintenance. The projector is not functioning properly.',
-          time: '1 day ago',
-          read: false
-        },
-        {
-          type: 'booking',
-          title: 'New Booking Request',
-          message: 'Maria Garcia from College of Engineering and Architecture has requested to book L202 on March 16, 2025 from 9:00 AM to 12:00 PM.',
-          time: '1 day ago',
-          read: true
-        },
-        {
-          type: 'notification',
-          title: 'System Update',
-          message: 'LabEase system will undergo maintenance on March 20, 2025. The system will be unavailable from 10:00 PM to 2:00 AM.',
-          time: '3 days ago',
-          read: true
-        },
-        {
-          type: 'alert',
-          title: 'Low Inventory Alert',
-          message: 'Laboratory supplies in L204 are running low. Please restock soon.',
-          time: '4 days ago',
-          read: true
-        },
-        {
-          type: 'booking',
-          title: 'New Booking Request',
-          message: 'David Lee from College of Pharmacy and Chemistry has requested to book L205 on March 17, 2025 from 2:00 PM to 4:00 PM.',
-          time: '5 days ago',
-          read: true
-        },
-        {
-          type: 'alert',
-          title: 'Equipment Issue',
-          message: 'Several computers in Open Laboratory need software updates. Please schedule maintenance.',
-          time: '1 week ago',
-          read: true
-        },
-        {
-          type: 'booking',
-          title: 'New Booking Request',
-          message: 'Sarah Johnson from College of Medical and Biological Sciences has requested to book IOT Lab on March 18, 2025 from 10:00 AM to 12:00 PM.',
-          time: '1 week ago',
-          read: true
-        }
-      ]
-    }
-  },
+  return {
+    showModal: false,
+    selectedNotification: null,
+    selectedNotificationIndex: -1,
+    activeFilter: 'all',
+    notifications: [], // Initialize with empty array instead of sample data
+    isLoading: false
+  }
+},
   computed: {
     filteredNotifications() {
       switch (this.activeFilter) {
@@ -269,33 +213,30 @@ export default {
     }
   },
   created() {
-  // Retrieve the userType from localStorage
-  const storedNotifications = localStorage.getItem('notifications');
-  if (storedNotifications) {
-    this.notifications = JSON.parse(storedNotifications);
-  } else {
-    this.fetchNotifications(); // Fetch from the database if no local data exists
-  }
-
+  // Clear any existing notifications from localStorage to prevent showing old data
+  localStorage.removeItem('notifications');
+  
+  // Check user role first
   const storedUserRole = localStorage.getItem('usertype');
-  console.log('Retrieved usertype from localStorage:', storedUserRole); // Debugging log
-
+  console.log('Retrieved usertype from localStorage:', storedUserRole);
+  
   if (!storedUserRole) {
     console.error('Usertype not found in localStorage. Redirecting to login.');
     this.$router.push('/');
     return;
   }
   
-
   // Check if the userType matches 'instructor'
   if (storedUserRole.toLowerCase() !== 'instructor') {
     console.error('Usertype is not instructor. Redirecting to login.');
     this.$router.push('/');
     return;
   }
-
-  // If userType is valid, proceed
+  
+  // If userType is valid, proceed to fetch notifications
   console.log('Usertype is valid:', storedUserRole);
+  this.isLoading = true;
+  this.fetchNotifications();
 },
   methods: {
     formatDate(dateString) {
@@ -319,28 +260,72 @@ formatTimeRange(startTime, endTime) {
     
 async fetchNotifications() {
   try {
-    const { data, error } = await supabase
+    // Get the current instructor's email from localStorage
+    const instructorEmail = localStorage.getItem('email');
+    
+    if (!instructorEmail) {
+      console.error('Instructor email not found in localStorage');
+      return;
+    }
+    
+    console.log('Fetching notifications for instructor:', instructorEmail);
+    
+    // Get ALL answered bookings
+    const { data: allBookings, error } = await supabase
       .from('bookings')
       .select('*')
-      .eq('answered', true) // Retrieve bookings where answered = true
-      .order('updated_at', { ascending: false }); // Sort by updated_at in descending order
+      .eq('answered', true); // Retrieve bookings where answered = true
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error fetching notifications:', error);
+      return;
+    }
+    
+    console.log('All answered bookings:', allBookings);
+    
+    // Filter bookings where the person field contains the instructor email
+    const data = allBookings.filter(booking => {
+      if (!booking.person) return false;
+      
+      // Check if the person field contains the instructor email or 'mcostillas'
+      const personField = booking.person.toLowerCase();
+      const currentEmail = instructorEmail.toLowerCase();
+      
+      return personField.includes(currentEmail) || personField.includes('mcostillas');
+    });
+    
+    console.log(`Found ${data.length} notifications for instructor after filtering`);
+    
+    if (data.length === 0) {
+      console.log('No notifications found for this instructor');
+      // Clear any existing notifications
+      this.notifications = [];
+      localStorage.setItem('notifications', JSON.stringify([]));
+      return;
+    }
 
-    // Map the bookings to notification format
-    const bookingNotifications = data.map((booking) => ({
-      type: 'booking',
-      title: `Booking for ${booking.person} in ${booking.selectedRoom} is ${booking.status === 'approved' ? 'Accepted' : 'Declined'}`,
-      message: `The booking for ${booking.person} in ${booking.selectedRoom} on ${this.formatDate(booking.requestDate)} has been ${booking.status}.`,
-      time: new Date(booking.updated_at).toLocaleString(),
-      selectedRoom: booking.selectedRoom || 'N/A',
-      requestDate: this.formatDate(booking.requestDate) || 'N/A',
-      timeRange: this.formatTimeRange(booking.startTime, booking.endTime) || 'N/A',
-      person: booking.person || 'N/A',
-      notedBy: booking.notedBy || 'N/A',
-      read: false,
-      statusClass: booking.status === 'approved' ? 'text-green' : 'text-red', // Add status class
-    }));
+    // Map the booking data to notification format
+    const bookingNotifications = data.map(booking => {
+      // Calculate timeRange from startTime and endTime
+      const timeRange = booking.startTime && booking.endTime ? 
+        `${this.formatTime(booking.startTime)} - ${this.formatTime(booking.endTime)}` : 'Not specified';
+      
+      return {
+        type: 'booking',
+        title: `Your booking request for ${booking.selectedRoom} has been ${booking.status}`,
+        message: `Your booking request for ${booking.selectedRoom} on ${booking.requestDate} from ${timeRange} has been ${booking.status}.`,
+        time: this.getTimeAgo(booking.updated_at),
+        selectedRoom: booking.selectedRoom,
+        requestDate: booking.requestDate,
+        startTime: booking.startTime,
+        endTime: booking.endTime,
+        person: booking.person || 'N/A',
+        notedBy: booking.notedBy || 'N/A',
+        read: false,
+        statusClass: booking.status === 'approved' ? 'text-green' : 'text-red', // Add status class
+        bookingId: booking.id, // Store the booking ID for reference
+      };
+    });
 
     // Save notifications to localStorage
     localStorage.setItem('notifications', JSON.stringify(bookingNotifications));

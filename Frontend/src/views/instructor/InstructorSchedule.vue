@@ -182,6 +182,7 @@ export default {
       itemsPerPage: 10,
       scheduleEvents: [], // Array to store fetched schedule events
       isLoading: false, // Loading state
+      instructorEmail: '', // Store the instructor's email
     };
   },
   computed: {
@@ -319,11 +320,26 @@ export default {
     async fetchScheduleEvents() {
       this.isLoading = true;
       try {
+        // Get instructor email from localStorage
+        const instructorEmail = localStorage.getItem('email');
+        
+        if (!instructorEmail) {
+          console.error('Instructor email not found in localStorage');
+          this.scheduleEvents = [];
+          return;
+        }
+        
+        console.log('Fetching schedules for instructor:', instructorEmail);
+        
+        // Query schedules where instructor_email matches the logged-in instructor's email
         const { data, error } = await supabaseSchedules
           .from('schedules')
-          .select('*');
+          .select('*')
+          .eq('instructor_email', instructorEmail);
 
         if (error) throw error;
+        
+        console.log(`Found ${data.length} schedule events for instructor ${instructorEmail}`);
 
         this.scheduleEvents = data.map(event => ({
           id: event.id,
@@ -336,14 +352,14 @@ export default {
           startTime: event.start_time,
           endTime: event.end_time,
           instructorName: event.instructor_name,
+          instructorEmail: event.instructor_email,
           semester: event.semester,
           scheduleType: event.schedule_types,
           status: event.status,
         }));
-
-        console.log('Fetched schedule events:', this.scheduleEvents);
       } catch (error) {
         console.error('Error fetching schedule events:', error.message);
+        this.scheduleEvents = [];
       } finally {
         this.isLoading = false;
       }
@@ -391,6 +407,11 @@ export default {
     },
   },
   mounted() {
+    // Get instructor email from localStorage and store it in data
+    this.instructorEmail = localStorage.getItem('email') || '';
+    if (!this.instructorEmail) {
+      console.warn('No instructor email found in localStorage');
+    }
     this.fetchScheduleEvents();
   },
 };

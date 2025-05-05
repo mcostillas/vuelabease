@@ -32,36 +32,33 @@
                 <option value="CTE">College of Teacher Education</option>
               </select>
             </div>
-            <div class="filter-group">
-              <label for="year-filter">Year Level:</label>
-              <select
-                id="year-filter"
-                v-model="selectedYear"
-                @change="applyFilters"
-              >
-                <option value="">All Years</option>
-                <option value="1">1st Year</option>
-                <option value="2">2nd Year</option>
-                <option value="3">3rd Year</option>
-                <option value="4">4th Year</option>
-              </select>
-            </div>
-            <div class="filter-group">
-              <label for="section-filter">Section:</label>
-              <select
-                id="section-filter"
-                v-model="selectedSection"
-                @change="applyFilters"
-              >
-                <option value="">All Sections</option>
-                <option
-                  v-for="section in availableSections"
-                  :key="section"
-                  :value="section"
+            <div class="search-group">
+              <label for="search-input">Search:</label>
+              <div class="search-input-container">
+                <input
+                  type="text"
+                  id="search-input"
+                  v-model="searchQuery"
+                  placeholder="Search by purpose, section, or room..."
+                  @input="applyFilters"
+                />
+                <svg
+                  class="search-icon"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
                 >
-                  {{ section }}
-                </option>
-              </select>
+                  <path
+                    d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </div>
             </div>
             <div class="filter-group">
               <label for="status-filter">Status:</label>
@@ -213,8 +210,7 @@ export default {
   data() {
     return {
       selectedProgram: "",
-      selectedYear: "",
-      selectedSection: "",
+      searchQuery: "",
       statusFilter: "",
       dateFilter: "all",
       selectedSemester: "current",
@@ -224,49 +220,29 @@ export default {
     };
   },
   computed: {
-    availableSections() {
-      // Generate sections based on program and year
-      const sections = [];
-      if (this.selectedProgram && this.selectedYear) {
-        const program = this.selectedProgram;
-        const year = this.selectedYear;
-        const sectionLetters = ["A", "B", "C", "D", "E"];
-
-        sectionLetters.forEach((letter) => {
-          sections.push(`${program}-${year}${letter}`);
-        });
-      }
-      return sections;
-    },
     filteredBookings() {
       let filtered = [...this.bookings];
 
       // Apply program filter
       if (this.selectedProgram) {
-        filtered = filtered.filter(
-          (booking) => booking.program === this.selectedProgram
-        );
+        filtered = filtered.filter((booking) => booking.program === this.selectedProgram);
       }
 
-      // Apply year filter
-      if (this.selectedYear) {
-        filtered = filtered.filter(
-          (booking) => booking.year === this.selectedYear
-        );
-      }
-
-      // Apply section filter
-      if (this.selectedSection) {
-        filtered = filtered.filter(
-          (booking) => booking.section === this.selectedSection
-        );
+      // Apply search query filter
+      if (this.searchQuery.trim() !== "") {
+        const query = this.searchQuery.toLowerCase().trim();
+        filtered = filtered.filter((booking) => {
+          return (
+            (booking.purpose && booking.purpose.toLowerCase().includes(query)) ||
+            (booking.section && booking.section.toLowerCase().includes(query)) ||
+            (booking.room && booking.room.toLowerCase().includes(query))
+          );
+        });
       }
 
       // Apply status filter
       if (this.statusFilter) {
-        filtered = filtered.filter(
-          (booking) => booking.status === this.statusFilter
-        );
+        filtered = filtered.filter((booking) => booking.status === this.statusFilter);
       }
 
       // Apply date filter
@@ -436,6 +412,49 @@ export default {
 .filter-group select:focus {
   outline: none;
   border-color: #DD3859;
+}
+
+/* Search Group Styles */
+.search-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-width: 250px;
+}
+
+.search-group label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #64748B;
+}
+
+.search-input-container {
+  position: relative;
+}
+
+.search-group input {
+  padding: 8px 12px 8px 36px;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #1E293B;
+  background-color: white;
+  width: 100%;
+  font-family: 'Poppins', sans-serif;
+}
+
+.search-group input:focus {
+  outline: none;
+  border-color: #DD3859;
+}
+
+.search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #64748B;
 }
 
 .schedule-content {
