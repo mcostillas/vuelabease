@@ -58,22 +58,7 @@
               />
             </div>
           </div>
-          <div class="filter-group">
-            <label for="department-filter">Department:</label>
-            <select id="department-filter" v-model="selectedDepartment" @change="applyFilters">
-              <option value="">All Departments</option>
-              <option value="College of Accounting and Business Education">College of Accounting and Business Education</option>
-              <option value="College of Arts and Humanities">College of Arts and Humanities</option>
-              <option value="College of Computer Studies">College of Computer Studies</option>
-              <option value="College of Engineering and Architecture">College of Engineering and Architecture</option>
-              <option value="College of Human Environmental Science and Food Studies">College of Human Environmental Science and Food Studies</option>
-              <option value="College of Medical and Biological Sciences">College of Medical and Biological Sciences</option>
-              <option value="College of Music">College of Music</option>
-              <option value="College of Nursing">College of Nursing</option>
-              <option value="College of Pharmacy and Chemistry">College of Pharmacy and Chemistry</option>
-              <option value="College of Teacher Education">College of Teacher Education</option>
-            </select>
-          </div>
+          
           <div class="filter-group">
             <label for="status-filter">Status:</label>
             <select id="status-filter" v-model="selectedStatus" @change="applyFilters">
@@ -91,6 +76,7 @@
             <div class="header-item">Department</div>
             <div class="header-item">Date</div>
             <div class="header-item">Schedule</div>
+            <div class="header-item">Course Name</div>
             <div class="header-item">Time In</div>
             <div class="header-item">Time Out</div>
             <div class="header-item">Status</div>
@@ -98,7 +84,7 @@
           
           <div class="logbook-cards">
             <div 
-              v-for="entry in paginatedLogEntries" 
+              v-for="entry in rfidLogEntries" 
               :key="entry.id" 
               class="logbook-card"
             >
@@ -107,8 +93,16 @@
                 <div class="department">{{ entry.department }}</div>
                 <div class="date">{{ entry.date }}</div>
                 <div class="scheduled">
-                  {{ entry.scheduledStart }} - {{ entry.scheduledEnd }}
-                </div>
+  <template v-if="entry.scheduledStart && entry.scheduledEnd">
+    {{ entry.scheduledStart }} - {{ entry.scheduledEnd }}
+  </template>
+  <template v-else>
+    No schedule
+  </template>
+</div>
+                <div class="course-name">
+        {{ entry.courseName }}
+      </div>
                 <div class="time-in">
                   {{ entry.timeIn }}
                   <span v-if="calculateLateness(entry)" class="time-diff late">+{{ calculateLateness(entry) }}m</span>
@@ -299,11 +293,14 @@
 /* eslint-disable */
 import DashboardLayout from '@/components/layout/DashboardLayout.vue';
 import AdminHeader from '@/components/admin/AdminHeader.vue';
-import { supabase } from '@/lib/supabaseClient';
 import { createClient } from '@supabase/supabase-js';
 const supabaseSchedules = createClient(
   'https://yfiyhsazgjsxjmybsyar.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlmaXloc2F6Z2pzeGpteWJzeWFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI4ODE5MzEsImV4cCI6MjA1ODQ1NzkzMX0.j7oFwaqYvJq45jhPuQBPEtNU-itU-CRleOJcqm1fOOo'
+);
+const supabaseBookings = createClient(
+  'https://bfmvnahlknvyrajofmdw.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJmbXZuYWhsa252eXJham9mbWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ5OTc4NjUsImV4cCI6MjA2MDU3Mzg2NX0.xkeqAML3bYf9iOV6iG_GJ35_RD7rPKH_OuXFz1SQBLk'
 );
 
 export default {
@@ -314,6 +311,8 @@ export default {
   data() {
     return {
       // RFID related
+      rfidData: [],
+      rfidLogEntries: [],
       rfidValue: '',
       showModal: false,
       currentInstructor: null,
@@ -528,6 +527,7 @@ export default {
   },
   mounted() {
     // Focus on the hidden RFID input field
+    this.fetchRfidData();
     this.$refs.rfidInput.focus();
     
     // Add event listener to keep focus on the RFID input field
@@ -559,6 +559,84 @@ export default {
     }
   },
   methods: {
+    async fetchSchedulesForCurrentDay(instructorName, currentDay) {
+  try {
+    // Query the 'schedules' table in Supabase for the current day
+    const { data: schedules, error } = await supabaseSchedules
+      .from('schedules')
+      .select('start_time, end_time, course_name') // Include course_name
+      .eq('instructor_name', instructorName) // Match instructor name
+      .eq('day', currentDay); // Match the current day
+
+    if (error) {
+      console.error('Error fetching schedules:', error.message);
+      this.showNotification('Failed to fetch schedules. Please try again.', 'error');
+      return [];
+    }
+
+    console.log('Schedules fetched:', schedules);
+    return schedules; // Return the fetched schedules
+  } catch (err) {
+    console.error('Unexpected error fetching schedules:', err);
+    this.showNotification('An unexpected error occurred. Please try again.', 'error');
+    return [];
+  }
+},
+async fetchRfidData() {
+  try {
+    // Query the 'rfid' table in Supabase to fetch all RFID data
+    const { data, error } = await supabaseBookings
+      .from('rfid')
+      .select('*'); // Fetch all records
+
+    if (error) {
+      console.error('Error fetching RFID data:', error.message);
+      this.showNotification('Failed to fetch RFID data. Please try again.', 'error');
+      return;
+    }
+
+    console.log('RFID data fetched:', data);
+
+    // Store the raw RFID data
+    this.rfidData = data;
+
+    // Get the current day (e.g., "Monday")
+    const currentDay = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+
+    // Process the data and initialize it into rfidLogEntries
+    this.rfidLogEntries = await Promise.all(
+      data.map(async (entry) => {
+        const schedules = await this.fetchSchedulesForCurrentDay(entry.name, currentDay);
+
+        // Find the schedule that matches the current time range
+        const currentTime = new Date();
+        const currentMinutes = currentTime.getHours() * 60 + currentTime.getMinutes();
+
+        const matchingSchedule = schedules.find((schedule) => {
+          const startMinutes = this.convertTimeToMinutes(schedule.start_time);
+          const endMinutes = this.convertTimeToMinutes(schedule.end_time);
+          return currentMinutes >= startMinutes && currentMinutes <= endMinutes;
+        });
+
+        return {
+          id: entry.id,
+          name: entry.name,
+          department: entry.department || 'Unknown',
+          date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
+          scheduledStart: matchingSchedule ? matchingSchedule.start_time : 'No Schedule Today',
+          scheduledEnd: matchingSchedule ? matchingSchedule.end_time : '',
+          courseName: matchingSchedule ? matchingSchedule.course_name : 'No Schedule Today', // Include course_name
+          timeIn: null,
+          timeOut: null,
+          status: 'out',
+        };
+      })
+    );
+  } catch (err) {
+    console.error('Unexpected error fetching RFID data:', err);
+    this.showNotification('An unexpected error occurred. Please try again.', 'error');
+  }
+},
     // RFID related methods
     convertTimeToMinutes(timeStr) {
   if (!timeStr) return 0;
@@ -682,11 +760,61 @@ export default {
       return [];
     }
   },
+  async validateScheduleBeforeCheckIn(instructorName) {
+  try {
+    // Get the current day (e.g., "Monday")
+    const currentDay = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+
+    // Get the current time in minutes since midnight
+    const currentTime = new Date();
+    const currentMinutes = currentTime.getHours() * 60 + currentTime.getMinutes();
+
+    // Query the schedules table for the instructor's schedule on the current day
+    const { data: schedules, error } = await supabaseSchedules
+      .from('schedules')
+      .select('start_time, end_time, course_name') // Include relevant fields
+      .eq('instructor_name', instructorName)
+      .eq('day', currentDay);
+
+    if (error) {
+      console.error('Error fetching schedules:', error.message);
+      this.showNotification('Failed to validate schedule. Please try again.', 'error');
+      return false;
+    }
+
+    if (!schedules || schedules.length === 0) {
+      // No schedules found for the instructor on the current day
+      this.showNotification('No schedule found for today. Check-in not allowed.', 'error');
+      return false;
+    }
+
+    // Check if the current time falls within any of the instructor's schedules
+    const hasMatchingSchedule = schedules.some((schedule) => {
+      const startMinutes = this.convertTimeToMinutes(schedule.start_time);
+      const endMinutes = this.convertTimeToMinutes(schedule.end_time);
+      return currentMinutes >= startMinutes && currentMinutes <= endMinutes;
+    });
+
+    if (!hasMatchingSchedule) {
+      // No matching schedule for the current time
+      this.showNotification('No active schedule for the current time. Check-in not allowed.', 'error');
+      return false;
+    }
+
+    // Matching schedule found
+    this.showNotification('Schedule validated. Check-in allowed.', 'success');
+    return true;
+  } catch (err) {
+    console.error('Unexpected error during schedule validation:', err);
+    this.showNotification('An unexpected error occurred. Please try again.', 'error');
+    return false;
+  }
+},
   async processRfidScan() {
   if (!this.rfidValue) return;
 
   const now = new Date().getTime();
-  if (this.lastScanTime && (now - this.lastScanTime) < 1000) {
+  if (this.lastScanTime && now - this.lastScanTime < 1000) {
     this.rfidValue = '';
     return;
   }
@@ -695,7 +823,7 @@ export default {
   this.playBeepSound();
 
   try {
-    const { data: instructor, error: instructorError } = await supabase
+    const { data: instructor, error: instructorError } = await supabaseBookings
       .from('rfid')
       .select('*')
       .eq('id', this.rfidValue)
@@ -710,72 +838,108 @@ export default {
 
     console.log('Instructor found:', instructor);
 
-    const currentDay = "Monday"; // Simulate the current day
-    const simulatedTime = "09:30"; // Simulate 9:30 AM
-    const [currentHour, currentMinute] = simulatedTime.split(":").map(Number);
-    const currentTimeInMinutes = currentHour * 60 + currentMinute;
-
-    const schedules = await this.fetchSchedules(instructor.name, currentDay);
-
-    if (!schedules || schedules.length === 0) {
-      this.showNotification('No scheduled classes found for this instructor.', 'error');
+     // Validate the schedule before allowing check-in
+     const isScheduleValid = await this.validateScheduleBeforeCheckIn(instructor.name);
+    if (!isScheduleValid) {
       this.rfidValue = '';
-      return;
+      return; // Stop further processing if the schedule is invalid
     }
 
-    console.log('Schedules found:', schedules);
+    const currentDate = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+    const currentTimestamp = new Date().toISOString(); // Full ISO timestamp
 
-    const matchingSchedule = schedules.find(schedule => {
-      const startTimeInMinutes = this.convertTimeToMinutes(schedule.start_time);
-      const endTimeInMinutes = this.convertTimeToMinutes(schedule.end_time);
-
-      return currentTimeInMinutes >= startTimeInMinutes && currentTimeInMinutes <= endTimeInMinutes;
-    });
-
-    if (!matchingSchedule) {
-      console.log('No matching schedule found for the simulated time.');
-      this.showNotification('No scheduled classes at this time.', 'error');
-      this.rfidValue = '';
-      return;
-    }
-
-    console.log('Matching schedule:', matchingSchedule);
-
-    // Store the matching schedule for display in the modal
-    this.currentSchedule = matchingSchedule;
-
-    const logData = {
-      rfid_id: instructor.id,
-      name: instructor.name,
-      department: instructor.department || null,
-      subject: matchingSchedule.course_name || null,
-      section: matchingSchedule.section || null,
-      status: 'in',
-      time_in: new Date().toISOString(),
-      time_out: null,
-    };
-
-    const { data: logEntry, error: logError } = await supabase
+    // Check if there's an existing log for today
+    const { data: existingLog, error: logError } = await supabaseBookings
       .from('logs')
-      .insert([logData]);
+      .select('*')
+      .eq('rfid_id', instructor.id)
+      .eq('date', currentDate)
+      .order('created_at', { ascending: false }) // Get the latest log
+      .limit(1)
+      .single();
 
     if (logError) {
-      console.error('Error inserting log:', logError.message);
-      this.showNotification('Failed to log attendance. Please try again.', 'error');
+      console.error('Error checking existing log:', logError.message);
+      this.showNotification('Failed to check existing log. Please try again.', 'error');
       return;
     }
 
-    console.log('Log inserted successfully:', logEntry);
+    let newLog;
 
-    this.showNotification(`${instructor.name} has checked in for ${matchingSchedule.course_name}`, 'success');
-    this.currentInstructor = instructor;
-    this.showModal = true;
+    if (existingLog) {
+      // Alternate between "in" and "out"
+      newLog = {
+        rfid_id: instructor.id,
+        name: instructor.name,
+        department: instructor.department,
+        subject: instructor.subject,
+        section: instructor.section,
+        status: existingLog.status === 'out' ? 'in' : 'out',
+        time_in: existingLog.status === 'out' ? currentTimestamp : null,
+        time_out: existingLog.status === 'in' ? currentTimestamp : null,
+        date: currentDate,
+      };
 
-    this.autoConfirmTimeout = setTimeout(() => {
-      if (this.showModal && this.currentInstructor) {
-        this.confirmAttendance();
+      // Update the local logbook entry
+      const logEntry = this.rfidLogEntries.find((entry) => entry.id === instructor.id);
+      if (logEntry) {
+        if (newLog.status === 'in') {
+          logEntry.timeIn = new Date(currentTimestamp).toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+          });
+          logEntry.timeOut = null;
+        } else {
+          logEntry.timeOut = new Date(currentTimestamp).toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+          });
+        }
+        logEntry.status = newLog.status;
       }
-    }, 5000);
+    } else {
+      // If no log exists for today, create a new "in" log
+      newLog = {
+        rfid_id: instructor.id,
+        name: instructor.name,
+        department: instructor.department,
+        subject: instructor.subject,
+        section: instructor.section,
+        status: 'in',
+        time_in: currentTimestamp,
+        time_out: null,
+        date: currentDate,
+      };
+
+      // Add the new log to the local logbook
+      this.rfidLogEntries.unshift({
+        id: instructor.id,
+        name: instructor.name,
+        department: instructor.department,
+        date: currentDate,
+        scheduledStart: 'N/A', // Default value, can be updated with schedule logic
+        scheduledEnd: 'N/A', // Default value, can be updated with schedule logic
+        timeIn: new Date(currentTimestamp).toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+        }),
+        timeOut: null,
+        status: 'in',
+      });
+    }
+
+    // Insert the new log into the logs table
+    const { error: insertError } = await supabaseBookings
+      .from('logs')
+      .insert([newLog]);
+
+    if (insertError) {
+      console.error('Error inserting log:', insertError.message);
+      this.showNotification('Failed to insert log. Please try again.', 'error');
+    } else {
+      const action = newLog.status === 'in' ? 'checked in' : 'checked out';
+      this.showNotification(`${instructor.name} has ${action} at ${new Date(currentTimestamp).toLocaleTimeString('en-US')}`, 'success');
+    }
   } catch (err) {
     console.error('Unexpected error during RFID scan:', err);
     this.showNotification('An unexpected error occurred. Please try again.', 'error');
@@ -1186,14 +1350,15 @@ export default {
 .logbook-header {
   display: grid;
   grid-template-columns: 1.5fr 1.5fr 1fr 1.2fr 1fr 1fr 0.8fr;
-  gap: 16px;
+  gap: 12px;
   padding: 16px;
   background-color: #DD3859;
   border-radius: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
 }
 
 .header-item {
+  width: 10px;
   color: white;
   font-size: 14px;
   font-weight: 600;
@@ -1609,8 +1774,10 @@ export default {
   }
   
   .logbook-header, .logbook-item {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 2fr 1fr;
+   
   }
+
   
   .header-item:nth-child(n+3), .logbook-item > div:nth-child(n+3) {
     display: none;
