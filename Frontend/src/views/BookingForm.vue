@@ -93,24 +93,29 @@
   >
     <td class="time-cell">{{ timeSlot.time }}</td>
     <td
-  v-for="day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']"
-  :key="`${timeSlot.value}-${day}`"
-  :class="{ 'has-class': getScheduleForTimeSlotAndDay(timeSlot, day).length > 0 }"
-  @click="handleCellClick(timeSlot, day)"
-  :style="{ cursor: getScheduleForTimeSlotAndDay(timeSlot, day).length > 0 ? 'not-allowed' : 'pointer' }"
->
-  <div
-    v-for="schedule in filteredSchedulesForDay.filter(schedule => schedule.day === day && isTimeSlotInRange(timeSlot.value, schedule.start_time, schedule.end_time))"
-    :key="schedule.id"
-    :class="['class-info', { 'pending-booking': schedule.isPending }]"
-  >
-    <div class="class-code">{{ schedule.course_code }}</div>
-    <div class="class-section">{{ schedule.section }}</div>
-    <div v-if="!schedule.isPending" class="class-instructor">{{ schedule.instructor }}</div>
-    <div v-else class="pending-label">PENDING APPROVAL</div>
-    <div class="class-room">{{ schedule.lab_room }}</div>
-  </div>
-</td>
+      v-for="day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']"
+      :key="`${timeSlot.value}-${day}`"
+      :class="{ 'has-class': getScheduleForTimeSlotAndDay(timeSlot, day).length > 0 }"
+      @click="handleCellClick(timeSlot, day)"
+      :style="{ cursor: getScheduleForTimeSlotAndDay(timeSlot, day).length > 0 ? 'not-allowed' : 'pointer' }"
+    >
+      <div
+        v-for="schedule in getScheduleForTimeSlotAndDay(timeSlot, day)"
+        :key="schedule.id"
+        :class="['class-info', { 
+          'pending-booking': schedule.isPending, 
+          'approved-booking': schedule.isApproved 
+        }]"
+      >
+        <div class="class-code">{{ schedule.course_code }}</div>
+        <div class="class-section">{{ schedule.section }}</div>
+        <div v-if="!schedule.isPending && !schedule.isApproved" class="class-instructor">{{ schedule.instructor }}</div>
+        <div v-else-if="schedule.isPending" class="pending-label">PENDING APPROVAL</div>
+        <div v-else-if="schedule.isApproved" class="approved-label">APPROVED BOOKING</div>
+        <div class="class-room">{{ schedule.lab_room }}</div>
+        <div v-if="schedule.event" class="event-name">{{ schedule.event }}</div>
+      </div>
+    </td>
   </tr>
 </tbody>
               </table>
@@ -325,38 +330,142 @@
                 </span>
               </div>
             </div>
-            <div class="form-group">
-              <label for="startTime">Event Start Time</label>
-              <div class="input-wrapper">
-                <input
-                  type="time"
-                  id="startTime"
-                  v-model="startTime"
-                  required
-                />
-                <span class="input-icon time-icon">
-                  <ClockIcon class="icon-primary" />
-                </span>
-              </div>
-            </div>
-            <div class="form-group">
-              <label for="endTime">Event End Time</label>
-              <div class="input-wrapper">
-                <input
-                  type="time"
-                  id="endTime"
-                  v-model="endTime"
-                  required
-                />
-                <span class="input-icon time-icon">
-                  <ClockIcon class="icon-primary" />
-                </span>
-              </div>
-            </div>
           </div>
         </section>
+      </form>
+    </div>
+    <div class="direct-modal-footer">
+      <button class="submit-btn" @click="validateRequesterInfo">Continue</button>
+    </div>
+  </div>
+</div>
+    <div v-if="showBookingModal" class="direct-modal-overlay">
+      <div class="direct-modal-container">
+        <div class="direct-modal-header">
+          <h3>Laboratory Booking Form</h3>
+          <button class="direct-close-button" @click="closeBookingModal" aria-label="Close">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M18 6L6 18" stroke="#dd3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M6 6L18 18" stroke="#dd3859" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+        <div class="direct-modal-body">
+          <form class="booking-form-modal" @submit.prevent="handleBooking">
+            <section class="form-section">
+              <h2>REQUESTING PARTY</h2>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="department">Department</label>
+                  <div class="input-wrapper">
+                    <input
+                      type="text"
+                      id="department"
+                      v-model="department"
+                      required
+                    />
+                    <span class="input-icon">
+                      <BuildingOfficeIcon class="icon-primary" />
+                    </span>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="club">Club/Organization</label>
+                  <div class="input-wrapper">
+                    <input type="text" id="club" v-model="club" />
+                    <span class="input-icon">
+                      <UserGroupIcon class="icon-primary" />
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="person">Person Responsible</label>
+                  <div class="input-wrapper">
+                    <input type="text" id="person" v-model="person" required />
+                    <span class="input-icon">
+                      <UserIcon class="icon-primary" />
+                    </span>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="contact">Email Address</label>
+                  <div class="input-wrapper">
+                    <input type="email" id="contact" v-model="contact" required />
+                    <span class="input-icon">
+                      <EnvelopeIcon class="icon-primary" />
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </section>
 
-        <section class="form-section">
+            <section class="form-section">
+              <h2>EVENT DETAILS</h2>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="event">Name of Event</label>
+                  <div class="input-wrapper">
+                    <input type="text" id="event" v-model="event" required />
+                    <span class="input-icon">
+                      <DocumentTextIcon class="icon-primary" />
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="attendance">Expected Attendees</label>
+                  <div class="input-wrapper">
+                    <input
+                      type="text"
+                      inputmode="numeric"
+                      pattern="[0-9]*"
+                      id="attendance"
+                      v-model="attendance"
+                      required
+                      class="no-spinner"
+                    />
+                    <span class="input-icon">
+                      <UserGroupIcon class="icon-primary" />
+                    </span>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="startTime">Event Start Time</label>
+                  <div class="input-wrapper">
+                    <input
+                      type="time"
+                      id="startTime"
+                      v-model="startTime"
+                      required
+                      class="time-input"
+                    />
+                    <span class="input-icon time-icon">
+                      <ClockIcon class="icon-primary" />
+                    </span>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="endTime">Event End Time</label>
+                  <div class="input-wrapper">
+                    <input
+                      type="time"
+                      id="endTime"
+                      v-model="endTime"
+                      required
+                      class="time-input"
+                    />
+                    <span class="input-icon time-icon">
+                      <ClockIcon class="icon-primary" />
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="form-section">
   <h2>LABORATORY SELECTION</h2>
   <div class="form-group">
     <label for="room">Choose a Laboratory</label>
@@ -379,31 +488,31 @@
   </div>
 </section>
 
-        <section class="form-section">
-          <h2>FACILITY</h2>
-          <div class="form-group">
-            <label for="facility">Laboratory Equipment</label>
-            <div class="input-wrapper">
-              <textarea
-                id="facility"
-                v-model="facility"
-                rows="3"
-                placeholder="List any specific equipment or facilities needed"
-              ></textarea>
-            </div>
-          </div>
-        </section>
+            <section class="form-section">
+              <h2>FACILITY</h2>
+              <div class="form-group">
+                <label for="facility">Laboratory Equipment</label>
+                <div class="input-wrapper">
+                  <textarea
+                    id="facility"
+                    v-model="facility"
+                    rows="3"
+                    placeholder="List any specific equipment or facilities needed"
+                  ></textarea>
+                </div>
+              </div>
+            </section>
 
-        <div v-if="errorMessage" class="error-message">
-          {{ errorMessage }}
+            <div v-if="errorMessage" class="error-message">
+              {{ errorMessage }}
+            </div>
+          </form>
         </div>
-      </form>
+        <div class="direct-modal-footer">
+          <button class="submit-btn" @click="handleBooking">Submit</button>
+        </div>
+      </div>
     </div>
-    <div class="direct-modal-footer">
-      <button class="submit-btn" @click="handleBooking">Submit</button>
-    </div>
-  </div>
-</div>
   
   <!-- Weekly Schedule Modal -->
   <Modal
@@ -749,6 +858,8 @@ export default {
       selectedDay: null,
       scheduleData: [], // Original schedule data
       pendingBookings: [], // Bookings that are pending approval
+      approvedBookings: [], // Bookings that have been approved
+      allBookings: [], // Combined pending and approved bookings
       filteredScheduleData: [], // Schedules filtered by the selected day
       selectedDayOfWeek: null, 
      
@@ -900,16 +1011,21 @@ export default {
   },
     filteredSchedulesForDay() {
       console.log("Schedule Data:", this.scheduleData);
-    console.log("Selected Day of Week:", this.selectedDayOfWeek);
-    if (!this.selectedDayOfWeek) {
-      return this.scheduleData; // Return all schedules if no day is selected
-    }
+      console.log("All Bookings:", this.allBookings);
+      console.log("Selected Day of Week:", this.selectedDayOfWeek);
+      
+      // Combine regular schedules and all bookings
+      const combinedData = [...this.scheduleData, ...this.allBookings];
+      
+      if (!this.selectedDayOfWeek) {
+        return combinedData; // Return all schedules and bookings if no day is selected
+      }
 
-    // Filter schedules for the selected day
-    return this.scheduleData.filter(
-      (schedule) => schedule.day === this.selectedDayOfWeek
-    );
-  },
+      // Filter schedules and bookings for the selected day
+      return combinedData.filter(
+        (item) => item.day === this.selectedDayOfWeek
+      );
+    },
     currentMonthName() {
       return new Date(this.currentDate).toLocaleString("default", {
         month: "long",
@@ -978,8 +1094,8 @@ export default {
     this.generateCalendar();
     // Fetch schedules
     this.fetchSchedules();
-    // Fetch pending bookings
-    this.fetchPendingBookings();
+    // Fetch all bookings (both pending and approved)
+    this.fetchAllBookings();
   },
   watch: {
     startTime(newValue, oldValue) {
@@ -1020,6 +1136,15 @@ export default {
     const options = { year: "numeric", month: "long", day: "numeric" };
     return new Date(date).toLocaleDateString(undefined, options);
   },
+    // Format date for database comparison (YYYY-MM-DD)
+    formatDateForDatabase(date) {
+      if (!date) return "";
+      const d = new Date(date);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    },
     getDayCellStyle(timeSlot, day) {
       const schedule = this.getScheduleForTimeSlotAndDay(timeSlot, day)[0];
       if (schedule) {
@@ -1276,49 +1401,58 @@ console.log("Filtered Available Rooms:", this.filteredRooms);
       }
       return aMinutes - bMinutes;
     },
-    
-    async fetchPendingBookings() {
-      try {
-        const { data, error } = await supabaseBookings
-          .from("bookings")
-          .select("*")
-          .eq("status", "pending");
-        
-        if (error) throw error;
-        
-        console.log("Pending bookings:", data);
-        
-        // Process the pending bookings to match the schedule data format
-        this.pendingBookings = data.map(booking => {
-          // Convert the booking date to a day of the week
-          const bookingDate = new Date(booking.requestDate);
-          const daysOfWeek = [
-            "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
-          ];
-          const dayOfWeek = daysOfWeek[bookingDate.getDay()];
-          
-          return {
-            id: booking.id,
-            day: dayOfWeek,
-            start_time: booking.startTime,
-            end_time: booking.endTime,
-            lab_room: booking.selectedRoom,
-            section: "Pending",
-            course_code: "PENDING",
-            course_name: booking.event,
-            isPending: true, // Flag to identify pending bookings
-            event: booking.event,
-            department: booking.department,
-            requestDate: booking.requestDate
-          };
-        });
-      } catch (error) {
-        console.error("Error fetching pending bookings:", error.message);
-        this.errorMessage = "Failed to fetch pending bookings.";
-      }
-    },
 
-    async fetchSchedules() {
+async fetchAllBookings() {
+  try {
+    // Fetch both pending and approved bookings
+    const { data, error } = await supabaseBookings
+      .from("bookings")
+      .select("*")
+      .or('status.eq.pending,status.eq.approved');
+    
+    if (error) throw error;
+    
+    console.log("All relevant bookings:", data);
+    
+    // Process the bookings to match the schedule data format
+    this.allBookings = data.map(booking => {
+      // Convert the booking date to a day of the week
+      const bookingDate = new Date(booking.requestDate);
+      const daysOfWeek = [
+        "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
+      ];
+      const dayOfWeek = daysOfWeek[bookingDate.getDay()];
+      
+      // Create a formatted booking object with status indicators
+      return {
+        id: booking.id,
+        day: dayOfWeek,
+        start_time: booking.startTime,
+        end_time: booking.endTime,
+        lab_room: booking.selectedRoom,
+        section: booking.status === "pending" ? "Pending Review" : "Approved",
+        course_code: booking.status === "pending" ? "PENDING" : "APPROVED",
+        course_name: booking.event,
+        isPending: booking.status === "pending",
+        isApproved: booking.status === "approved",
+        event: booking.event,
+        department: booking.department,
+        requestDate: booking.requestDate,
+        status: booking.status
+      };
+    });
+    
+    // Separate into pending and approved for backward compatibility
+    this.pendingBookings = this.allBookings.filter(booking => booking.isPending);
+    this.approvedBookings = this.allBookings.filter(booking => booking.isApproved);
+    
+  } catch (error) {
+    console.error("Error fetching bookings:", error.message);
+    this.errorMessage = "Failed to fetch bookings.";
+  }
+},
+
+async fetchSchedules() {
   try {
     const { data, error } = await supabaseSchedules
       .from("schedules")
@@ -1385,55 +1519,93 @@ console.log("Filtered Available Rooms:", this.filteredRooms);
     },
 
     getScheduleForTimeSlotAndDay(timeSlot, day) {
-      if (!Array.isArray(this.filteredSchedulesForDay)) {
-        console.error("filteredSchedulesForDay is not an array or is undefined");
-        return [];
-      }
-
+  // Initialize empty arrays for schedules and bookings
+  const schedulesForSlot = [];
+  const bookingsForSlot = [];
+  
+  // PART 1: Handle regular schedules (classes)
+  // These are regular weekly classes that repeat every week
+  if (Array.isArray(this.scheduleData)) {
+    // Filter schedules for the given day
+    const daySchedules = this.scheduleData.filter(schedule => schedule.day === day);
+    
+    // Filter by time slot
+    for (const schedule of daySchedules) {
+      const scheduleStart = this.convertTimeToMinutes(schedule.start_time);
+      const scheduleEnd = this.convertTimeToMinutes(schedule.end_time);
+      const slotStart = this.convertTimeToMinutes(timeSlot.value);
       
-
-      // Filter schedules for the given time slot
-      const filteredSchedules = this.filteredSchedulesForDay.filter((schedule) => {
-        
-        // Convert times to minutes for comparison
-        const scheduleStart = this.convertTimeToMinutes(schedule.start_time);
-        const scheduleEnd = this.convertTimeToMinutes(schedule.end_time);
-        const slotStart = this.convertTimeToMinutes(timeSlot.value);
-
-        // Check if the time slot falls within the schedule's time range
-        const isTimeMatch = slotStart >= scheduleStart && slotStart < scheduleEnd;
-
-     
-
-        return isTimeMatch;
+      // Check if the time slot falls within the schedule's time range
+      if (slotStart >= scheduleStart && slotStart < scheduleEnd) {
+        schedulesForSlot.push(schedule);
+      }
+    }
+  }
+  
+  // PART 2: Handle bookings (both pending and approved)
+  // These need to match the specific date selected, not just the day of week
+  if (Array.isArray(this.allBookings) && this.allBookings.length > 0 && this.requestDate) {
+    // Format the selected date to match the booking date format (YYYY-MM-DD)
+    const selectedDateFormatted = this.formatDateForDatabase(this.requestDate);
+    console.log('Selected date for filtering bookings:', selectedDateFormatted);
+    
+    // Filter bookings for this day AND the specific date
+    const dayBookings = this.allBookings.filter(booking => {
+      // Log each booking's date for debugging
+      console.log('Comparing booking:', {
+        bookingDay: booking.day,
+        currentDay: day,
+        bookingDate: booking.requestDate,
+        selectedDate: selectedDateFormatted,
+        matches: booking.day === day && booking.requestDate === selectedDateFormatted
       });
       
-      // Filter pending bookings for the given time slot and day
-      const pendingBookingsForSlot = [];
+      // Check if the booking is for the selected day of the week AND the specific date
+      return booking.day === day && booking.requestDate === selectedDateFormatted;
+    });
+    
+    console.log('Filtered bookings for day and date:', dayBookings);
+    
+    // Filter by time slot
+    for (const booking of dayBookings) {
+      const bookingStart = this.convertTimeToMinutes(booking.start_time);
+      const bookingEnd = this.convertTimeToMinutes(booking.end_time);
+      const slotStart = this.convertTimeToMinutes(timeSlot.value);
       
-      if (Array.isArray(this.pendingBookings) && this.pendingBookings.length > 0) {
-        // Filter pending bookings for this day
-        const dayPendingBookings = this.pendingBookings.filter(booking => booking.day === day);
-        
-        // Filter by time slot
-        for (const booking of dayPendingBookings) {
-          const bookingStart = this.convertTimeToMinutes(booking.start_time);
-          const bookingEnd = this.convertTimeToMinutes(booking.end_time);
-          const slotStart = this.convertTimeToMinutes(timeSlot.value);
-          
-          // Check if the time slot falls within the booking's time range
-          if (slotStart >= bookingStart && slotStart < bookingEnd) {
-            pendingBookingsForSlot.push(booking);
-          }
-        }
+      // Check if the time slot falls within the booking's time range
+      if (slotStart >= bookingStart && slotStart < bookingEnd) {
+        bookingsForSlot.push(booking);
       }
+    }
+  }
+  
+  // PART 3: For backward compatibility - if allBookings isn't populated yet
+  if (bookingsForSlot.length === 0 && Array.isArray(this.pendingBookings) && this.pendingBookings.length > 0 && this.requestDate) {
+    // Format the selected date to match the booking date format (YYYY-MM-DD)
+    const selectedDateFormatted = this.formatDateForDatabase(this.requestDate);
+    
+    // Filter pending bookings for this day AND the specific date
+    const dayPendingBookings = this.pendingBookings.filter(booking => {
+      return booking.day === day && booking.requestDate === selectedDateFormatted;
+    });
+    
+    // Filter by time slot
+    for (const booking of dayPendingBookings) {
+      const bookingStart = this.convertTimeToMinutes(booking.start_time);
+      const bookingEnd = this.convertTimeToMinutes(booking.end_time);
+      const slotStart = this.convertTimeToMinutes(timeSlot.value);
       
-      // Combine regular schedules and pending bookings
-      const combinedSchedules = [...filteredSchedules, ...pendingBookingsForSlot];
-
-      
-
-      return combinedSchedules;
+      // Check if the time slot falls within the booking's time range
+      if (slotStart >= bookingStart && slotStart < bookingEnd) {
+        bookingsForSlot.push(booking);
+      }
+    }
+  }
+  
+  // Combine regular schedules and bookings
+  const combinedSchedules = [...schedulesForSlot, ...bookingsForSlot];
+  
+  return combinedSchedules;
     },
     
     // Methods for handling merged cells
@@ -2101,7 +2273,21 @@ console.log("Filtered Available Rooms:", this.filteredRooms);
         this.calendarDays.push({ date: null });
       }
     },
-    // ... methods ...
+    // Navigate to the previous month
+    previousMonth() {
+      const newDate = new Date(this.currentDate);
+      newDate.setMonth(newDate.getMonth() - 1);
+      this.currentDate = newDate;
+      this.generateCalendar();
+    },
+
+    // Navigate to the next month
+    nextMonth() {
+      const newDate = new Date(this.currentDate);
+      newDate.setMonth(newDate.getMonth() + 1);
+      this.currentDate = newDate;
+      this.generateCalendar();
+    },
   },
 };
 </script>
@@ -2117,10 +2303,21 @@ console.log("Filtered Available Rooms:", this.filteredRooms);
 /* Remove spinner buttons from number inputs for all browsers */
 /* Chrome, Safari, Edge, Opera */
 input::-webkit-outer-spin-button,
-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  appearance: none;
-  margin: 0;
+input::-webkit-inner-spin-button,
+.time-input {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-family: "Poppins", sans-serif;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.3s ease;
+  position: relative;
+  background-color: #fff;
+  color: #333;
+  cursor: pointer;
+  z-index: 1;
 }
 
 /* Firefox */
@@ -2376,6 +2573,7 @@ body {
 .form-group select {
   width: 100%;
   padding: 0.8rem 1rem;
+  padding-right: 2.5rem; /* Add extra padding on the right to prevent text from overlapping with the icon */
   border: 1px solid #ddd;
   border-radius: 8px;
   font-size: 1rem;
@@ -2446,23 +2644,71 @@ body {
   font-size: 1rem;
   outline: none;
   transition: border-color 0.3s, box-shadow 0.3s;
-  appearance: none;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
   background-color: #fff;
   color: #333;
   position: relative;
   cursor: pointer;
+  z-index: 1;
+  padding-right: 2.5rem !important; /* Make room for the icon */
+}
+
+/* Ensure all inputs with icons have proper padding */
+input[type="text"],
+input[type="email"],
+input[type="number"],
+input[type="date"],
+input[type="time"],
+textarea,
+select {
+  padding-right: 2.5rem !important; /* Ensure text doesn't overlap with icons */
 }
 
 /* Hide the default calendar and time picker icons */
 .custom-date-input::-webkit-calendar-picker-indicator,
 .time-input::-webkit-calendar-picker-indicator {
-  opacity: 0;
-  width: 100%;
-  height: 100%;
-  position: absolute;
-  top: 0;
-  left: 0;
-  cursor: pointer;
+  opacity: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  cursor: pointer !important;
+  display: none !important;
+  background: none !important;
+  color: transparent !important;
+  z-index: -1 !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+}
+
+/* Hide all browser-specific time input styling */
+.time-input::-webkit-datetime-edit-fields-wrapper,
+.time-input::-webkit-datetime-edit,
+.time-input::-webkit-datetime-edit-text,
+.time-input::-webkit-datetime-edit-hour-field,
+.time-input::-webkit-datetime-edit-minute-field,
+.time-input::-webkit-datetime-edit-ampm-field,
+.time-input::-webkit-inner-spin-button,
+.time-input::-webkit-clear-button,
+.time-input::-webkit-inner-spin-button,
+.time-input::-webkit-outer-spin-button,
+.time-input::-ms-clear {
+  color: #333 !important;
+}
+
+/* Hide the browser's default time icon */
+input[type="time"]::-webkit-calendar-picker-indicator {
+  display: none !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  opacity: 0 !important;
+  position: absolute !important;
+  z-index: -999 !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 .custom-date-input:hover,
@@ -2480,7 +2726,11 @@ body {
 .date-icon,
 .time-icon {
   pointer-events: none;
-  z-index: 2;
+  z-index: 5;
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 /* Success Modal Styles */
@@ -3961,16 +4211,80 @@ body {
 }
 
 .pending-booking {
-  background-color: #fff3cd;
-  border-left: 3px solid #ffc107;
-  animation: pulse 2s infinite;
+  background-color: #fff3cd !important; /* Light yellow background */
+  color: #856404;
+  border-left: 4px solid #ffc107; /* Yellow border */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+  animation: gentle-pulse 2s infinite;
+}
+
+.approved-booking {
+  background-color: #d4edda !important; /* Light green background */
+  color: #155724;
+  border-left: 4px solid #28a745; /* Green border */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.pending-booking:hover, .approved-booking:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .pending-label {
-  color: #856404;
+  font-size: 0.7rem;
   font-weight: bold;
-  font-size: 0.8rem;
-  text-transform: uppercase;
+  color: #856404;
+  margin-top: 0.25rem;
+  background-color: #ffeeba;
+  padding: 2px 6px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.approved-label {
+  font-size: 0.7rem;
+  font-weight: bold;
+  color: #155724;
+  margin-top: 0.25rem;
+  background-color: #c3e6cb;
+  padding: 2px 6px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.event-name {
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.class-code {
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.class-room {
+  font-size: 0.75rem;
+  opacity: 0.9;
+  margin-top: 2px;
+}
+
+@keyframes gentle-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.2);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(255, 193, 7, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 193, 7, 0);
+  }
 }
 
 @keyframes pulse {
