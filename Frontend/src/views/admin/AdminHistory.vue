@@ -6,32 +6,7 @@
       <div class="schedule-content">
         <div class="content-wrapper">
           <div class="filters">
-            <div class="filter-group">
-              <label for="program-filter">Program:</label>
-              <select
-                id="program-filter"
-                v-model="selectedProgram"
-                @change="applyFilters"
-              >
-                <option value="">All Programs</option>
-                <option value="CABE">
-                  College of Accounting and Business Education
-                </option>
-                <option value="CAH">College of Arts and Humanities</option>
-                <option value="CCS">College of Computer Studies</option>
-                <option value="CEA">College of Engineering and Architecture</option>
-                <option value="CHESFS">
-                  College of Human Environmental Science and Food Studies
-                </option>
-                <option value="CMBS">
-                  College of Medical and Biological Sciences
-                </option>
-                <option value="CM">College of Music</option>
-                <option value="CN">College of Nursing</option>
-                <option value="CPC">College of Pharmacy and Chemistry</option>
-                <option value="CTE">College of Teacher Education</option>
-              </select>
-            </div>
+            
             <div class="search-group">
               <label for="search-input">Search:</label>
               <div class="search-input-container">
@@ -60,48 +35,12 @@
                 </svg>
               </div>
             </div>
-            <div class="filter-group">
-              <label for="status-filter">Status:</label>
-              <select
-                id="status-filter"
-                v-model="statusFilter"
-                @change="applyFilters"
-              >
-                <option value="">All Statuses</option>
-                <option value="approved">Approved</option>
-                <option value="pending">Pending</option>
-                <option value="rejected">Rejected</option>
-                
-              </select>
-            </div>
-            <div class="filter-group">
-              <label for="date-filter">Date Range:</label>
-              <select id="date-filter" v-model="dateFilter" @change="applyFilters">
-                <option value="all">All Time</option>
-                <option value="week">This Week</option>
-                <option value="month">This Month</option>
-                <option value="semester">This Semester</option>
-              </select>
-            </div>
-            <div class="filter-group" v-if="dateFilter === 'semester'">
-              <label for="semester-filter">Select Semester:</label>
-              <select
-                id="semester-filter"
-                v-model="selectedSemester"
-                @change="applyFilters"
-              >
-                <option value="current">Current Semester</option>
-                <option value="2024-2">2nd Semester 2024-2025</option>
-                <option value="2024-1">1st Semester 2024-2025</option>
-                <option value="2023-2">2nd Semester 2023-2024</option>
-                <option value="2023-1">1st Semester 2023-2024</option>
-              </select>
-            </div>
+            
           </div>
           <div class="schedule-header">
             <div class="header-item">Time Slot</div>
             <div class="header-item">Purpose</div>
-            <div class="header-item">Section</div>
+            <div class="header-item">Person Responsible</div>
             <div class="header-item">Room</div>
             <div class="header-item">Status</div>
           </div>
@@ -120,7 +59,7 @@
                     ) }}
                   </div>
                   <div class="purpose">{{ booking.event }}</div>
-                  <div class="section">{{ booking.section || "N/A" }}</div>
+                  <div class="section">{{ booking.person }}</div>
                   <div class="room">{{ booking.selectedRoom }}</div>
                   <div class="status">
                     <span class="status-badge" :class="booking.status">
@@ -221,80 +160,20 @@ export default {
   },
   computed: {
     filteredBookings() {
-      let filtered = [...this.bookings];
-
-      // Apply program filter
-      if (this.selectedProgram) {
-        filtered = filtered.filter((booking) => booking.program === this.selectedProgram);
-      }
-
-      // Apply search query filter
-      if (this.searchQuery.trim() !== "") {
-        const query = this.searchQuery.toLowerCase().trim();
-        filtered = filtered.filter((booking) => {
-          return (
-            (booking.purpose && booking.purpose.toLowerCase().includes(query)) ||
-            (booking.section && booking.section.toLowerCase().includes(query)) ||
-            (booking.room && booking.room.toLowerCase().includes(query))
-          );
-        });
-      }
-
-      // Apply status filter
-      if (this.statusFilter) {
-        filtered = filtered.filter((booking) => booking.status === this.statusFilter);
-      }
-
-      // Apply date filter
-      if (this.dateFilter !== "all") {
-        const today = new Date();
-        const startOfWeek = new Date(today);
-        startOfWeek.setDate(today.getDate() - today.getDay()); // Sunday
-
-        const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-
-        let startDate, endDate;
-
-        if (this.dateFilter === "week") {
-          startDate = startOfWeek;
-          endDate = new Date(today);
-          endDate.setDate(startOfWeek.getDate() + 6); // Saturday
-        } else if (this.dateFilter === "month") {
-          startDate = startOfMonth;
-          endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0); // Last day of month
-        } else if (this.dateFilter === "semester") {
-          // Simplified semester dates
-          if (this.selectedSemester === "current") {
-            startDate = new Date("2024-08-01");
-            endDate = new Date("2024-12-31");
-          } else if (this.selectedSemester === "2024-2") {
-            startDate = new Date("2025-01-01");
-            endDate = new Date("2025-05-31");
-          } else if (this.selectedSemester === "2024-1") {
-            startDate = new Date("2024-08-01");
-            endDate = new Date("2024-12-31");
-          } else if (this.selectedSemester === "2023-2") {
-            startDate = new Date("2024-01-01");
-            endDate = new Date("2024-05-31");
-          } else if (this.selectedSemester === "2023-1") {
-            startDate = new Date("2023-08-01");
-            endDate = new Date("2023-12-31");
-          }
-        }
-
-        if (startDate && endDate) {
-          filtered = filtered.filter((booking) => {
-            const bookingDate = new Date(booking.date);
-            return bookingDate >= startDate && bookingDate <= endDate;
-          });
-        }
-      }
-
-      // Pagination
-      const start = (this.currentPage - 1) * this.itemsPerPage;
-      const end = start + this.itemsPerPage;
-      return filtered.slice(start, end);
-    },
+  let filtered = [...this.bookings];
+  if (this.searchQuery.trim() !== "") {
+    const query = this.searchQuery.toLowerCase().trim();
+    filtered = filtered.filter((booking) => {
+      return (
+        (booking.event && booking.event.toLowerCase().includes(query)) ||
+        (booking.person && booking.person.toLowerCase().includes(query)) ||
+        (booking.selectedRoom && booking.selectedRoom.toLowerCase().includes(query))
+      );
+    });
+  }
+  console.log("Filtered Bookings:", filtered); // Debugging log
+  return filtered;
+},
     totalPages() {
       return Math.ceil(this.bookings.length / this.itemsPerPage);
     },
@@ -312,7 +191,7 @@ export default {
     // Sort bookings by `updated_at` (or `created_at`) in descending order
     this.bookings = data.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
 
-    console.log("Sorted bookings:", this.bookings);
+    console.log("Fetched Bookings:", this.bookings); // Debugging log
   } catch (error) {
     console.error("Error fetching bookings:", error.message);
   }
@@ -347,6 +226,7 @@ export default {
     },
     applyFilters() {
       this.currentPage = 1; // Reset pagination when filters change
+      console.log("Search Query:", this.searchQuery); // Debugging log
     },
   },
   created() {
