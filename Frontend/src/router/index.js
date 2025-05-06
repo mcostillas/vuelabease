@@ -61,6 +61,13 @@ const routes = [
     meta: { requiresAuth: true, role: 'instructor' },
   },
   {
+    path: '/instructor/booking',
+    name: 'InstructorBooking',
+    component: () => import('@/views/BookingForm.vue'),
+    props: (route) => ({ userRole: 'instructor', ...route.query }),
+    meta: { requiresAuth: true, role: 'instructor' },
+  },
+  {
     path: '/instructor/account',
     name: 'InstructorAccount',
     component: () => import('@/views/instructor/AccountPage.vue'),

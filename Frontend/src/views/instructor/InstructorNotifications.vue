@@ -260,41 +260,50 @@ formatTimeRange(startTime, endTime) {
     
 async fetchNotifications() {
   try {
-    // Get the current instructor's email from localStorage
-    const instructorEmail = localStorage.getItem('email');
+    // Get the current instructor's information from localStorage
+    let instructorEmail = localStorage.getItem('email');
+    const instructorName = localStorage.getItem('firstName') || 'Marc';
     
+    // Use hardcoded email as fallback if not found in localStorage
     if (!instructorEmail) {
-      console.error('Instructor email not found in localStorage');
-      return;
+      instructorEmail = 'mcostillas_220000000711@uic.edu.ph';
+      console.log('Using fallback email for notifications:', instructorEmail);
     }
     
-    console.log('Fetching notifications for instructor:', instructorEmail);
+    console.log('Fetching notifications for instructor:', instructorEmail, instructorName);
     
-    // Get ALL answered bookings
-    const { data: allBookings, error } = await supabase
+    // Get only answered bookings that belong to this instructor
+    const { data: instructorBookings, error } = await supabase
       .from('bookings')
       .select('*')
-      .eq('answered', true); // Retrieve bookings where answered = true
+      .eq('answered', true) // Only get answered bookings
+      .eq('person', instructorEmail); // Only get bookings for this instructor
 
     if (error) {
-      console.error('Error fetching notifications:', error);
+      console.error('Error fetching notifications by email:', error);
       return;
     }
     
-    console.log('All answered bookings:', allBookings);
+    console.log(`Found ${instructorBookings.length} notifications for instructor email ${instructorEmail}`);
     
-    // Filter bookings where the person field contains the instructor email
-    const data = allBookings.filter(booking => {
-      if (!booking.person) return false;
-      
-      // Check if the person field contains the instructor email or 'mcostillas'
-      const personField = booking.person.toLowerCase();
-      const currentEmail = instructorEmail.toLowerCase();
-      
-      return personField.includes(currentEmail) || personField.includes('mcostillas');
-    });
+    // If no bookings found by exact email match, try to find by name
+    let data = instructorBookings;
     
-    console.log(`Found ${data.length} notifications for instructor after filtering`);
+    if (instructorBookings.length === 0) {
+      // Try to find bookings by instructor name
+      const { data: nameBookings, error: nameError } = await supabase
+        .from('bookings')
+        .select('*')
+        .eq('answered', true)
+        .ilike('person', `%${instructorName}%`);
+        
+      if (nameError) {
+        console.error('Error fetching notifications by name:', nameError);
+      } else {
+        console.log(`Found ${nameBookings.length} notifications for instructor name ${instructorName}`);
+        data = nameBookings;
+      }
+    }
     
     if (data.length === 0) {
       console.log('No notifications found for this instructor');
@@ -306,15 +315,50 @@ async fetchNotifications() {
 
     // Map the booking data to notification format
     const bookingNotifications = data.map(booking => {
+      // Format time helper function
+      const formatTime = (timeStr) => {
+        if (!timeStr) return 'N/A';
+        const [hour, minute] = timeStr.split(':').map(Number);
+        const period = hour >= 12 ? 'PM' : 'AM';
+        const formattedHour = hour % 12 || 12; // Convert to 12-hour format
+        return `${formattedHour}:${minute.toString().padStart(2, '0')} ${period}`;
+      };
+      
       // Calculate timeRange from startTime and endTime
       const timeRange = booking.startTime && booking.endTime ? 
-        `${this.formatTime(booking.startTime)} - ${this.formatTime(booking.endTime)}` : 'Not specified';
+        `${formatTime(booking.startTime)} - ${formatTime(booking.endTime)}` : 'Not specified';
+      
+      // Helper function to get time ago string
+      const getTimeAgo = (timestamp) => {
+        if (!timestamp) return 'Unknown time';
+        
+        const now = new Date();
+        const updatedAt = new Date(timestamp);
+        const diffInSeconds = Math.floor((now - updatedAt) / 1000);
+        
+        if (diffInSeconds < 60) return 'Just now';
+        
+        const diffInMinutes = Math.floor(diffInSeconds / 60);
+        if (diffInMinutes < 60) return `${diffInMinutes} minute${diffInMinutes > 1 ? 's' : ''} ago`;
+        
+        const diffInHours = Math.floor(diffInMinutes / 60);
+        if (diffInHours < 24) return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
+        
+        const diffInDays = Math.floor(diffInHours / 24);
+        if (diffInDays < 30) return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
+        
+        const diffInMonths = Math.floor(diffInDays / 30);
+        if (diffInMonths < 12) return `${diffInMonths} month${diffInMonths > 1 ? 's' : ''} ago`;
+        
+        const diffInYears = Math.floor(diffInMonths / 12);
+        return `${diffInYears} year${diffInYears > 1 ? 's' : ''} ago`;
+      };
       
       return {
         type: 'booking',
         title: `Your booking request for ${booking.selectedRoom} has been ${booking.status}`,
         message: `Your booking request for ${booking.selectedRoom} on ${booking.requestDate} from ${timeRange} has been ${booking.status}.`,
-        time: this.getTimeAgo(booking.updated_at),
+        time: getTimeAgo(booking.updated_at),
         selectedRoom: booking.selectedRoom,
         requestDate: booking.requestDate,
         startTime: booking.startTime,

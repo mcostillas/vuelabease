@@ -2,10 +2,10 @@
   <div class="booking-container">
     <div class="booking-layout">
       <div class="header">
-        <router-link to="/" class="back-button">
+        <router-link :to="userRole === 'instructor' ? '/instructor/dashboard' : '/'" class="back-button">
           <ArrowLeftIcon class="icon-primary" />
         </router-link>
-        <h1>Laboratory Booking System</h1>
+        <h1>{{ userRole === 'instructor' ? 'Instructor Laboratory Booking' : 'Laboratory Booking System' }}</h1>
       </div>
 
       <!-- Schedule View -->
@@ -75,6 +75,29 @@
                 </button>
               </div>
             </div>
+            
+            <!-- Room Filters -->
+            <div class="room-filters">
+              <div class="filter-label">Filter by Room:</div>
+              <div class="room-filter-buttons">
+                <button 
+                  class="room-filter-btn" 
+                  :class="{ 'active': selectedRoomFilter === 'all' }" 
+                  @click="selectRoomFilter('all')"
+                >
+                  All Rooms
+                </button>
+                <button 
+                  v-for="room in ['L201', 'L202', 'L203', 'L204', 'L205', 'IOT', 'Open Lab']" 
+                  :key="room" 
+                  class="room-filter-btn" 
+                  :class="{ 'active': selectedRoomFilter === room }"
+                  @click="selectRoomFilter(room)"
+                >
+                  {{ room }}
+                </button>
+              </div>
+            </div>
 
             <!-- Weekly Schedule Table (similar to reference image) -->
             <div class="weekly-schedule-table-container">
@@ -104,16 +127,24 @@
         :key="schedule.id"
         :class="['class-info', { 
           'pending-booking': schedule.isPending, 
-          'approved-booking': schedule.isApproved 
+          'approved-booking': schedule.isApproved,
+          'regular-schedule': !schedule.isPending && !schedule.isApproved
         }]"
       >
-        <div class="class-code">{{ schedule.course_code }}</div>
-        <div class="class-section">{{ schedule.section }}</div>
-        <div v-if="!schedule.isPending && !schedule.isApproved" class="class-instructor">{{ schedule.instructor }}</div>
-        <div v-else-if="schedule.isPending" class="pending-label">PENDING APPROVAL</div>
-        <div v-else-if="schedule.isApproved" class="approved-label">APPROVED BOOKING</div>
-        <div class="class-room">{{ schedule.lab_room }}</div>
+        <!-- Header section with status/course code -->
+        <div class="booking-header">
+          <div v-if="schedule.isPending" class="status-header pending-header">PENDING</div>
+          <div v-else-if="schedule.isApproved" class="status-header approved-header">APPROVED</div>
+          <div v-else class="status-header course-header">{{ schedule.course_code }}</div>
+        </div>
+        
+        <!-- Title below header: event name for bookings, section for regular schedules -->
         <div v-if="schedule.event" class="event-name">{{ schedule.event }}</div>
+        <div v-else-if="schedule.section" class="event-name">{{ schedule.section }}</div>
+        
+        <!-- Other details -->
+        <div v-if="!schedule.isPending && !schedule.isApproved" class="class-instructor">{{ schedule.instructor }}</div>
+        <div class="class-room">{{ schedule.lab_room }}</div>
       </div>
     </td>
   </tr>
@@ -829,6 +860,12 @@ const supabase = createClient(
 );
 export default {
   name: "BookingForm",
+  props: {
+    userRole: {
+      type: String,
+      default: 'student'
+    }
+  },
   components: {
     Modal,
     ArrowLeftIcon,
@@ -840,11 +877,13 @@ export default {
     ComputerDesktopIcon,
     EnvelopeIcon,
   },
+
   data() {
     return {
       // Modal states
       showRequesterModal: false,
       showBookingModal: false,
+      selectedRoomFilter: 'all', // For individual room filtering in weekly schedule
       
       // Requester info
       requesterType: "student",
@@ -1099,6 +1138,13 @@ export default {
     this.fetchSchedules();
     // Fetch all bookings (both pending and approved)
     this.fetchAllBookings();
+    
+    // If user is an instructor, auto-select instructor as requester type
+    if (this.userRole === 'instructor') {
+      this.requesterType = 'instructor';
+      // Skip the requester modal for instructors
+      this.showRequesterModal = false;
+    }
   },
   watch: {
     startTime(newValue, oldValue) {
@@ -1606,7 +1652,17 @@ async fetchSchedules() {
   }
   
   // Combine regular schedules and bookings
-  const combinedSchedules = [...schedulesForSlot, ...bookingsForSlot];
+  let combinedSchedules = [...schedulesForSlot, ...bookingsForSlot];
+  
+  // Apply room filter if a specific room is selected
+  if (this.selectedRoomFilter !== 'all') {
+    combinedSchedules = combinedSchedules.filter(schedule => {
+      // Check if the schedule has a lab_room property that matches the selected room filter
+      return schedule.lab_room === this.selectedRoomFilter || 
+             schedule.room === this.selectedRoomFilter || 
+             schedule.selectedRoom === this.selectedRoomFilter;
+    });
+  }
   
   return combinedSchedules;
     },
@@ -2004,6 +2060,11 @@ async fetchSchedules() {
     selectLabFilter(lab) {
       this.selectedLabFilter = lab;
     },
+    
+    // Select room filter for the weekly schedule section
+    selectRoomFilter(room) {
+      this.selectedRoomFilter = room;
+    },
 
     // Select section filter for the weekly schedule
     selectSectionFilter(section) {
@@ -2052,7 +2113,10 @@ async fetchSchedules() {
           
           // Store instructor email in the person field (which exists in the database)
           bookingData.person = instructorEmail;
-          console.log('Storing instructor email in person field:', instructorEmail);
+          // Also store the instructor name to make it easier to find bookings
+          const instructorName = localStorage.getItem('firstName') || 'Marc';
+          bookingData.instructor_name = instructorName;
+          console.log('Storing instructor info:', { email: instructorEmail, name: instructorName });
         }
         
         console.log('Final booking data:', bookingData);
@@ -2159,8 +2223,66 @@ async fetchSchedules() {
 
   console.log("Filtered schedules for the selected day:", this.filteredScheduleData);
 
-  // Show the requester info modal
-  this.showRequesterModal = true;
+  // If user is an instructor, skip the requester modal and go directly to booking form
+  if (this.userRole === 'instructor') {
+    // Set default values for instructor
+    this.requesterType = 'instructor';
+    
+    // Get instructor info from localStorage if available
+    const instructorName = localStorage.getItem('firstName') || '';
+    const instructorEmail = localStorage.getItem('email') || '';
+    
+    // Try to fetch instructor details from database
+    this.fetchInstructorInfo(instructorName, instructorEmail).then(() => {
+      // Show booking modal directly
+      this.showBookingModal = true;
+    });
+  } else {
+    // For students, show the requester info modal first
+    this.showRequesterModal = true;
+  }
+},
+
+// Helper method to fetch instructor info
+async fetchInstructorInfo(name, email) {
+  try {
+    // If we have an email, try to find the instructor by email
+    let query = supabase.from('user').select('fullname, usertype, email').eq('usertype', 'Instructor');
+    
+    if (email) {
+      query = query.eq('email', email);
+    } else if (name) {
+      query = query.ilike('fullname', `%${name}%`);
+    } else {
+      // If no name or email, just set default department
+      this.department = "Faculty";
+      return;
+    }
+    
+    const { data, error } = await query.limit(1);
+    
+    if (error) {
+      console.error('Error fetching instructor info:', error.message);
+      this.department = "Faculty";
+      return;
+    }
+    
+    if (data && data.length > 0) {
+      // Instructor found in database
+      this.department = "Faculty";
+      this.person = data[0].fullname; // Use the exact name from the database
+      this.contact = data[0].email || email || ""; // Use email from database if available
+      console.log("Instructor found in database:", data[0]);
+    } else {
+      // Instructor not found but we'll proceed anyway
+      this.department = "Faculty";
+      this.person = name || "Instructor";
+      this.contact = email || "";
+    }
+  } catch (error) {
+    console.error("Error fetching instructor info:", error.message);
+    this.department = "Faculty";
+  }
 },
     // Close the requester info modal
     closeRequesterModal() {
@@ -3978,7 +4100,7 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 }
 
 .weekly-schedule-table .has-class {
-  background-color: rgba(252, 240, 227, 0.7);
+  background-color: transparent;
 }
 
 .weekly-schedule-table .lunch-row td {
@@ -4001,12 +4123,12 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 }
 
 .class-info {
-  background-color: rgba(255, 166, 102, 0.15);
+  background-color: white;
   padding: 0.75rem;
   border-radius: 8px;
   font-size: 0.8rem;
   margin-bottom: 0.5rem;
-  border-left: 3px solid #ff9c54;
+  border-left: 3px solid transparent;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
   transition: all 0.2s ease;
 }
@@ -4161,7 +4283,53 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 1rem;
+}
+
+/* Room Filters Styles */
+.room-filters {
+  display: flex;
+  flex-direction: column;
   margin-bottom: 1.5rem;
+  background-color: #f8f9fa;
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.filter-label {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.room-filter-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.room-filter-btn {
+  background-color: #fff;
+  border: 1px solid #e0e0e0;
+  color: #666;
+  padding: 0.4rem 0.8rem;
+  border-radius: 16px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.room-filter-btn:hover {
+  background-color: #f1f1f1;
+  border-color: #ccc;
+}
+
+.room-filter-btn.active {
+  background-color: #dd3859;
+  color: white;
+  border-color: #dd3859;
 }
 
 .schedule-section-header h3 {
@@ -4307,9 +4475,46 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   transition: all 0.2s ease;
 }
 
-.pending-booking:hover, .approved-booking:hover {
+.regular-schedule {
+  background-color: rgba(221, 56, 89, 0.15) !important; /* Light red background */
+  color: #333;
+  border-left: 4px solid #dd3859; /* LabEase red border */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.pending-booking:hover, .approved-booking:hover, .regular-schedule:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.booking-header {
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+.status-header {
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  display: inline-block;
+  margin-bottom: 0.25rem;
+}
+
+.pending-header {
+  color: #856404;
+  background-color: #ffeeba;
+}
+
+.approved-header {
+  color: #155724;
+  background-color: #c3e6cb;
+}
+
+.course-header {
+  color: white;
+  background-color: #dd3859;
 }
 
 .pending-label {
@@ -4317,7 +4522,6 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   font-weight: bold;
   color: #856404;
   margin-top: 0.25rem;
-  background-color: #ffeeba;
   padding: 2px 6px;
   border-radius: 3px;
   display: inline-block;
@@ -4328,20 +4532,21 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   font-weight: bold;
   color: #155724;
   margin-top: 0.25rem;
-  background-color: #c3e6cb;
   padding: 2px 6px;
   border-radius: 3px;
   display: inline-block;
 }
 
 .event-name {
-  font-size: 0.75rem;
-  margin-top: 0.25rem;
-  font-weight: 500;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.5rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 100%;
+  text-align: center;
 }
 
 .class-code {
@@ -4384,3 +4589,5 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   to { opacity: 1; transform: translateY(0); }
 }
 </style>
+
+

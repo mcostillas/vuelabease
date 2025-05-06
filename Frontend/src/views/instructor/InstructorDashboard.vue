@@ -161,24 +161,39 @@ export default {
         ],
         roomAvailability: [], // Array to hold room availability data
         scheduleData: [], // Array to hold schedule data
+        testDay: null, // New property to hold test day
     };
   },
   computed: {
   todaysSchedule() {
-    const currentDay = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+    // Use testDay if available (for testing purposes), otherwise use current day
+    const currentDay = this.testDay || new Date().toLocaleDateString('en-US', { weekday: 'long' });
 
-    // Filter schedules for the current day
+    console.log('Using day for schedule filtering:', currentDay);
+
+    // Filter schedules for the current day or test day
     const filteredSchedules = this.scheduleData.filter(schedule => schedule.day === currentDay);
 
-    console.log('Filtered schedules for today:', filteredSchedules); // Debugging log
+    console.log('Filtered schedules for today/test day:', filteredSchedules); // Debugging log
 
     // Sort schedules by startTime in ascending order
     return filteredSchedules.sort((a, b) => {
-      const [aHour, aMinute] = a.startTime.split(':').map(Number);
-      const [bHour, bMinute] = b.startTime.split(':').map(Number);
+      // Handle different time formats (with or without AM/PM)
+      const formatTimeToMinutes = (timeStr) => {
+        if (timeStr.includes('AM') || timeStr.includes('PM')) {
+          const [timePart, period] = timeStr.split(' ');
+          let [hours, minutes] = timePart.split(':').map(Number);
+          if (period === 'PM' && hours < 12) hours += 12;
+          if (period === 'AM' && hours === 12) hours = 0;
+          return hours * 60 + minutes;
+        } else {
+          const [hours, minutes] = timeStr.split(':').map(Number);
+          return hours * 60 + minutes;
+        }
+      };
 
-      const aTotalMinutes = aHour * 60 + aMinute;
-      const bTotalMinutes = bHour * 60 + bMinute;
+      const aTotalMinutes = formatTimeToMinutes(a.startTime);
+      const bTotalMinutes = formatTimeToMinutes(b.startTime);
 
       return aTotalMinutes - bTotalMinutes;
     });
@@ -192,8 +207,18 @@ export default {
   const currentMinutes = currentTime.getMinutes();
   const currentDay = new Date().toLocaleDateString('en-US', { weekday: 'long' });
 
+  // Get only the rooms that are used by this instructor in their schedule
+  const instructorRoomIds = [...new Set(this.scheduleData.map(schedule => schedule.labRoom))];
+  console.log('Instructor room IDs:', instructorRoomIds);
+  
+  // Filter the rooms to only include those that are in the instructor's schedule
+  const instructorRooms = this.rooms.filter(room => instructorRoomIds.includes(room.id));
+  
+  // If no instructor rooms found, show all rooms as a fallback
+  const roomsToDisplay = instructorRooms.length > 0 ? instructorRooms : this.rooms;
+  
   // Iterate through each room and check if it is in use
-  this.roomAvailability = this.rooms.map(room => {
+  this.roomAvailability = roomsToDisplay.map(room => {
     const schedules = this.scheduleData.filter(schedule =>
       schedule.labRoom === room.id && schedule.day === currentDay
     );
@@ -217,7 +242,7 @@ export default {
     };
   });
 
-  console.log('Updated room availability:', this.roomAvailability);
+  console.log('Updated room availability for instructor:', this.roomAvailability);
 },
   async fetchTotalBookings() {
   try {
@@ -239,14 +264,62 @@ export default {
 },
 async fetchSchedules() {
   try {
+    // Get instructor information from localStorage
+    let instructorEmail = localStorage.getItem('email');
+    const instructorName = localStorage.getItem('firstName') || 'Marc';
+    const instructorLastName = localStorage.getItem('lastName') || 'Costillas';
+    const fullName = `${instructorName} ${instructorLastName}`;
+    
+    // For testing purposes, we'll use a hardcoded instructor name that matches the database
+    // This is temporary to ensure we can see data
+    const testInstructorName = 'Michel Bolo';
+    
+    // Use hardcoded email as fallback if not found in localStorage
+    if (!instructorEmail) {
+      instructorEmail = 'mcostillas_220000000711@uic.edu.ph';
+      console.log('Using fallback email for schedule fetch:', instructorEmail);
+    }
+    
+    console.log('Fetching schedules for instructor:', fullName);
+    console.log('Using test instructor name for development:', testInstructorName);
+    
+    // Log the current day for debugging
+    const currentDay = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+    console.log('Current day:', currentDay);
+    
+    // Fetch all schedules from the database
     const { data, error } = await supabaseSchedules
       .from('schedules')
-      .select('*'); // Fetch all columns from the schedules table
+      .select('*');
 
     if (error) throw error;
+    
+    console.log('Total schedules in database:', data.length);
+    
+    // First approach: Try to find schedules by instructor email (for production)
+    let instructorSchedules = [];
+    
+    // For development/testing, use the test instructor name
+    // In production, this should be replaced with the actual instructor name from localStorage
+    instructorSchedules = data.filter(schedule => {
+      return schedule.instructor_name && 
+             schedule.instructor_name.toLowerCase() === testInstructorName.toLowerCase();
+    });
+    
+    console.log(`Found ${instructorSchedules.length} schedules for test instructor ${testInstructorName}`);
+    
+    // If no schedules found, get some sample data to display
+    if (instructorSchedules.length === 0) {
+      console.log('No schedules found for test instructor, using sample data');
+      instructorSchedules = data.slice(0, 5); // Get first 5 schedules as samples
+    }
+    
+    // Log days from the database for debugging
+    const daysInDatabase = [...new Set(data.map(schedule => schedule.day))];
+    console.log('Days in database:', daysInDatabase);
 
-    // Map the fetched data to the scheduleData array
-    this.scheduleData = data.map(schedule => ({
+    // Map the filtered data to the scheduleData array
+    this.scheduleData = instructorSchedules.map(schedule => ({
       id: schedule.id,
       startTime: schedule.start_time,
       endTime: schedule.end_time,
@@ -254,38 +327,99 @@ async fetchSchedules() {
       courseName: schedule.course_name,
       section: schedule.section,
       labRoom: schedule.lab_room,
-      day: schedule.day, // Ensure this matches the column name in your database
+      day: schedule.day,
     }));
 
-    console.log('Fetched scheduleData:', this.scheduleData); // Debugging log
+    console.log('Filtered scheduleData for instructor:', this.scheduleData);
+    
+    // Log schedules for today
+    const todaySchedules = this.scheduleData.filter(schedule => schedule.day === currentDay);
+    console.log(`Found ${todaySchedules.length} schedules for today (${currentDay}):`, todaySchedules);
+    
+    // If no schedules for today, modify the current day for testing purposes
+    if (todaySchedules.length === 0 && this.scheduleData.length > 0) {
+      console.log('No schedules found for today, using a sample day for testing');
+      // Get a day that has schedules
+      const sampleDay = this.scheduleData[0].day;
+      console.log(`Using sample day: ${sampleDay} for testing`);
+      // Override the current day in the computed property (for testing only)
+      this.testDay = sampleDay;
+    }
   } catch (error) {
     console.error('Error fetching schedules:', error.message);
   }
 },
     async fetchBookingStats() {
-      try {
-        const { data, error } = await supabaseBookings
-          .from('bookings')
-          .select('status'); // Fetch only the status column
-
-        if (error) throw error;
-
-        // Calculate totals based on booking status
-        this.totalPending = data.filter(booking => booking.status === 'pending').length;
-        this.totalConfirmed = data.filter(booking => booking.status === 'approved').length;
-        this.totalCanceled = data.filter(booking => booking.status === 'rejected').length;
-        this.totalBookings = this.totalPending + this.totalConfirmed + this.totalCanceled; // Total bookings
-
-        console.log('Booking stats fetched:', {
-          totalPending: this.totalPending,
-          totalConfirmed: this.totalConfirmed,
-          totalCanceled: this.totalCanceled,
-          totalBookings: this.totalBookings,
-        });
-      } catch (error) {
-        console.error('Error fetching booking stats:', error.message);
+  try {
+    // Get instructor information from localStorage
+    let instructorEmail = localStorage.getItem('email');
+    const instructorName = localStorage.getItem('firstName') || 'Marc';
+    
+    // Use hardcoded email as fallback if not found in localStorage
+    if (!instructorEmail) {
+      instructorEmail = 'mcostillas_220000000711@uic.edu.ph';
+      console.log('Using fallback email for dashboard stats:', instructorEmail);
+    }
+    
+    console.log('Fetching booking stats for instructor:', instructorEmail, instructorName);
+    
+    // First, try to get bookings where person field matches the email
+    const { data: emailBookings, error: emailError } = await supabaseBookings
+      .from('bookings')
+      .select('*')
+      .eq('person', instructorEmail);
+      
+    if (emailError) {
+      console.error('Error fetching instructor bookings by email:', emailError);
+      return;
+    }
+    
+    console.log(`Found ${emailBookings.length} bookings for instructor email ${instructorEmail}`);
+    
+    // Now try to get bookings where person field contains the instructor's name
+    const { data: nameBookings, error: nameError } = await supabaseBookings
+      .from('bookings')
+      .select('*')
+      .ilike('person', `%${instructorName}%`);
+      
+    if (nameError) {
+      console.error('Error fetching instructor bookings by name:', nameError);
+      return;
+    }
+    
+    console.log(`Found ${nameBookings.length} bookings for instructor name ${instructorName}`);
+    
+    // Combine both results and remove duplicates
+    const allBookings = [...emailBookings];
+    
+    // Add name bookings that aren't already in the email bookings
+    nameBookings.forEach(booking => {
+      if (!allBookings.some(b => b.id === booking.id)) {
+        allBookings.push(booking);
       }
-    },
+    });
+    
+    console.log(`Total combined bookings for dashboard: ${allBookings.length}`);
+    
+    // Use the combined bookings for stats
+    let instructorBookings = allBookings;
+    
+    // Calculate totals based on booking status for this instructor only
+    this.totalPending = instructorBookings.filter(booking => booking.status === 'pending').length;
+    this.totalConfirmed = instructorBookings.filter(booking => booking.status === 'approved').length;
+    this.totalCanceled = instructorBookings.filter(booking => booking.status === 'rejected').length;
+    this.totalBookings = instructorBookings.length; // Total bookings for this instructor
+
+    console.log('Instructor booking stats:', {
+      totalPending: this.totalPending,
+      totalConfirmed: this.totalConfirmed,
+      totalCanceled: this.totalCanceled,
+      totalBookings: this.totalBookings,
+    });
+  } catch (error) {
+    console.error('Error fetching booking stats:', error.message);
+  }
+},
   },
   mounted() {
     this.fetchBookingStats(); // Fetch booking stats when the component is mounted

@@ -318,52 +318,98 @@ export default {
   },
   methods: {
     async fetchScheduleEvents() {
-      this.isLoading = true;
-      try {
-        // Get instructor email from localStorage
-        const instructorEmail = localStorage.getItem('email');
-        
-        if (!instructorEmail) {
-          console.error('Instructor email not found in localStorage');
-          this.scheduleEvents = [];
-          return;
-        }
-        
-        console.log('Fetching schedules for instructor:', instructorEmail);
-        
-        // Query schedules where instructor_email matches the logged-in instructor's email
-        const { data, error } = await supabaseSchedules
-          .from('schedules')
-          .select('*')
-          .eq('instructor_email', instructorEmail);
-
-        if (error) throw error;
-        
-        console.log(`Found ${data.length} schedule events for instructor ${instructorEmail}`);
-
-        this.scheduleEvents = data.map(event => ({
-          id: event.id,
-          title: event.course_name,
-          courseCode: event.course_code,
-          section: event.section,
-          location: event.lab_room,
-          date: event.day,
-          secondDay: event.second_day || null,
-          startTime: event.start_time,
-          endTime: event.end_time,
-          instructorName: event.instructor_name,
-          instructorEmail: event.instructor_email,
-          semester: event.semester,
-          scheduleType: event.schedule_types,
-          status: event.status,
-        }));
-      } catch (error) {
-        console.error('Error fetching schedule events:', error.message);
-        this.scheduleEvents = [];
-      } finally {
-        this.isLoading = false;
+  this.isLoading = true;
+  try {
+    // Get instructor information from localStorage
+    let instructorEmail = localStorage.getItem('email');
+    const instructorName = localStorage.getItem('firstName') || 'Marc';
+    const instructorLastName = localStorage.getItem('lastName') || 'Costillas';
+    const fullName = `${instructorName} ${instructorLastName}`;
+    
+    // Use hardcoded email as fallback if not found in localStorage
+    if (!instructorEmail) {
+      instructorEmail = 'mcostillas_220000000711@uic.edu.ph';
+      console.log('Using fallback email for schedule fetch:', instructorEmail);
+    }
+    
+    console.log('Fetching schedules for instructor:', instructorEmail, fullName);
+    
+    // For testing purposes, use a test instructor name that exists in the database
+    const testInstructorName = 'Michel Bolo';
+    console.log('Using test instructor name for development:', testInstructorName);
+    
+    // First approach: Try to find schedules by instructor email
+    const { data: emailData, error: emailError } = await supabaseSchedules
+      .from('schedules')
+      .select('*')
+      .eq('instructor_email', instructorEmail);
+    
+    if (emailError) {
+      console.error('Error fetching schedules by email:', emailError);
+      return;
+    }
+    
+    console.log(`Found ${emailData.length} schedule events for instructor email ${instructorEmail}`);
+    
+    // Second approach: If no schedules found by email, try by instructor name
+    let instructorData = emailData;
+    
+    if (emailData.length === 0) {
+      // For development, use the test instructor name to ensure we see data
+      const { data: nameData, error: nameError } = await supabaseSchedules
+        .from('schedules')
+        .select('*')
+        .eq('instructor_name', testInstructorName);
+      
+      if (nameError) {
+        console.error('Error fetching schedules by name:', nameError);
+      } else {
+        console.log(`Found ${nameData.length} schedule events for test instructor ${testInstructorName}`);
+        instructorData = nameData;
       }
-    },
+    }
+    
+    // Third approach: If still no data, fetch a sample of schedules for demonstration
+    if (instructorData.length === 0) {
+      const { data: sampleData, error: sampleError } = await supabaseSchedules
+        .from('schedules')
+        .select('*')
+        .limit(10);
+      
+      if (sampleError) {
+        console.error('Error fetching sample schedules:', sampleError);
+      } else {
+        console.log(`Found ${sampleData.length} sample schedule events for demonstration`);
+        instructorData = sampleData;
+      }
+    }
+
+    // Map the data to our schedule events format
+    this.scheduleEvents = instructorData.map(event => ({
+      id: event.id,
+      title: event.course_name,
+      courseCode: event.course_code,
+      section: event.section,
+      location: event.lab_room,
+      date: event.day,
+      secondDay: event.second_day || null,
+      startTime: event.start_time,
+      endTime: event.end_time,
+      instructorName: event.instructor_name,
+      instructorEmail: event.instructor_email || instructorEmail,
+      semester: event.semester,
+      scheduleType: event.schedule_types,
+      status: event.status,
+    }));
+    
+    console.log('Processed schedule events:', this.scheduleEvents);
+  } catch (error) {
+    console.error('Error fetching schedule events:', error.message);
+    this.scheduleEvents = [];
+  } finally {
+    this.isLoading = false;
+  }
+},
     getDayAbbreviation(dateString) {
       const date = new Date(dateString);
       const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];

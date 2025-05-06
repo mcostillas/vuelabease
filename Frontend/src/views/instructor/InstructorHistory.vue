@@ -234,45 +234,133 @@ export default {
     return filtered.slice(start, end);
   },
   totalPages() {
-    return Math.ceil(
-      this.bookings.filter((booking) => booking.answered === true).length / this.itemsPerPage
-    );
+    let filtered = [...this.bookings];
+    
+    // Filter by program
+    if (this.selectedProgram) {
+      filtered = filtered.filter((booking) => booking.program === this.selectedProgram);
+    }
+
+    // Filter by year
+    if (this.selectedYear) {
+      filtered = filtered.filter((booking) => booking.year === this.selectedYear);
+    }
+
+    // Filter by section
+    if (this.selectedSection) {
+      filtered = filtered.filter((booking) => booking.section === this.selectedSection);
+    }
+
+    // Filter by status
+    if (this.statusFilter) {
+      filtered = filtered.filter((booking) => booking.status === this.statusFilter);
+    }
+
+    // Filter by answered status
+    filtered = filtered.filter((booking) => booking.answered === true);
+    
+    return Math.ceil(filtered.length / this.itemsPerPage);
   },
 },
   methods: {
     async fetchBookings() {
-      try {
-        // Get the current instructor's email from localStorage
-        const instructorEmail = localStorage.getItem('email');
-        
-        if (!instructorEmail) {
-          console.error('Instructor email not found in localStorage');
-          return;
-        }
-        
-        console.log('Fetching booking history for instructor:', instructorEmail);
-        
-        // Get ALL bookings from the database
-        const { data: allBookings, error: allError } = await supabase
-          .from("bookings")
-          .select("*")
-          .order("created_at", { ascending: false });
-          
-        if (allError) {
-          console.error('Error fetching all bookings:', allError);
-          return;
-        }
-        
-        console.log('ALL bookings in database:', allBookings);
-        console.log('Booking person fields:', allBookings.map(b => b.person));
-        
-        // For demo purposes, show all bookings
-        console.log('Showing all bookings for demo purposes');
-        this.bookings = allBookings;
-      } catch (error) {
-        console.error("Error fetching bookings:", error.message);
+  try {
+    // Get instructor information from localStorage
+    let instructorEmail = localStorage.getItem('email');
+    const instructorName = localStorage.getItem('firstName') || 'Marc';
+    
+    console.log('Instructor name from localStorage:', instructorName);
+    
+    // Use hardcoded email as fallback if not found in localStorage
+    if (!instructorEmail) {
+      instructorEmail = 'mcostillas_220000000711@uic.edu.ph';
+      console.log('Using fallback email:', instructorEmail);
+    }
+    
+    console.log('Fetching booking history for instructor:', instructorEmail);
+    
+    // First, try to get bookings where person field matches the email
+    const { data: emailBookings, error: emailError } = await supabase
+      .from("bookings")
+      .select("*")
+      .eq("person", instructorEmail)
+      .order("created_at", { ascending: false });
+      
+    if (emailError) {
+      console.error('Error fetching instructor bookings by email:', emailError);
+      return;
+    }
+    
+    console.log(`Found ${emailBookings.length} bookings for instructor email ${instructorEmail}`);
+    
+    // Now try to get bookings where person field contains the instructor's name
+    const { data: nameBookings, error: nameError } = await supabase
+      .from("bookings")
+      .select("*")
+      .ilike("person", `%${instructorName}%`)
+      .order("created_at", { ascending: false });
+      
+    if (nameError) {
+      console.error('Error fetching instructor bookings by name:', nameError);
+      return;
+    }
+    
+    console.log(`Found ${nameBookings.length} bookings for instructor name ${instructorName}`);
+    
+    // Combine both results and remove duplicates
+    const allBookings = [...emailBookings];
+    
+    // Add name bookings that aren't already in the email bookings
+    nameBookings.forEach(booking => {
+      if (!allBookings.some(b => b.id === booking.id)) {
+        allBookings.push(booking);
       }
-    },
+    });
+    
+    console.log(`Total combined bookings: ${allBookings.length}`);
+    
+    // Debug: Check counts for all booking statuses
+    const approvedBookings = allBookings.filter(booking => booking.status === 'approved');
+    const rejectedBookings = allBookings.filter(booking => booking.status === 'rejected');
+    const pendingBookings = allBookings.filter(booking => booking.status === 'pending');
+    const cancelledBookings = allBookings.filter(booking => booking.status === 'cancelled');
+    
+    console.log('Booking counts by status:');
+    console.log(`- Approved: ${approvedBookings.length}`);
+    console.log(`- Rejected: ${rejectedBookings.length}`);
+    console.log(`- Pending: ${pendingBookings.length}`);
+    console.log(`- Cancelled: ${cancelledBookings.length}`);
+    
+    // For instructor history, we consider all bookings as 'answered'
+    // This ensures they all show up in the history view regardless of status
+    allBookings.forEach(booking => {
+      booking.answered = true;
+    });
+    
+    // Log a sample of bookings from each status
+    console.log('Sample bookings after update:');
+    const logSampleBooking = (booking, status) => {
+      if (booking) {
+        console.log(`${status} booking example:`, {
+          id: booking.id,
+          event: booking.event,
+          answered: booking.answered,
+          status: booking.status
+        });
+      }
+    };
+    
+    if (approvedBookings.length) logSampleBooking(approvedBookings[0], 'Approved');
+    if (rejectedBookings.length) logSampleBooking(rejectedBookings[0], 'Rejected');
+    if (pendingBookings.length) logSampleBooking(pendingBookings[0], 'Pending');
+    if (cancelledBookings.length) logSampleBooking(cancelledBookings[0], 'Cancelled');
+    
+    // Set the bookings to display
+    this.bookings = allBookings;
+  } catch (error) {
+    console.error("Error fetching bookings:", error.message);
+  }
+},
     applyFilters() {
       this.currentPage = 1;
     },
