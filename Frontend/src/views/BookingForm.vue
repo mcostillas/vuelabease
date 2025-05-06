@@ -116,37 +116,42 @@
   >
     <td class="time-cell">{{ timeSlot.time }}</td>
     <td
-      v-for="day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']"
-      :key="`${timeSlot.value}-${day}`"
-      :class="{ 'has-class': getScheduleForTimeSlotAndDay(timeSlot, day).length > 0 }"
-      @click="handleCellClick(timeSlot, day)"
-      :style="{ cursor: getScheduleForTimeSlotAndDay(timeSlot, day).length > 0 ? 'not-allowed' : 'pointer' }"
-    >
-      <div
-        v-for="schedule in getScheduleForTimeSlotAndDay(timeSlot, day)"
-        :key="schedule.id"
-        :class="['class-info', { 
-          'pending-booking': schedule.isPending, 
-          'approved-booking': schedule.isApproved,
-          'regular-schedule': !schedule.isPending && !schedule.isApproved
-        }]"
-      >
-        <!-- Header section with status/course code -->
-        <div class="booking-header">
-          <div v-if="schedule.isPending" class="status-header pending-header">PENDING</div>
-          <div v-else-if="schedule.isApproved" class="status-header approved-header">APPROVED</div>
-          <div v-else class="status-header course-header">{{ schedule.course_code }}</div>
-        </div>
-        
-        <!-- Title below header: event name for bookings, section for regular schedules -->
-        <div v-if="schedule.event" class="event-name">{{ schedule.event }}</div>
-        <div v-else-if="schedule.section" class="event-name">{{ schedule.section }}</div>
-        
-        <!-- Other details -->
-        <div v-if="!schedule.isPending && !schedule.isApproved" class="class-instructor">{{ schedule.instructor }}</div>
-        <div class="class-room">{{ schedule.lab_room }}</div>
-      </div>
-    </td>
+  v-for="day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']"
+  :key="`${timeSlot.value}-${day}`"
+  :class="{
+    'has-class': getScheduleForTimeSlotAndDay(timeSlot, day).length > 0,
+    'disabled-cell': selectedDayOfWeek && day !== selectedDayOfWeek,
+  }"
+  @click="handleCellClick(timeSlot, day)"
+  :style="{
+    cursor: selectedDayOfWeek && day !== selectedDayOfWeek ? 'not-allowed' : getScheduleForTimeSlotAndDay(timeSlot, day).length > 0 ? 'not-allowed' : 'pointer',
+  }"
+>
+  <div
+    v-for="schedule in getScheduleForTimeSlotAndDay(timeSlot, day)"
+    :key="schedule.id"
+    :class="['class-info', { 
+      'pending-booking': schedule.isPending, 
+      'approved-booking': schedule.isApproved,
+      'regular-schedule': !schedule.isPending && !schedule.isApproved
+    }]"
+  >
+    <!-- Header section with status/course code -->
+    <div class="booking-header">
+      <div v-if="schedule.isPending" class="status-header pending-header">PENDING</div>
+      <div v-else-if="schedule.isApproved" class="status-header approved-header">APPROVED</div>
+      <div v-else class="status-header course-header">{{ schedule.course_code }}</div>
+    </div>
+    
+    <!-- Title below header: event name for bookings, section for regular schedules -->
+    <div v-if="schedule.event" class="event-name">{{ schedule.event }}</div>
+    <div v-else-if="schedule.section" class="event-name">{{ schedule.section }}</div>
+    
+    <!-- Other details -->
+    <div v-if="!schedule.isPending && !schedule.isApproved" class="class-instructor">{{ schedule.instructor }}</div>
+    <div class="class-room">{{ schedule.lab_room }}</div>
+  </div>
+</td>
   </tr>
 </tbody>
               </table>
@@ -479,7 +484,7 @@
                       <option v-for="time in timeOptions" :key="time" :value="time">{{ time }}</option>
                     </select>
                     <span class="input-icon time-icon">
-                      <ClockIcon class="icon-primary" />
+                     
                     </span>
                   </div>
                 </div>
@@ -496,7 +501,7 @@
                       <option v-for="time in timeOptions" :key="time" :value="time">{{ time }}</option>
                     </select>
                     <span class="input-icon time-icon">
-                      <ClockIcon class="icon-primary" />
+                      
                     </span>
                   </div>
                 </div>
@@ -839,7 +844,7 @@ import {
   BuildingOfficeIcon,
   UserIcon,
   UserGroupIcon,
-  ClockIcon,
+  
   DocumentTextIcon,
   ComputerDesktopIcon,
   EnvelopeIcon,
@@ -876,7 +881,7 @@ export default {
     BuildingOfficeIcon,
     UserIcon,
     UserGroupIcon,
-    ClockIcon,
+   
     DocumentTextIcon,
     ComputerDesktopIcon,
     EnvelopeIcon,
@@ -1173,23 +1178,29 @@ export default {
   },
   methods: {
     handleCellClick(timeSlot, day) {
-    const hasSchedule = this.getScheduleForTimeSlotAndDay(timeSlot, day).length > 0;
+  // Ensure the clicked cell corresponds to the selected day
+  if (this.selectedDayOfWeek && day !== this.selectedDayOfWeek) {
+    console.log(`Cannot click on ${day} because it is not the selected day (${this.selectedDayOfWeek}).`);
+    return;
+  }
 
-    if (hasSchedule) {
-      console.log("This cell already has a schedule and cannot be clicked.");
-      return;
-    }
+  const hasSchedule = this.getScheduleForTimeSlotAndDay(timeSlot, day).length > 0;
 
-    // Handle the click event for empty cells
-    console.log("Cell clicked:", { timeSlot, day });
+  if (hasSchedule) {
+    console.log("This cell already has a schedule and cannot be clicked.");
+    return;
+  }
 
-    // Set the selected time slot and day
-    this.selectedTimeSlot = timeSlot.value;
-    this.selectedDay = day;
+  // Handle the click event for empty cells
+  console.log("Cell clicked:", { timeSlot, day });
 
-    // Open the booking modal or perform any other action
-    this.openBookingModal();
-  },
+  // Set the selected time slot and day
+  this.selectedTimeSlot = timeSlot.value;
+  this.selectedDay = day;
+
+  // Open the booking modal or perform any other action
+  this.openBookingModal();
+},
 
     formatDate(date) {
     if (!date) return "";
@@ -1582,101 +1593,89 @@ async fetchSchedules() {
   // Initialize empty arrays for schedules and bookings
   const schedulesForSlot = [];
   const bookingsForSlot = [];
-  
+
   // PART 1: Handle regular schedules (classes)
-  // These are regular weekly classes that repeat every week
   if (Array.isArray(this.scheduleData)) {
-    // Filter schedules for the given day
+    // Filter schedules for the given day (selected from the calendar)
     const daySchedules = this.scheduleData.filter(schedule => schedule.day === day);
-    
+
     // Filter by time slot
     for (const schedule of daySchedules) {
       const scheduleStart = this.convertTimeToMinutes(schedule.start_time);
       const scheduleEnd = this.convertTimeToMinutes(schedule.end_time);
       const slotStart = this.convertTimeToMinutes(timeSlot.value);
-      
+
       // Check if the time slot falls within the schedule's time range
       if (slotStart >= scheduleStart && slotStart < scheduleEnd) {
         schedulesForSlot.push(schedule);
       }
     }
   }
-  
+
   // PART 2: Handle bookings (both pending and approved)
-  // These need to match the specific date selected, not just the day of week
   if (Array.isArray(this.allBookings) && this.allBookings.length > 0 && this.requestDate) {
     // Format the selected date to match the booking date format (YYYY-MM-DD)
     const selectedDateFormatted = this.formatDateForDatabase(this.requestDate);
-    console.log('Selected date for filtering bookings:', selectedDateFormatted);
-    
+
     // Filter bookings for this day AND the specific date
     const dayBookings = this.allBookings.filter(booking => {
-      // Log each booking's date for debugging
-      console.log('Comparing booking:', {
-        bookingDay: booking.day,
-        currentDay: day,
-        bookingDate: booking.requestDate,
-        selectedDate: selectedDateFormatted,
-        matches: booking.day === day && booking.requestDate === selectedDateFormatted
-      });
-      
-      // Check if the booking is for the selected day of the week AND the specific date
       return booking.day === day && booking.requestDate === selectedDateFormatted;
     });
-    
-    console.log('Filtered bookings for day and date:', dayBookings);
-    
+
     // Filter by time slot
     for (const booking of dayBookings) {
       const bookingStart = this.convertTimeToMinutes(booking.start_time);
       const bookingEnd = this.convertTimeToMinutes(booking.end_time);
       const slotStart = this.convertTimeToMinutes(timeSlot.value);
-      
+
       // Check if the time slot falls within the booking's time range
       if (slotStart >= bookingStart && slotStart < bookingEnd) {
         bookingsForSlot.push(booking);
       }
     }
   }
-  
+
   // PART 3: For backward compatibility - if allBookings isn't populated yet
   if (bookingsForSlot.length === 0 && Array.isArray(this.pendingBookings) && this.pendingBookings.length > 0 && this.requestDate) {
-    // Format the selected date to match the booking date format (YYYY-MM-DD)
     const selectedDateFormatted = this.formatDateForDatabase(this.requestDate);
-    
+
     // Filter pending bookings for this day AND the specific date
     const dayPendingBookings = this.pendingBookings.filter(booking => {
       return booking.day === day && booking.requestDate === selectedDateFormatted;
     });
-    
+
     // Filter by time slot
     for (const booking of dayPendingBookings) {
       const bookingStart = this.convertTimeToMinutes(booking.start_time);
       const bookingEnd = this.convertTimeToMinutes(booking.end_time);
       const slotStart = this.convertTimeToMinutes(timeSlot.value);
-      
+
       // Check if the time slot falls within the booking's time range
       if (slotStart >= bookingStart && slotStart < bookingEnd) {
         bookingsForSlot.push(booking);
       }
     }
   }
-  
+
   // Combine regular schedules and bookings
   let combinedSchedules = [...schedulesForSlot, ...bookingsForSlot];
-  
+
   // Apply room filter if a specific room is selected
   if (this.selectedRoomFilter !== 'all') {
     combinedSchedules = combinedSchedules.filter(schedule => {
-      // Check if the schedule has a lab_room property that matches the selected room filter
       return schedule.lab_room === this.selectedRoomFilter || 
              schedule.room === this.selectedRoomFilter || 
              schedule.selectedRoom === this.selectedRoomFilter;
     });
   }
-  
+
+  // Filter combined schedules by the selected day (currentDay)
+  if (this.selectedDayOfWeek) {
+    combinedSchedules = combinedSchedules.filter(schedule => schedule.day === this.selectedDayOfWeek);
+  }
+
   return combinedSchedules;
-    },
+},
     
     // Methods for handling merged cells
     isPartOfMergedCell(timeSlot, day) {
@@ -1963,12 +1962,12 @@ async fetchSchedules() {
     },
 
     async fetchSchedulesForDay(dayOfWeek, timeSlot = null) {
-      try {
-        // Build the query with filters
-        let query = supabaseSchedules
-          .from("schedules")
-          .select("*")
-          .eq("day", dayOfWeek); // Filter by the selected day
+  try {
+    // Build the query with filters
+    let query = supabaseSchedules
+      .from("schedules")
+      .select("*")
+      .eq("day", dayOfWeek); // Filter by the selected day
 
     // If a time slot is provided, add time range filters
     if (timeSlot) {
@@ -1992,8 +1991,20 @@ async fetchSchedules() {
       time: `${item.start_time} - ${item.end_time}`,
       startTime: item.start_time,
       endTime: item.end_time,
+      day: item.day, // Ensure the day field is included
+      lab_room: item.lab_room,
+      section: item.section,
+      course_code: item.course_code,
+      course_name: item.course_name,
       periods: item.periods || [], // Ensure periods is always an array
     }));
+
+    // Apply additional filtering for the selected day
+    this.filteredScheduleData = this.scheduleData.filter(
+      (schedule) => schedule.day === dayOfWeek
+    );
+
+    console.log("Filtered schedules for the selected day:", this.filteredScheduleData);
   } catch (error) {
     console.error(
       `Error fetching schedules for ${dayOfWeek}:`,
@@ -2805,7 +2816,12 @@ body {
   opacity: 0.8;
   transition: opacity 0.3s ease;
 }
-
+.disabled-cell {
+  background-color: #f5f5f5; /* Light gray background */
+  color: #999; /* Gray text */
+  pointer-events: none; /* Disable clicks */
+  opacity: 0.6; /* Reduce visibility */
+}
 .form-group input,
 .form-group textarea,
 .form-group select {
@@ -2904,23 +2920,7 @@ select {
   padding-right: 2.5rem !important; /* Ensure text doesn't overlap with icons */
 }
 
-/* Hide the default calendar and time picker icons */
-.custom-date-input::-webkit-calendar-picker-indicator,
-.time-input::-webkit-calendar-picker-indicator {
-  opacity: 0 !important;
-  width: 0 !important;
-  height: 0 !important;
-  position: absolute !important;
-  top: 0 !important;
-  left: 0 !important;
-  cursor: pointer !important;
-  display: none !important;
-  background: none !important;
-  color: transparent !important;
-  z-index: -1 !important;
-  -webkit-appearance: none !important;
-  appearance: none !important;
-}
+
 
 /* Hide all browser-specific time input styling */
 .time-input::-webkit-datetime-edit-fields-wrapper,
@@ -2937,17 +2937,7 @@ select {
   color: #333 !important;
 }
 
-/* Hide the browser's default time icon */
-input[type="time"]::-webkit-calendar-picker-indicator {
-  display: none !important;
-  -webkit-appearance: none !important;
-  appearance: none !important;
-  opacity: 0 !important;
-  position: absolute !important;
-  z-index: -999 !important;
-  width: 0 !important;
-  height: 0 !important;
-}
+
 
 .custom-date-input:hover,
 .time-input:hover {
