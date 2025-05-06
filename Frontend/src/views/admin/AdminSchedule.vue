@@ -3,6 +3,23 @@
     <AdminHeader pageTitle="Semester Schedule" />
     <div class="schedule-container">
       <div class="schedule-section">
+        <!-- View Toggle -->
+        <div class="view-toggle">
+          <button 
+            class="toggle-btn" 
+            :class="{ 'active': currentView === 'list' }" 
+            @click="currentView = 'list'"
+          >
+            List View
+          </button>
+          <button 
+            class="toggle-btn" 
+            :class="{ 'active': currentView === 'weekly' }" 
+            @click="currentView = 'weekly'"
+          >
+            Weekly Schedule
+          </button>
+        </div>
         <div class="filters">
           <div class="filter-group">
   <label for="search-filter">Search:</label>
@@ -25,19 +42,7 @@
               </option>
             </select>
           </div>
-          <div class="filter-group">
-            <label for="day-filter">Day:</label>
-            <select id="day-filter" v-model="selectedDay">
-              <option value="">All Days</option>
-              <option value="Monday">Monday</option>
-              <option value="Tuesday">Tuesday</option>
-              <option value="Wednesday">Wednesday</option>
-              <option value="Thursday">Thursday</option>
-              <option value="Friday">Friday</option>
-              <option value="Saturday">Saturday</option>
-              <option value="Sunday">Sunday</option>
-            </select>
-          </div>
+          <!-- Day filter removed as requested -->
           
         
           <div class="filter-group" v-if="dateFilter === 'semester'">
@@ -52,8 +57,8 @@
           </div>
         </div>
         
-        <!-- Schedule Content -->
-        <div class="schedule-content">
+        <!-- List View Schedule Content -->
+        <div v-if="currentView === 'list'" class="schedule-content">
           <div class="schedule-header">
             <div class="header-item">Day</div>
             <div class="header-item">Time Slot</div>
@@ -70,18 +75,83 @@
               class="schedule-card"
             >
             <div class="schedule-item">
-      <div class="day">{{ event.day }}{{ event.secondDay ? ` / ${event.secondDay}` : '' }}</div>
-      <div class="time-slot">{{ formatEventTime(event.startTime, event.endTime) }}</div>
-      <div class="purpose">{{ event.courseName }}</div>
-      <div class="section">{{ event.section }}</div>
-      <div class="room">{{ event.labRoom }}</div>
-      <div class="instructor">{{ event.instructorName }}</div>
-    </div>
+              <div class="day">{{ event.day }}{{ event.secondDay ? ` / ${event.secondDay}` : '' }}</div>
+              <div class="time-slot">{{ formatEventTime(event.startTime, event.endTime) }}</div>
+              <div class="purpose">{{ event.courseName }}</div>
+              <div class="section">{{ event.section }}</div>
+              <div class="room">{{ event.labRoom }}</div>
+              <div class="instructor">{{ event.instructorName }}</div>
+            </div>
             </div>
             
             <div v-if="filteredEvents.length === 0" class="empty-schedule">
               <p>No scheduled events.</p>
             </div>
+          </div>
+        </div>
+        
+        <!-- Weekly Schedule View -->
+        <div v-if="currentView === 'weekly'" class="weekly-schedule-section">
+          <!-- Day Filters -->
+          <div class="day-filters">
+            <div class="filter-label">Filter by Day:</div>
+            <div class="day-filter-buttons">
+              <button 
+                v-for="day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']" 
+                :key="day" 
+                class="day-filter-btn" 
+                :class="{ 'active': selectedDayFilter === day }"
+                @click="selectDayFilter(day)"
+              >
+                {{ day }}
+              </button>
+            </div>
+          </div>
+          
+          <!-- Weekly Schedule Table (by Room) -->
+          <div class="weekly-schedule-table-container">
+            <table class="weekly-schedule-table">
+              <thead>
+                <tr>
+                  <th class="time-column">Time</th>
+                  <th v-for="room in ['L201', 'L202', 'L203', 'L204', 'L205', 'IOT', 'Open Lab']" :key="room">{{ room }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="timeSlot in timeSlots"
+                  :key="timeSlot.value"
+                  :class="{ 'lunch-row': timeSlot.isLunch }"
+                >
+                  <td class="time-cell">{{ timeSlot.time }}</td>
+                  <td
+                    v-for="room in ['L201', 'L202', 'L203', 'L204', 'L205', 'IOT', 'Open Lab']"
+                    :key="`${timeSlot.value}-${room}`"
+                    :class="{
+                      'has-class': getScheduleForTimeSlotAndRoom(timeSlot, room).length > 0
+                    }"
+                  >
+                    <div
+                      v-for="schedule in getScheduleForTimeSlotAndRoom(timeSlot, room)"
+                      :key="schedule.id"
+                      class="class-info regular-schedule"
+                    >
+                      <!-- Header section with course code -->
+                      <div class="booking-header">
+                        <div class="status-header course-header">{{ schedule.course_code || schedule.courseCode }}</div>
+                      </div>
+                      
+                      <!-- Section info -->
+                      <div class="event-name">{{ schedule.section }}</div>
+                      
+                      <!-- Other details -->
+                      <div class="class-instructor">{{ schedule.instructor || schedule.instructorName }}</div>
+                      <div class="day-info">{{ schedule.day }}</div>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
         
@@ -146,6 +216,83 @@ export default {
       itemsPerPage: 10,
       scheduleEvents: [], // Dynamically fetched data will be stored here
       isLoading: false,
+      currentView: 'list', // Default view is list view
+      selectedDayFilter: '', // Default day filter for weekly view
+      // Time slots for weekly schedule
+      timeSlots: [
+        {
+          time: "7:00 AM - 8:00 AM",
+          value: "07:00",
+          duration: 60,
+          isLunch: false,
+        },
+        {
+          time: "8:00 AM - 9:00 AM",
+          value: "08:00",
+          duration: 60,
+          isLunch: false,
+        },
+        {
+          time: "9:00 AM - 10:00 AM",
+          value: "09:00",
+          duration: 60,
+          isLunch: false,
+        },
+        {
+          time: "10:00 AM - 11:00 AM",
+          value: "10:00",
+          duration: 60,
+          isLunch: false,
+        },
+        {
+          time: "11:00 AM - 12:00 PM",
+          value: "11:00",
+          duration: 60,
+          isLunch: false,
+        },
+        {
+          time: "12:00 PM - 1:00 PM",
+          value: "12:00",
+          duration: 60,
+          isLunch: true,
+        },
+        {
+          time: "1:00 PM - 2:00 PM",
+          value: "13:00",
+          duration: 60,
+          isLunch: false,
+        },
+        {
+          time: "2:00 PM - 3:00 PM",
+          value: "14:00",
+          duration: 60,
+          isLunch: false,
+        },
+        {
+          time: "3:00 PM - 4:00 PM",
+          value: "15:00",
+          duration: 60,
+          isLunch: false,
+        },
+        {
+          time: "4:00 PM - 5:00 PM",
+          value: "16:00",
+          duration: 60,
+          isLunch: false,
+        },
+        {
+          time: "5:00 PM - 6:00 PM",
+          value: "17:00",
+          duration: 60,
+          isLunch: false,
+        },
+        {
+          time: "6:00 PM - 7:00 PM",
+          value: "18:00",
+          duration: 60,
+          isLunch: false,
+        },
+      ]
     }
   },
   
@@ -303,7 +450,9 @@ export default {
         day: event.day,
         secondDay: event.second_day,
         labRoom: event.lab_room,
+        lab_room: event.lab_room, // Added for compatibility with weekly view
         instructorName: event.instructor_name,
+        instructor: event.instructor_name, // Added for compatibility with weekly view
         startTime: event.start_time,
         endTime: event.end_time,
         scheduleTypes: event.schedule_types,
@@ -311,6 +460,7 @@ export default {
         semester: event.semester,
         section: event.section,
         courseCode: event.course_code,
+        course_code: event.course_code, // Added for compatibility with weekly view
         courseName: event.course_name,
       }));
 
@@ -319,10 +469,112 @@ export default {
       console.error('Error fetching schedule events:', error.message);
     }
   },
+    
+    // Method to select day filter for weekly schedule view
+    selectDayFilter(day) {
+      this.selectedDayFilter = day;
+    },
+    
+    // Method to get schedules for a specific time slot and room in weekly view
+    getScheduleForTimeSlotAndRoom(timeSlot, room) {
+      if (!Array.isArray(this.scheduleEvents)) {
+        return [];
+      }
+      
+      // Filter events for the selected day (if a day filter is applied)
+      let filteredEvents = this.scheduleEvents;
+      if (this.selectedDayFilter) {
+        filteredEvents = filteredEvents.filter(event => event.day === this.selectedDayFilter);
+      }
+      
+      // Filter events for the given room
+      const roomEvents = filteredEvents.filter(event => {
+        return event.labRoom === room || event.lab_room === room;
+      });
+      
+      // Filter events by time slot
+      const eventsInTimeSlot = roomEvents.filter(event => {
+        // Ensure we have valid time values
+        if (!event.startTime || !event.endTime) {
+          return false;
+        }
+        
+        const eventStart = this.convertTimeToMinutes(event.startTime);
+        const eventEnd = this.convertTimeToMinutes(event.endTime);
+        const slotStart = this.convertTimeToMinutes(timeSlot.value);
+        const slotEnd = slotStart + timeSlot.duration;
+        
+        // Check if the event overlaps with the time slot
+        return (eventStart < slotEnd && eventEnd > slotStart);
+      });
+      
+      return eventsInTimeSlot;
+    },
+    
+    
+    // Helper method to convert time string to minutes for comparison
+    convertTimeToMinutes(timeStr) {
+      if (!timeStr) return 0;
+      
+      // Log the input time string for debugging
+      console.log('Converting time:', timeStr);
+      
+      // Handle different time formats
+      let hours, minutes;
+      
+      // Handle AM/PM format
+      if (timeStr.toLowerCase().includes('am') || timeStr.toLowerCase().includes('pm')) {
+        const isPM = timeStr.toLowerCase().includes('pm');
+        // Remove AM/PM and trim
+        const cleanTime = timeStr.toLowerCase().replace(/(am|pm)/g, '').trim();
+        
+        if (cleanTime.includes(':')) {
+          [hours, minutes] = cleanTime.split(':').map(Number);
+        } else {
+          hours = parseInt(cleanTime);
+          minutes = 0;
+        }
+        
+        // Adjust for PM
+        if (isPM && hours < 12) hours += 12;
+        // Adjust for 12 AM
+        if (!isPM && hours === 12) hours = 0;
+      }
+      // Handle 24-hour format with colon
+      else if (timeStr.includes(':')) {
+        [hours, minutes] = timeStr.split(':').map(Number);
+      } 
+      // Handle 24-hour format without colon
+      else {
+        const paddedTime = timeStr.padStart(4, '0');
+        hours = parseInt(paddedTime.substring(0, 2));
+        minutes = parseInt(paddedTime.substring(2, 4));
+      }
+      
+      const totalMinutes = hours * 60 + minutes;
+      console.log(`Converted ${timeStr} to ${totalMinutes} minutes (${hours}h:${minutes}m)`);
+      return totalMinutes;
+    },
     getDayAbbreviation(dateString) {
       const date = new Date(dateString)
       const day = date.toLocaleDateString('en-US', { weekday: 'short' })
       return day
+    },
+    
+    // Set the day filter to the current day of the week
+    setCurrentDayFilter() {
+      const today = new Date();
+      const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      const currentDay = daysOfWeek[today.getDay()];
+      
+      console.log('Setting day filter to current day:', currentDay);
+      // Skip Sunday as it's not in our filter options
+      if (currentDay !== 'Sunday') {
+        this.selectedDayFilter = currentDay;
+      } else {
+        // Default to Monday if it's Sunday
+        this.selectedDayFilter = 'Monday';
+      }
     },
     formatEventTime(start, end) {
   // Format time from 24-hour to 12-hour format
@@ -348,7 +600,15 @@ export default {
     }
   },
   mounted() {
-    this.fetchScheduleEvents() // Fetch data when the component is mounted
+    // Fetch data when the component is mounted
+    this.fetchScheduleEvents()
+      .then(() => {
+        console.log('Schedule events loaded:', this.scheduleEvents);
+        // Set the day filter to the current day of the week after data is loaded
+        this.setCurrentDayFilter();
+        // Set the view to weekly schedule when data is loaded
+        this.currentView = 'weekly';
+      });
   }
 }
 </script>
@@ -365,6 +625,35 @@ export default {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   padding: 32px;
   height: 100%;
+}
+
+/* View Toggle Styles */
+.view-toggle {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.toggle-btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid #E2E8F0;
+  background-color: white;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.toggle-btn.active {
+  background-color: #DD3859;
+  color: white;
+  border-color: #DD3859;
+}
+
+.toggle-btn:hover:not(.active) {
+  border-color: #DD3859;
+  color: #DD3859;
 }
 
 .filters {
@@ -568,5 +857,166 @@ export default {
     grid-template-columns: 1fr;
     gap: 8px;
   }
+  
+  .view-toggle {
+    flex-direction: column;
+  }
+}
+
+/* Weekly Schedule View Styles */
+.weekly-schedule-section {
+  margin-top: 20px;
+}
+
+.day-filters {
+  margin-bottom: 20px;
+}
+
+.filter-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #64748B;
+  margin-bottom: 8px;
+}
+
+.day-filter-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.day-filter-btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #E2E8F0;
+  background-color: white;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.day-filter-btn.active {
+  background-color: #DD3859;
+  color: white;
+  border-color: #DD3859;
+}
+
+.day-filter-btn:hover:not(.active) {
+  border-color: #DD3859;
+  color: #DD3859;
+}
+
+.weekly-schedule-table-container {
+  overflow-x: auto;
+  margin-top: 16px;
+}
+
+.weekly-schedule-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 4px;
+  min-width: 900px;
+}
+
+.weekly-schedule-table th {
+  background-color: #DD3859;
+  color: white;
+  padding: 10px;
+  text-align: center;
+  font-weight: 600;
+  border-radius: 6px;
+}
+
+.weekly-schedule-table .time-column {
+  width: 140px;
+}
+
+.weekly-schedule-table td {
+  height: 80px;
+  vertical-align: top;
+  border-radius: 6px;
+  padding: 6px;
+  border: 1px solid #E2E8F0;
+  position: relative;
+}
+
+.weekly-schedule-table .time-cell {
+  background-color: #f8f9fa;
+  color: #555;
+  font-weight: 500;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.weekly-schedule-table td.has-class {
+  background-color: #f9f9f9;
+}
+
+.weekly-schedule-table tr.lunch-row td {
+  background-color: #f5f5f5;
+  color: #777;
+  font-style: italic;
+}
+
+.class-info {
+  padding: 6px;
+  border-radius: 4px;
+  margin-bottom: 4px;
+  font-size: 12px;
+}
+
+.regular-schedule {
+  background-color: rgba(221, 56, 89, 0.15);
+  color: #333;
+  border-left: 4px solid #dd3859;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.regular-schedule:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.booking-header {
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+.status-header {
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  display: inline-block;
+  margin-bottom: 0.25rem;
+}
+
+.course-header {
+  color: white;
+  background-color: #dd3859;
+}
+
+.event-name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+  text-align: center;
+}
+
+.class-instructor {
+  font-size: 0.75rem;
+  opacity: 0.9;
+}
+
+.class-room {
+  font-size: 0.75rem;
+  opacity: 0.9;
+  margin-top: 2px;
 }
 </style>
