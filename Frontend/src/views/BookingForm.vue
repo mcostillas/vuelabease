@@ -468,14 +468,16 @@
                 </div>
                 <div class="form-group">
                   <label for="startTime">Event Start Time</label>
-                  <div class="input-wrapper">
-                    <input
-                      type="time"
+                  <div class="input-wrapper select-wrapper">
+                    <select
                       id="startTime"
                       v-model="startTime"
                       required
-                      class="time-input"
-                    />
+                      class="time-select"
+                    >
+                      <option value="" disabled>Select start time</option>
+                      <option v-for="time in timeOptions" :key="time" :value="time">{{ time }}</option>
+                    </select>
                     <span class="input-icon time-icon">
                       <ClockIcon class="icon-primary" />
                     </span>
@@ -483,14 +485,16 @@
                 </div>
                 <div class="form-group">
                   <label for="endTime">Event End Time</label>
-                  <div class="input-wrapper">
-                    <input
-                      type="time"
+                  <div class="input-wrapper select-wrapper">
+                    <select
                       id="endTime"
                       v-model="endTime"
                       required
-                      class="time-input"
-                    />
+                      class="time-select"
+                    >
+                      <option value="" disabled>Select end time</option>
+                      <option v-for="time in timeOptions" :key="time" :value="time">{{ time }}</option>
+                    </select>
                     <span class="input-icon time-icon">
                       <ClockIcon class="icon-primary" />
                     </span>
@@ -948,6 +952,13 @@ export default {
       dateRangeWarning: "",
       showSuccessModal: false,
       showWeeklyScheduleModal: false,
+      timeOptions: [
+        "7:00 AM", "7:30 AM", "8:00 AM", "8:30 AM", "9:00 AM", "9:30 AM", 
+        "10:00 AM", "10:30 AM", "11:00 AM", "11:30 AM", "12:00 PM", "12:30 PM", 
+        "1:00 PM", "1:30 PM", "2:00 PM", "2:30 PM", "3:00 PM", "3:30 PM", 
+        "4:00 PM", "4:30 PM", "5:00 PM", "5:30 PM", "6:00 PM", "6:30 PM", 
+        "7:00 PM", "7:30 PM", "8:00 PM", "8:30 PM", "9:00 PM"
+      ],
       selectedRoom: "",
       selectedTimeSlot: "",
       currentDate: new Date(),
@@ -2372,11 +2383,18 @@ async fetchInstructorInfo(name, email) {
     closeBookingModal() {
       this.showBookingModal = false;
       this.errorMessage = ""; // Clear any error messages
+      // If user is an instructor, don't show requester modal
+      if (this.userRole !== 'instructor') {
+        this.showRequesterModal = true;
+      }
     },
     // Go back to requester info modal
     backToRequesterModal() {
       this.showBookingModal = false;
-      this.showRequesterModal = true;
+      // Only show requester modal if not an instructor
+      if (this.userRole !== 'instructor') {
+        this.showRequesterModal = true;
+      }
       this.errorMessage = ""; // Clear any error messages
     },
     // ... methods ...
@@ -2490,7 +2508,7 @@ async fetchInstructorInfo(name, email) {
 /* Chrome, Safari, Edge, Opera */
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button,
-.time-input {
+.time-input, .time-select {
   width: 100%;
   padding: 0.8rem 1rem;
   border: 1px solid #ccc;
@@ -2510,6 +2528,24 @@ input::-webkit-inner-spin-button,
 input[type="number"] {
   -moz-appearance: textfield;
   appearance: textfield;
+}
+
+/* Select dropdown styles */
+.select-wrapper {
+  position: relative;
+}
+
+.select-wrapper select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: none;
+  padding-right: 1rem;
+}
+
+.time-select:focus {
+  border-color: #dd3859;
+  box-shadow: 0 0 0 2px rgba(221, 56, 89, 0.2);
 }
 
 /* Custom class to remove any spinner buttons */
