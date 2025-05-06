@@ -482,7 +482,7 @@
                       class="time-input"
                     />
                     <span class="input-icon time-icon">
-                      <ClockIcon class="icon-primary" />
+                     
                     </span>
                   </div>
                 </div>
@@ -497,7 +497,7 @@
                       class="time-input"
                     />
                     <span class="input-icon time-icon">
-                      <ClockIcon class="icon-primary" />
+                      
                     </span>
                   </div>
                 </div>
@@ -840,7 +840,7 @@ import {
   BuildingOfficeIcon,
   UserIcon,
   UserGroupIcon,
-  ClockIcon,
+  
   DocumentTextIcon,
   ComputerDesktopIcon,
   EnvelopeIcon,
@@ -877,7 +877,7 @@ export default {
     BuildingOfficeIcon,
     UserIcon,
     UserGroupIcon,
-    ClockIcon,
+   
     DocumentTextIcon,
     ComputerDesktopIcon,
     EnvelopeIcon,
@@ -2884,23 +2884,7 @@ select {
   padding-right: 2.5rem !important; /* Ensure text doesn't overlap with icons */
 }
 
-/* Hide the default calendar and time picker icons */
-.custom-date-input::-webkit-calendar-picker-indicator,
-.time-input::-webkit-calendar-picker-indicator {
-  opacity: 0 !important;
-  width: 0 !important;
-  height: 0 !important;
-  position: absolute !important;
-  top: 0 !important;
-  left: 0 !important;
-  cursor: pointer !important;
-  display: none !important;
-  background: none !important;
-  color: transparent !important;
-  z-index: -1 !important;
-  -webkit-appearance: none !important;
-  appearance: none !important;
-}
+
 
 /* Hide all browser-specific time input styling */
 .time-input::-webkit-datetime-edit-fields-wrapper,
@@ -2917,15 +2901,7 @@ select {
   color: #333 !important;
 }
 
-/* Hide the browser's default time icon */
-input[type="time"]::-webkit-calendar-picker-indicator {
-  display: block !important; /* Ensure the time picker is visible */
-  opacity: 1 !important; /* Make it fully visible */
-  position: static !important; /* Reset positioning */
-  z-index: auto !important; /* Reset z-index */
-  width: auto !important; /* Reset width */
-  height: auto !important; /* Reset height */
-}
+
 
 .custom-date-input:hover,
 .time-input:hover {
